@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile — AutoFixPro</title>
+    <meta name="description" content="Manage your AutoFixPro account credentials, contact information, and security.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+{% include 'includes/navbar.html' %}
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="page-main">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1>My Profile</h1>
+            <p>Manage your personal profile, vehicle fleet, and security preferences</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'edit_profile' %}" class="btn-primary-sm">
+                <i class="fas fa-user-edit"></i> Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="profile-layout">
+
+        <!-- ── Left Sidebar Card ── -->
+        <aside class="profile-sidebar">
+            <div class="sidebar-user-card">
+                <div class="profile-avatar">
+                    {{ name|first|upper }}
+                </div>
+                <h2 class="profile-name">{{ name }}</h2>
+                <div class="verified-badge">
+                    <i class="fas fa-check-circle"></i> Verified Client
+                </div>
+
+                <div class="user-meta-list">
+                    <div class="user-meta-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ email }}</span>
+                    </div>
+                    <div class="user-meta-item">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ phone }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Navigation Menu -->
+            <nav class="profile-nav-menu">
+                <a href="{% url 'profile' %}" class="nav-menu-item is-active">
+                    <i class="fas fa-id-card"></i> Overview &amp; Info
+                </a>
+                <a href="{% url 'edit_profile' %}" class="nav-menu-item">
+                    <i class="fas fa-user-edit"></i> Edit Profile
+                </a>
+                <a href="{% url 'change_password' %}" class="nav-menu-item">
+                    <i class="fas fa-shield-alt"></i> Change Password
+                </a>
+                <a href="{% url 'my_vehicle' %}" class="nav-menu-item">
+                    <i class="fas fa-car-side"></i> My Vehicles <span class="badge-count">{{ vehicle_count }}</span>
+                </a>
+                <a href="{% url 'my_bookings' %}" class="nav-menu-item">
+                    <i class="fas fa-calendar-check"></i> Service Bookings <span class="badge-count">{{ booking_count }}</span>
+                </a>
+                <div class="nav-divider"></div>
+                <a href="{% url 'logout' %}" class="nav-menu-item logout-link">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <!-- ── Right Main Section ── -->
+        <section class="profile-main-content">
+
+            <!-- Stats Overview Row -->
+            <div class="profile-stats-grid">
+                <div class="profile-stat-card">
+                    <div class="stat-icon-wrap icon-blue">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-number">{{ vehicle_count }}</span>
+                        <span class="stat-title">Registered Vehicles</span>
+                    </div>
+                </div>
+
+                <div class="profile-stat-card">
+                    <div class="stat-icon-wrap icon-orange">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-number">{{ booking_count }}</span>
+                        <span class="stat-title">Total Bookings</span>
+                    </div>
+                </div>
+
+                <div class="profile-stat-card">
+                    <div class="stat-icon-wrap icon-green">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-number">{{ completed_count }}</span>
+                        <span class="stat-title">Services Completed</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information Card -->
+            <div class="profile-content-card">
+                <div class="card-top-bar">
+                    <div class="card-title-group">
+                        <div class="card-icon-tag"><i class="fas fa-user"></i></div>
+                        <div>
+                            <h3>Personal Information</h3>
+                            <p>Your primary contact &amp; account details</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'edit_profile' %}" class="card-action-btn">
+                        <i class="fas fa-pen"></i> Edit
+                    </a>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-field">
+                        <span class="field-label">Full Name</span>
+                        <span class="field-val">{{ name }}</span>
+                    </div>
+
+                    <div class="info-field">
+                        <span class="field-label">Email Address</span>
+                        <span class="field-val">
+                            {{ email }}
+                            <span class="email-verified-tag"><i class="fas fa-shield-check"></i> OTP Verified</span>
+                        </span>
+                    </div>
+
+                    <div class="info-field">
+                        <span class="field-label">Phone Number</span>
+                        <span class="field-val">{{ phone }}</span>
+                    </div>
+
+                    <div class="info-field">
+                        <span class="field-label">Account Role</span>
+                        <span class="field-val"><span class="role-pill">AutoFixPro Customer</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & Authentication Card -->
+            <div class="profile-content-card">
+                <div class="card-top-bar">
+                    <div class="card-title-group">
+                        <div class="card-icon-tag icon-shield"><i class="fas fa-lock"></i></div>
+                        <div>
+                            <h3>Security &amp; Login</h3>
+                            <p>Manage your password and authentication options</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'change_password' %}" class="card-action-btn">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                </div>
+
+                <div class="security-features-list">
+                    <div class="security-feature-item">
+                        <div class="security-icon"><i class="fas fa-shield-alt"></i></div>
+                        <div class="security-details">
+                            <h4>Password Protection</h4>
+                            <p>Your password is active and secured with hash encryption.</p>
+                        </div>
+                        <a href="{% url 'change_password' %}" class="btn-outline-sm">Update</a>
+                    </div>
+
+                    <div class="security-feature-item">
+                        <div class="security-icon icon-email-otp"><i class="fas fa-envelope-open-text"></i></div>
+                        <div class="security-details">
+                            <h4>Email OTP Login (Passwordless)</h4>
+                            <p>You can securely log in anytime using a 6-digit code sent to {{ email }}.</p>
+                        </div>
+                        <span class="status-active-pill"><i class="fas fa-check"></i> Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registered Vehicles Quick View -->
+            <div class="profile-content-card">
+                <div class="card-top-bar">
+                    <div class="card-title-group">
+                        <div class="card-icon-tag icon-car"><i class="fas fa-car-side"></i></div>
+                        <div>
+                            <h3>Your Vehicles</h3>
+                            <p>Vehicles registered under your profile</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'add_vehicle' %}" class="card-action-btn btn-primary-highlight">
+                        <i class="fas fa-plus"></i> Add Vehicle
+                    </a>
+                </div>
+
+                {% if vehicles %}
+                <div class="mini-vehicles-grid">
+                    {% for v in vehicles %}
+                    <div class="mini-vehicle-card">
+                        <div class="v-icon"><i class="fas fa-car"></i></div>
+                        <div class="v-details">
+                            <h4>{{ v.brand }} {{ v.model }}</h4>
+                            <span class="v-plate">{{ v.vehicle_number }}</span>
+                            <span class="v-meta">{{ v.year }} &bull; {{ v.fuel_type }}</span>
+                        </div>
+                        <a href="{% url 'edit_vehicle' v.id %}" class="v-edit-link" title="Edit Vehicle">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state-card">
+                    <i class="fas fa-car empty-icon"></i>
+                    <p>You haven't added any vehicles yet.</p>
+                    <a href="{% url 'add_vehicle' %}" class="btn-primary-sm" style="margin-top: 10px;">
+                        <i class="fas fa-plus"></i> Add Your First Vehicle
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Workshop Help & Support Banner -->
+            <div class="support-contact-banner">
+                <div class="support-banner-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="support-banner-info">
+                    <h3>Need Assistance with Your Vehicle?</h3>
+                    <p>Our expert mechanics and customer care team are here to help you 6 days a week.</p>
+                    <div class="support-contact-pills">
+                        <span class="contact-pill"><i class="fas fa-envelope"></i> support@autofixpro.com</span>
+                        <span class="contact-pill"><i class="fas fa-phone-alt"></i> +91 98765 43210</span>
+                        <span class="contact-pill"><i class="fas fa-clock"></i> Mon–Sat: 9:00 AM – 7:00 PM</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+{% include 'includes/footer.html' %}
+
+</body>
+</html>

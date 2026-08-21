@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+
+<div class="admin-layout">
+    
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-left">
+                    <h1>Users Directory</h1>
+                    <p>Manage all registered clients and mechanics user accounts</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <form method="get" class="admin-search-form">
+                    <input type="text" name="search" class="admin-search-input" placeholder="Search by name, email, phone..." value="{{ search|default:'' }}">
+                    <button type="submit" class="admin-search-submit">Search</button>
+                    {% if search %}
+                        <a href="{% url 'manage_users' %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-content">
+            
+            {% if messages %}
+                <div class="messages-container" style="padding:0; margin: 0 0 20px 0;">
+                    {% for message in messages %}
+                        <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(16,185,129,0.12); color: #16a34a; border: 1px solid rgba(16,185,129,0.3);">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>Registered Clients List ({{ users|length }})</h2>
+                    <a href="{% url 'add_user' %}" class="admin-btn-primary" style="font-size: 13px; padding: 9px 18px;">
+                        + Add New User
+                    </a>
+                </div>
+                
+                <table class="admin-table">                   
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Full Name</th>
+                            <th>Email Address</th>
+                            <th>Phone Number</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for item in users %}
+                            <tr>
+                                <td>
+                                    <strong>#USR-{{ item.id }}</strong>
+                                </td>
+                                <td>
+                                    <div class="table-user-cell" style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="user-mini-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;">
+                                            {{ item.fullname|first|upper }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ item.fullname }}</strong>
+                                            {% if item.email|lower|slice:":6" == "admin@" %}
+                                                <span style="font-size: 10px; background: rgba(255,77,48,0.15); color: var(--primary); padding: 2px 6px; border-radius: 10px; font-weight: 700; margin-left: 5px;">ADMIN</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ item.email }}</td>
+                                <td>{{ item.phone }}</td>
+                                <td style="text-align: right;">
+                                    <div class="action-btns">
+                                        <a href="{% url 'edit_user' item.id %}" class="action-edit-btn">Edit</a>
+                                        <a href="{% url 'delete_user' item.id %}" class="action-del-btn" onclick="return confirm('Are you sure you want to delete user {{ item.fullname }} ({{ item.email }})?')">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding: 30px; color: var(--text-muted);">
+                                    No users found matching your search.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

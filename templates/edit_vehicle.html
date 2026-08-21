@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Vehicle - AutoFixPro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/edit_vehicle.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+{% include 'includes/navbar.html' %}
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="page-main">
+
+    <div class="form-wrapper">
+        <div class="form-header">
+            <div class="header-badge">EDIT VEHICLE</div>
+            <h1>Edit Vehicle Details</h1>
+            <p>Update vehicle records for {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.vehicle_number }})</p>
+        </div>
+
+        <form method="post" class="form-box">
+            {% csrf_token %}
+
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="vehicle_number">Vehicle Registration Number</label>
+                    <input type="text" id="vehicle_number" name="vehicle_number" value="{{ vehicle.vehicle_number }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="brand">Vehicle Brand</label>
+                    <input type="text" id="brand" name="brand" value="{{ vehicle.brand }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="model">Model Name</label>
+                    <input type="text" id="model" name="model" value="{{ vehicle.model }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="year">Manufacturing Year</label>
+                    <input type="number" id="year" name="year" value="{{ vehicle.year }}" min="1990" max="2026" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="fuel_type">Fuel Type</label>
+                    <select id="fuel_type" name="fuel_type" required>
+                        <option value="Petrol" {% if vehicle.fuel_type == "Petrol" %}selected{% endif %}>Petrol</option>
+                        <option value="Diesel" {% if vehicle.fuel_type == "Diesel" %}selected{% endif %}>Diesel</option>
+                        <option value="CNG" {% if vehicle.fuel_type == "CNG" %}selected{% endif %}>CNG</option>
+                        <option value="Electric" {% if vehicle.fuel_type == "Electric" %}selected{% endif %}>Electric</option>
+                        <option value="Hybrid" {% if vehicle.fuel_type == "Hybrid" %}selected{% endif %}>Hybrid</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="color">Vehicle Color</label>
+                    <input type="text" id="color" name="color" value="{{ vehicle.color }}" required>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">Update Vehicle Information</button>
+                <a href="{% url 'my_vehicle' %}" class="cancel-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</main>
+
+{% include 'includes/footer.html' %}
+
+</body>
+</html>

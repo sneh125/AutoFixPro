@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+
+<div class="admin-layout">
+    
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-left">
+                    <h1>Edit User #{{ user.id }}</h1>
+                    <p>Modify user details for {{ user.fullname }} ({{ user.email }})</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="{% url 'manage_users' %}" class="admin-btn-cancel">← Back to Users</a>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-content">
+            
+            {% if messages %}
+                <div class="messages-container" style="padding:0; margin: 0 0 20px 0;">
+                    {% for message in messages %}
+                        <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.3);">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="admin-form-card">
+                <form method="POST" class="admin-form-grid">
+                    {% csrf_token %}
+
+                    <div class="admin-input-group">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" id="fullname" name="fullname" value="{{ user.fullname }}" required>
+                    </div>
+
+                    <div class="admin-input-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+
+                    <div class="admin-input-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" value="{{ user.phone }}" required>
+                    </div>
+
+                    <div class="admin-input-group">
+                        <label for="password">Reset Password (Optional)</label>
+                        <input type="password" id="password" name="password" placeholder="Leave blank to keep existing password">
+                    </div>
+
+                    <div class="admin-form-actions">
+                        <button type="submit" class="admin-btn-primary">Update User Record</button>
+                        <a href="{% url 'manage_users' %}" class="admin-btn-cancel">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

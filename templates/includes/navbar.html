@@ -1,0 +1,167 @@
+{% load static %}
+<header class="navbar" id="mainNavbar">
+    <!-- Logo -->
+    <a href="{% url 'home' %}" class="logo">
+        <img src="{% static 'images/logo-light.png' %}" alt="AutoFixPro">
+        <span>AutoFix<span class="highlight">Pro</span></span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="navbar-nav" id="navMenu">
+        {% if request.session.user_id %}
+
+            <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="{% url 'my_vehicle' %}" class="nav-item {% if request.resolver_match.url_name == 'my_vehicle' or request.resolver_match.url_name == 'add_vehicle' or request.resolver_match.url_name == 'edit_vehicle' %}is-active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z"/>
+                </svg>
+                Vehicles
+            </a>
+
+            <a href="{% url 'book_service' %}" class="nav-item {% if request.resolver_match.url_name == 'book_service' %}is-active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                </svg>
+                Book Service
+            </a>
+
+            <a href="{% url 'my_bookings' %}" class="nav-item {% if request.resolver_match.url_name == 'my_bookings' or request.resolver_match.url_name == 'view_booking' or request.resolver_match.url_name == 'payment' %}is-active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                Bookings
+            </a>
+
+            <a href="{% url 'service_history' %}" class="nav-item {% if request.resolver_match.url_name == 'service_history' %}is-active{% endif %}">
+                <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                </svg>
+                History
+            </a>
+
+            {% if request.session.is_admin %}
+            <a href="{% url 'admin_dashboard' %}" class="nav-item {% if 'admin' in request.resolver_match.url_name %}is-active{% endif %}" style="color: #ff4d30; font-weight: 700;">
+                <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                Admin
+            </a>
+            {% endif %}
+
+            <!-- Divider -->
+            <div class="nav-divider"></div>
+
+            <!-- Profile Dropdown -->
+            <div class="nav-profile-wrap" id="profileDropdown">
+                <button class="nav-profile-btn" id="profileToggle" type="button" aria-expanded="false">
+                    <span class="nav-avatar">{{ request.session.name|first|upper|default:"U" }}</span>
+                    <span class="nav-profile-name">{{ request.session.name|truncatechars:14 }}</span>
+                    <svg class="nav-chevron" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <div class="nav-dropdown" id="profileMenu">
+                    {% if request.session.is_admin %}
+                    <a href="{% url 'admin_dashboard' %}" class="dropdown-item" style="color: #ff4d30; font-weight: 700;">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        Admin Control Panel
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    {% endif %}
+                    <a href="{% url 'profile' %}" class="dropdown-item">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                        My Profile
+                    </a>
+                    <a href="{% url 'edit_profile' %}" class="dropdown-item">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'change_password' %}" class="dropdown-item">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                        Change Password
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'logout' %}" class="dropdown-item dropdown-logout">
+                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+
+        {% else %}
+
+            <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">Home</a>
+            <a href="{% url 'home' %}#services" class="nav-item">Services</a>
+            <a href="{% url 'home' %}#why-us" class="nav-item">Why Us</a>
+            <a href="{% url 'contact' %}" class="nav-item {% if request.resolver_match.url_name == 'contact' %}is-active{% endif %}">Contact</a>
+            <div class="nav-divider"></div>
+            <a href="{% url 'login' %}" class="nav-item {% if request.resolver_match.url_name == 'login' %}is-active{% endif %}">Login</a>
+            <a href="{% url 'register' %}" class="navbar-cta">Get Started</a>
+
+        {% endif %}
+    </nav>
+
+    <!-- Hamburger -->
+    <button class="nav-hamburger" id="navToggleBtn" aria-label="Open menu" type="button">
+        <svg id="hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+</header>
+
+<script>
+(function() {
+    // Scroll-aware navbar
+    const navbar = document.getElementById('mainNavbar');
+    if (navbar) {
+        window.addEventListener('scroll', function() {
+            navbar.classList.toggle('scrolled', window.scrollY > 20);
+        }, { passive: true });
+    }
+
+    // Hamburger toggle
+    const hamburger = document.getElementById('navToggleBtn');
+    const menu = document.getElementById('navMenu');
+    if (hamburger && menu) {
+        hamburger.addEventListener('click', function() {
+            const isOpen = menu.classList.toggle('is-open');
+            hamburger.setAttribute('aria-expanded', isOpen);
+        });
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!hamburger.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.remove('is-open');
+                hamburger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    // Profile dropdown
+    const profileToggle = document.getElementById('profileToggle');
+    const profileMenu = document.getElementById('profileMenu');
+    const profileWrap = document.getElementById('profileDropdown');
+    if (profileToggle && profileMenu) {
+        profileToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isOpen = profileMenu.classList.toggle('is-open');
+            profileToggle.setAttribute('aria-expanded', isOpen);
+        });
+        document.addEventListener('click', function(e) {
+            if (profileWrap && !profileWrap.contains(e.target)) {
+                profileMenu.classList.remove('is-open');
+                profileToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+})();
+</script>

@@ -1,0 +1,353 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoFixPro - Premium Vehicle Workshop &amp; Auto Care</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+{% include 'includes/navbar.html' %}
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── Hero Section ── -->
+<section class="hero">
+    <div class="overlay"></div>
+
+    <div class="hero-content">
+        <span class="badge"><i class="fas fa-tools"></i> PROFESSIONAL AUTOMOTIVE WORKSHOP</span>
+        <h1>KEEP YOUR CAR IN <span class="text-gradient">PERFECT</span> CONDITION</h1>
+        <p>
+            Experience premium vehicle servicing, transparent digital tracking, and expert mechanical care — all managed seamlessly in one digital platform.
+        </p>
+
+        <div class="hero-actions">
+            {% if request.session.user_id %}
+                <a href="{% url 'book_service' %}" class="btn-primary">Book a Service</a>
+                <a href="{% url 'dashboard' %}" class="btn-secondary">Go to Dashboard</a>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn-primary">Get Started Now</a>
+                <a href="{% url 'login' %}" class="btn-secondary">Client Login</a>
+            {% endif %}
+        </div>
+
+        <div class="trust-badge">
+            <span class="stars">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+            </span>
+            <span>Trusted by <strong>12,000+</strong> Car Owners across India</span>
+        </div>
+    </div>
+
+    <div class="hero-image-container">
+        <div class="hero-simple-card">
+            <img src="{% static 'images/car.jpg' %}" alt="AutoFixPro Workshop Car" class="hero-simple-img">
+        </div>
+    </div>
+</section>
+
+<!-- ── Stats Section ── -->
+<section class="stats">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>12K+</h3>
+            <p>Vehicles Serviced</p>
+        </div>
+        <div class="stat-card">
+            <h3>99.4%</h3>
+            <p>Customer Satisfaction</p>
+        </div>
+        <div class="stat-card">
+            <h3>25+</h3>
+            <p>Expert Mechanics</p>
+        </div>
+        <div class="stat-card">
+            <h3>100%</h3>
+            <p>Quality Guarantee</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── Services Section ── -->
+<section class="services" id="services">
+    <span class="sub-heading">WHAT WE OFFER</span>
+    <h2>Our Premium Workshop Services</h2>
+    <p class="section-desc">We combine skilled craftsmanship with cutting-edge diagnostics to keep your car operating like new.</p>
+
+    <div class="service-box">
+
+        <!-- 1. Periodic Service -->
+        <div class="service-card-item">
+            <div class="service-thumb-wrap">
+                <img src="{% static 'images/service_periodic.jpg' %}" alt="General Periodic Service" class="service-thumb-img">
+                <div class="service-price-tag">From <strong>₹1,499</strong></div>
+            </div>
+            <div class="service-card-body">
+                <h3>General Periodic Service</h3>
+                <p>Complete multi-point vehicle health scan, electrical diagnostics, filter cleaning, and vital fluids top-up.</p>
+                <ul class="service-feature-checklist">
+                    <li><i class="fas fa-check-circle"></i> 40-Point Comprehensive Inspection</li>
+                    <li><i class="fas fa-check-circle"></i> OBD-II Computer System Scan</li>
+                    <li><i class="fas fa-check-circle"></i> Coolant &amp; Brake Fluid Top-up</li>
+                </ul>
+                <a href="{% url 'book_service' %}" class="service-book-btn">
+                    <span>Book Service</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 2. Oil & Filter Service -->
+        <div class="service-card-item">
+            <div class="service-thumb-wrap">
+                <img src="{% static 'images/service_oil.jpg' %}" alt="Engine Oil &amp; Filter Service" class="service-thumb-img">
+                <div class="service-price-tag">From <strong>₹899</strong></div>
+            </div>
+            <div class="service-card-body">
+                <h3>Oil &amp; Filter Change</h3>
+                <p>High-grade 100% synthetic motor oil replacement, OEM oil filter, and engine sludge flush for peak performance.</p>
+                <ul class="service-feature-checklist">
+                    <li><i class="fas fa-check-circle"></i> Premium Synthetic Engine Oil</li>
+                    <li><i class="fas fa-check-circle"></i> Genuine OEM Filter Replacement</li>
+                    <li><i class="fas fa-check-circle"></i> Free Engine Bay Cleaning</li>
+                </ul>
+                <a href="{% url 'book_service' %}" class="service-book-btn">
+                    <span>Book Service</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 3. Brake & Suspension -->
+        <div class="service-card-item">
+            <div class="service-thumb-wrap">
+                <img src="{% static 'images/service_brake.jpg' %}" alt="Brake &amp; Suspension Service" class="service-thumb-img">
+                <div class="service-price-tag">From <strong>₹1,850</strong></div>
+            </div>
+            <div class="service-card-body">
+                <h3>Brake &amp; Suspension Care</h3>
+                <p>Precision disc rotor resurfacing, brake pad replacement, caliper lubrication, and shock absorber inspection.</p>
+                <ul class="service-feature-checklist">
+                    <li><i class="fas fa-check-circle"></i> Front &amp; Rear Brake Pad Overhaul</li>
+                    <li><i class="fas fa-check-circle"></i> Disc Rotor Inspection &amp; Cleaning</li>
+                    <li><i class="fas fa-check-circle"></i> Shock Absorber &amp; Strut Testing</li>
+                </ul>
+                <a href="{% url 'book_service' %}" class="service-book-btn">
+                    <span>Book Service</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 4. Tire & Alignment -->
+        <div class="service-card-item">
+            <div class="service-thumb-wrap">
+                <img src="{% static 'images/service_tire.jpg' %}" alt="Tire &amp; Laser Alignment" class="service-thumb-img">
+                <div class="service-price-tag">From <strong>₹1,200</strong></div>
+            </div>
+            <div class="service-card-body">
+                <h3>Tire Care &amp; Alignment</h3>
+                <p>Computerized 3D laser wheel alignment, high-speed dynamic alloy balancing, and precision tire rotation.</p>
+                <ul class="service-feature-checklist">
+                    <li><i class="fas fa-check-circle"></i> 3D Computerized Laser Alignment</li>
+                    <li><i class="fas fa-check-circle"></i> Dynamic Alloy Wheel Balancing</li>
+                    <li><i class="fas fa-check-circle"></i> Nitrogen Inflation &amp; Tread Check</li>
+                </ul>
+                <a href="{% url 'book_service' %}" class="service-book-btn">
+                    <span>Book Service</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 5. Full Engine Tuning -->
+        <div class="service-card-item">
+            <div class="service-thumb-wrap">
+                <img src="{% static 'images/service_engine.jpg' %}" alt="Full Engine &amp; Electronic Tuning" class="service-thumb-img">
+                <div class="service-price-tag">From <strong>₹3,499</strong></div>
+            </div>
+            <div class="service-card-body">
+                <h3>Full Vehicle &amp; Engine Tuning</h3>
+                <p>Complete mechanical overhaul, throttle body decarbonization, spark plug replacement, and AC performance tune-up.</p>
+                <ul class="service-feature-checklist">
+                    <li><i class="fas fa-check-circle"></i> Throttle Body &amp; Injector Cleaning</li>
+                    <li><i class="fas fa-check-circle"></i> Iridium Spark Plugs Inspection</li>
+                    <li><i class="fas fa-check-circle"></i> Battery Load &amp; Alternator Test</li>
+                </ul>
+                <a href="{% url 'book_service' %}" class="service-book-btn">
+                    <span>Book Service</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ── Why Choose Us Section ── -->
+<section class="why-us" id="why-us">
+    <div class="why-container">
+        <div class="why-header">
+            <span class="sub-heading">WHY CHOOSE AUTOFIXPRO</span>
+            <h2>Why Car Owners Trust Us</h2>
+            <p>We redefine automobile service with complete transparency, genuine parts, and master craftsmanship.</p>
+        </div>
+
+        <div class="why-grid">
+            <div class="why-card">
+                <div class="why-icon"><i class="fas fa-bolt"></i></div>
+                <h3>Same-Day Quick Turnaround</h3>
+                <p>Most periodic maintenance and routine services completed on the same day without delay.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>100% Genuine Spare Parts</h3>
+                <p>We source only original OEM spare parts with official manufacturer warranty.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon"><i class="fas fa-laptop"></i></div>
+                <h3>Digital Service History</h3>
+                <p>Access your complete repair logs, invoice receipts, and service dates anytime online.</p>
+            </div>
+            <div class="why-card">
+                <div class="why-icon"><i class="fas fa-tag"></i></div>
+                <h3>Transparent Fixed Pricing</h3>
+                <p>No unexpected bills or hidden charges. Upfront estimates before any work begins.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── How It Works Section ── -->
+<section class="how-it-works" id="how-it-works">
+    <span class="sub-heading">SIMPLE 3-STEP PROCESS</span>
+    <h2>How AutoFixPro Works</h2>
+    <p class="section-desc">Get your vehicle serviced in three effortless steps.</p>
+
+    <div class="steps-grid">
+        <div class="step-card">
+            <div class="step-number">01</div>
+            <h3>Register &amp; Add Vehicle</h3>
+            <p>Create your account and register your vehicle brand, model, and registration plate number.</p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">02</div>
+            <h3>Book Service Slot</h3>
+            <p>Select your required service type, preferred date, time, and describe any vehicle issues.</p>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">03</div>
+            <h3>Track &amp; Pay Online</h3>
+            <p>Monitor live repair status, view completed service logs, and pay securely via UPI or Card.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── Testimonials Section ── -->
+<section class="testimonials">
+    <span class="sub-heading">TESTIMONIALS</span>
+    <h2>What Our Customers Say</h2>
+    <div class="testimonials-grid">
+        {% if reviews %}
+            {% for r in reviews %}
+            <div class="testimonial-card">
+                <div class="stars">
+                    {% for i in "12345"|make_list %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                </div>
+                <p>"{{ r.comment|default:'Outstanding workshop service, transparent pricing and highly professional mechanics!' }}"</p>
+                <div class="client-info">
+                    <div class="client-avatar">{{ r.user.fullname|first|upper }}</div>
+                    <div>
+                        <h4>{{ r.user.fullname }}</h4>
+                        <span>{{ r.booking.vehicle.brand }} {{ r.booking.vehicle.model }} Owner</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"AutoFixPro has completely changed how I service my car. The real-time tracking feature and transparent pricing are amazing!"</p>
+                <div class="client-info">
+                    <div class="client-avatar">RK</div>
+                    <div>
+                        <h4>Rajesh Kumar</h4>
+                        <span>Honda City Owner</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"Very professional mechanics and upfront estimates. They completed my Creta's brake overhaul on time. Highly recommended!"</p>
+                <div class="client-info">
+                    <div class="client-avatar">SP</div>
+                    <div>
+                        <h4>Sneh Patel</h4>
+                        <span>Hyundai Creta Owner</span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ── FAQ Section ── -->
+<section class="faq-section" id="faq">
+    <span class="sub-heading">FREQUENTLY ASKED QUESTIONS</span>
+    <h2>Got Questions? We Have Answers</h2>
+
+    <div class="faq-grid">
+        <div class="faq-card">
+            <h4>Q: How do I book a service appointment?</h4>
+            <p>Simply register or log into your account, add your vehicle details, click 'Book Service', and choose your preferred date and time.</p>
+        </div>
+        <div class="faq-card">
+            <h4>Q: How can I track my vehicle's repair status?</h4>
+            <p>Go to 'My Bookings' in your account. You can view whether your service is Pending, In Progress, or Completed in real-time.</p>
+        </div>
+        <div class="faq-card">
+            <h4>Q: What payment options are supported?</h4>
+            <p>We accept all digital payment methods including UPI (Google Pay, PhonePe, Paytm), Credit/Debit Cards, Net Banking, and Cash at Workshop.</p>
+        </div>
+        <div class="faq-card">
+            <h4>Q: Do you use original spare parts?</h4>
+            <p>Yes! We exclusively use 100% genuine OEM spare parts with manufacturer guarantees for maximum safety and longevity.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── Call to Action Banner ── -->
+<section class="cta-banner">
+    <div class="cta-banner-content">
+        <h2>Ready for a Smoother, Safer Drive?</h2>
+        <p>Book your vehicle service today and experience workshop care powered by digital convenience.</p>
+        {% if request.session.user_id %}
+            <a href="{% url 'book_service' %}" class="btn-primary">Book an Appointment Now</a>
+        {% else %}
+            <a href="{% url 'register' %}" class="btn-primary">Register Free Account</a>
+        {% endif %}
+    </div>
+</section>
+
+{% include 'includes/footer.html' %}
+
+</body>
+</html>

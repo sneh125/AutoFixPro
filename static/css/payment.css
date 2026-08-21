@@ -1,0 +1,100 @@
+/* ── payment.css — Payment Page ── */
+
+body { background: var(--bg-body); }
+.page-main { max-width: 720px; margin: 0 auto; padding: calc(var(--navbar-h) + 40px) 24px 64px; }
+.form-wrapper { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); overflow: hidden; }
+.form-header { padding: 32px 36px 26px; border-bottom: 1px solid var(--border); background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); position: relative; overflow: hidden; }
+.form-header::before { content: ''; position: absolute; bottom: -60px; right: -40px; width: 200px; height: 200px; background: var(--primary); border-radius: 50%; opacity: 0.08; }
+.header-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-light); border: 1px solid var(--primary-ring); color: var(--primary); padding: 6px 14px; border-radius: var(--r-sm); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+.header-badge svg { width: 14px; height: 14px; fill: currentColor; }
+.form-header h1 { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.form-header p { color: #94A3B8; font-size: 14px; }
+
+.form-box { padding: 32px 36px; }
+
+/* Summary card */
+.summary-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sum-row:last-child { border-bottom: none; }
+.sum-row.total {
+  background: var(--bg-card);
+  border-top: 2px solid var(--border);
+}
+.sum-label { font-size: 13.5px; font-weight: 600; color: var(--text-muted); }
+.sum-val { font-size: 14px; font-weight: 700; color: var(--text-main); text-align: right; }
+.sum-val.price { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--primary); }
+
+/* Payment methods */
+.payment-methods { margin-bottom: 28px; }
+.payment-methods h3 { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+.pay-option {
+  display: block;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+  position: relative;
+}
+.pay-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+.pay-option:hover { border-color: var(--primary); }
+.pay-option input[type="radio"] {
+  position: absolute;
+  opacity: 0; width: 0; height: 0;
+}
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.option-icon {
+  width: 42px; height: 42px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+}
+.option-icon svg { width: 22px; height: 22px; }
+.option-content div strong { font-size: 14.5px; font-weight: 700; display: block; margin-bottom: 2px; }
+.option-content div p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+/* Trust badge */
+.trust-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.trust-row svg { width: 14px; height: 14px; fill: var(--success); }
+
+/* Form actions */
+.form-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.submit-btn { padding: 14px 36px; background: var(--primary); color: #fff; border: none; border-radius: var(--r-md); font-size: 15.5px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-primary); transition: background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast); }
+.submit-btn:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,77,48,0.38); }
+.cancel-link { color: var(--text-muted); font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 18px; border: 1px solid var(--border); border-radius: var(--r-md); transition: background var(--t-fast); }
+.cancel-link:hover { background: var(--bg-subtle); color: var(--text-main); }
+
+@media (max-width: 600px) { .form-header { padding: 24px 20px 20px; } .form-box { padding: 24px 20px; } .sum-val { font-size: 13px; } .sum-val.price { font-size: 18px; } }

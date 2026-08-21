@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking #{{ booking.id }} Details - AutoFixPro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/view_booking.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+{% include 'includes/navbar.html' %}
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="page-main">
+
+    <div class="card-container">
+
+        <div class="card-header">
+            <div class="vehicle-head">
+                <div class="car-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg>
+                </div>
+                <div>
+                    <h1>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</h1>
+                    <span class="plate-number">{{ booking.vehicle.vehicle_number }}</span>
+                </div>
+            </div>
+            {% if booking.status|lower == 'pending' %}
+                <span class="status-badge pending">Pending</span>
+            {% elif booking.status|lower == 'in progress' or booking.status|lower == 'progress' %}
+                <span class="status-badge progress">In Progress</span>
+            {% elif booking.status|lower == 'completed' %}
+                <span class="status-badge completed">Completed</span>
+            {% else %}
+                <span class="status-badge">{{ booking.status }}</span>
+            {% endif %}
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-box">
+                <span class="label">Booking Reference ID</span>
+                <span class="value">#{{ booking.id }}</span>
+            </div>
+            <div class="detail-box">
+                <span class="label">Service Category</span>
+                <span class="value">{{ booking.service_type }}</span>
+            </div>
+            <div class="detail-box">
+                <span class="label">Appointment Schedule</span>
+                <span class="value">{{ booking.service_date }} at {{ booking.service_time }}</span>
+            </div>
+            <div class="detail-box">
+                <span class="label">Estimated Service Cost</span>
+                <span class="value" style="color: var(--primary); font-weight: 800;">₹{{ amount }}</span>
+            </div>
+            <div class="detail-box">
+                <span class="label">Registered Owner</span>
+                <span class="value">{{ booking.vehicle.user.fullname }}</span>
+            </div>
+            <div class="detail-box">
+                <span class="label">Vehicle Details</span>
+                <span class="value">{{ booking.vehicle.fuel_type }} | {{ booking.vehicle.year }} | {{ booking.vehicle.color }}</span>
+            </div>
+        </div>
+
+        {% if booking.description %}
+        <div class="description-section">
+            <h3>Problem Description / Mechanic Notes</h3>
+            <p>{{ booking.description }}</p>
+        </div>
+        {% endif %}
+
+        {% if payment %}
+        <div class="payment-section">
+            <div class="payment-header">
+        <h3>Payment Information</h3>
+        <span class="payment-status">✓ Paid</span>
+    </div>
+
+    <div class="payment-details">
+        <div class="payment-item">
+            <span class="payment-label">Payment Amount</span>
+            <span class="payment-value">₹{{ payment.amount }}</span>
+        </div>
+
+        <div class="payment-item">
+            <span class="payment-label">Payment Method</span>
+            <span class="payment-value">{{ payment.payment_method }}</span>
+        </div>
+
+        <div class="payment-item">
+            <span class="payment-label">Payment Date</span>
+            <span class="payment-value">
+                {{ payment.payment_date|date:"d M Y, h:i A" }}
+            </span>
+        </div>
+
+        <div class="payment-item">
+            <span class="payment-label">Payment Status</span>
+            <span class="payment-value paid-text">Paid Successfully</span>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="payment-section unpaid">
+    <div class="payment-header">
+        <h3>Payment Information</h3>
+        <span class="payment-status unpaid-status">Pending</span>
+    </div>
+
+    <div class="payment-details">
+        <div class="payment-item">
+            <span class="payment-label">Payment Amount</span>
+            <span class="payment-value">₹{{ amount }}</span>
+        </div>
+
+        <div class="payment-item">
+            <span class="payment-label">Payment Status</span>
+            <span class="payment-value">Payment Pending</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if booking.status|lower == 'completed' %}
+<div class="review-box" style="margin-top: 24px; padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 4px 16px rgba(15,23,42,0.03);">
+
+            {% if review %}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">
+                        <i class="fas fa-check-circle" style="color: #16a34a; margin-right: 6px;"></i> Your Service Review
+                    </h3>
+                    <div style="color: #f59e0b; font-size: 18px; letter-spacing: 3px;">
+                        {% for i in "12345"|make_list %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+                    </div>
+                </div>
+                <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 10px;">"{{ review.comment|default:'Great workshop service!' }}"</p>
+                <div style="font-size: 11.5px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-calendar-check"></i> Submitted on {{ review.created_at|date:"d M Y, h:i A" }} • Verified Customer Feedback
+                </div>
+            {% else %}
+                <h3 style="margin: 0 0 8px; font-size: 17px; font-weight: 800; color: #0f172a;">
+                    <i class="fas fa-star" style="color: #f59e0b; margin-right: 6px;"></i> Rate Your Workshop Experience
+                </h3>
+                <p style="color: #64748b; font-size: 13.5px; margin: 0 0 16px;">How was the mechanical care and service speed for your {{ booking.vehicle.brand }} {{ booking.vehicle.model }}?</p>
+
+                <form method="POST" action="{% url 'submit_review' booking.id %}">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 14px;">
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Select Rating (1 to 5 Stars) *</label>
+                        <select name="rating" required style="width: 100%; max-width: 220px; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc;">
+                            <option value="5">⭐⭐⭐⭐⭐ 5 - Excellent (Highly Satisfied)</option>
+                            <option value="4">⭐⭐⭐⭐ 4 - Very Good</option>
+                            <option value="3">⭐⭐⭐ 3 - Average</option>
+                            <option value="2">⭐⭐ 2 - Below Average</option>
+                            <option value="1">⭐ 1 - Poor</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Your Comments &amp; Feedback</label>
+                        <textarea name="comment" rows="3" placeholder="Share your experience regarding mechanic expertise, parts quality, or workshop speed..." style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-family: inherit; outline: none; box-sizing: border-box; background: #f8fafc;"></textarea>
+                    </div>
+
+                    <button type="submit" style="background: linear-gradient(135deg, #ff4d30 0%, #e03a1e 100%); color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(255,77,48,0.3);">
+                        <i class="fas fa-paper-plane"></i> Submit Feedback
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="action-footer">
+            <a href="{% url 'my_bookings' %}" class="back-link">← Back to My Bookings</a>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                {% if payment %}
+                    <a href="{% url 'download_invoice' booking.id %}" class="pay-btn" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; box-shadow: 0 4px 12px rgba(15,23,42,0.2);">
+                        <i class="fas fa-file-pdf" style="color: #ff4d30; margin-right: 6px;"></i> Download PDF Invoice
+                    </a>
+                    <a href="{% url 'preview_invoice' booking.id %}" target="_blank" class="pay-btn" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1;">
+                        <i class="fas fa-eye" style="margin-right: 6px;"></i> View
+                    </a>
+                {% endif %}
+
+                {% if not payment %}
+                    <a href="{% url 'payment' booking.id %}" class="pay-btn">Pay ₹{{ amount }} Now</a>
+                {% else %}
+                    <span class="pay-btn" style="background: #16a34a; cursor: default; pointer-events: none;">✓ Paid</span>
+                {% endif %}
+
+                {% if booking.status|lower == 'pending' and not payment %}
+                    <a href="{% url 'cancel_booking' booking.id %}" class="cancel-btn" onclick="return confirm('Are you sure you want to cancel this booking?')">Cancel Booking</a>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+{% include 'includes/footer.html' %}
+
+</body>
+</html>

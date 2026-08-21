@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Login - AutoFixPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+    <!-- Ambient Glowing Orbs -->
+    <div class="orb orb-orange"></div>
+    <div class="orb orb-blue"></div>
+
+    <div class="split-wrapper">
+
+        <!-- ── LEFT SHOWCASE PANEL ── -->
+        <div class="left-showcase-panel">
+
+            <!-- Brand Logo -->
+            <a href="{% url 'home' %}" class="showcase-brand">
+                <img src="{% static 'images/logo-light.png' %}" alt="AutoFixPro Logo">
+                <span>AutoFix<span class="highlight">Pro</span></span>
+            </a>
+
+            <!-- Middle Content & Features -->
+            <div class="showcase-content">
+                <div class="showcase-badge">
+                    <i class="fas fa-shield-alt"></i> Certified Garage Platform
+                </div>
+                <h2 class="showcase-title">Next-Gen Vehicle Care &amp; Service Platform</h2>
+                <p class="showcase-desc">
+                    Track mechanical inspections live, book certified repairs in 60 seconds, and manage your vehicle maintenance seamlessly.
+                </p>
+
+                <ul class="showcase-features">
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Instant online appointment booking &amp; doorstep pickup</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Live mechanical stage-by-stage status tracking</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Certified OEM genuine spare parts &amp; warranty</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Transparent digital job cards &amp; online billing</span>
+                    </li>
+                </ul>
+
+                <!-- Live Status Card -->
+                <div class="live-status-card">
+                    <div class="live-status-left">
+                        <div class="live-pulse-dot"></div>
+                        <div>
+                            <div class="live-status-title">Workshop Active</div>
+                            <div class="live-status-sub">24/7 Mechanics Ready</div>
+                        </div>
+                    </div>
+                    <div class="live-status-stat">15,000+ Fixed</div>
+                </div>
+            </div>
+
+            <!-- Left Panel Footer -->
+            <div class="showcase-footer">
+                <span><i class="fas fa-lock"></i> 256-Bit SSL Encrypted</span>
+                <span><i class="fas fa-star" style="color:#fbbf24;"></i> 4.9/5 Rating (1,200+ Reviews)</span>
+            </div>
+
+        </div>
+
+        <!-- ── RIGHT FORM PANEL ── -->
+        <div class="right-form-panel">
+
+            <!-- Mobile Brand Logo -->
+            <a href="{% url 'home' %}" class="mobile-brand">
+                <img src="{% static 'images/logo.png' %}" alt="AutoFixPro">
+                <span>AutoFix<span class="hl">Pro</span></span>
+            </a>
+
+            <div class="form-container">
+
+                <div class="form-header">
+                    <h1>Welcome Back</h1>
+                    <p>Enter your credentials to access your account dashboard</p>
+                </div>
+
+                <!-- Django Messages / Alerts -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            <i class="fas {% if 'success' in message.tags %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Login Form -->
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+
+                    <div class="field">
+                        <label for="login-email">Email Address</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-envelope field-icon"></i>
+                            <input type="email" id="login-email" name="email" placeholder="name@example.com" required autocomplete="email" autofocus>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label-row">
+                            <label for="login-password">Password</label>
+                            <a href="{% url 'forgot_password' %}" class="forgot-link">Forgot Password?</a>
+                        </div>
+                        <div class="input-wrap">
+                            <i class="fas fa-lock field-icon"></i>
+                            <input type="password" id="login-password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                            <i class="fas fa-eye password-toggle" id="togglePassword" title="Show / Hide"></i>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary-action" type="submit">
+                        <span>Sign In to Dashboard</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="divider-separator">
+                    <div class="divider-line"></div>
+                    <span>Fast Login</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <a href="{% url 'login_otp' %}" class="btn-secondary-action">
+                    <i class="fas fa-shield-alt" style="color: var(--primary, #ff4d30);"></i>
+                    <span>One-Click Login with Email OTP</span>
+                </a>
+
+                <div class="form-footer-prompt">
+                    Don't have an account? <a href="{% url 'register' %}">Create account here</a>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="{% url 'home' %}" class="back-home-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Homepage
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('togglePassword');
+        const passInput = document.getElementById('login-password');
+        if (toggle && passInput) {
+            toggle.addEventListener('click', function() {
+                const isPass = passInput.getAttribute('type') === 'password';
+                passInput.setAttribute('type', isPass ? 'text' : 'password');
+                this.classList.toggle('fa-eye', !isPass);
+                this.classList.toggle('fa-eye-slash', isPass);
+            });
+        }
+    });
+    </script>
+</body>
+</html>

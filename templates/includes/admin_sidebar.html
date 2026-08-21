@@ -1,0 +1,75 @@
+{% load static %}
+<!-- Sidebar Navigation -->
+<aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'admin_dashboard' %}" class="sidebar-logo-link" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+            <img src="{% static 'images/logo-light.png' %}" alt="Logo">
+            <h2>AutoFix<span>Pro</span></h2>
+        </a>
+        <button class="mobile-sidebar-close" id="sidebarCloseBtn" style="display:none; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;" aria-label="Close Sidebar">&times;</button>
+    </div>
+    
+    <nav class="sidebar-menu">
+        <a href="{% url 'admin_dashboard' %}" class="menu-item {% if active_page == 'dashboard' or request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z"/></svg>
+            Dashboard
+        </a>
+        <a href="{% url 'manage_users' %}" class="menu-item {% if active_page == 'users' or request.resolver_match.url_name == 'manage_users' or request.resolver_match.url_name == 'add_user' or request.resolver_match.url_name == 'edit_user' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Manage Users
+        </a>
+        <a href="{% url 'manage_vehicles' %}" class="menu-item {% if active_page == 'vehicles' or request.resolver_match.url_name == 'manage_vehicles' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+            Manage Vehicles
+        </a>
+        <a href="{% url 'manage_bookings' %}" class="menu-item {% if active_page == 'bookings' or request.resolver_match.url_name == 'manage_bookings' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+            Manage Bookings
+        </a>
+        <a href="{% url 'manage_payments' %}" class="menu-item {% if active_page == 'payments' or request.resolver_match.url_name == 'manage_payments' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+            Manage Payments
+        </a>
+        <a href="{% url 'inventory' %}" class="menu-item {% if active_page == 'inventory' or request.resolver_match.url_name == 'inventory' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+            Inventory
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="avatar">AD</div>
+            <div class="info">
+                <h4>Admin Panel</h4>
+                <span>admin@autofixpro.com</span>
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="logout-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            <span>Logout</span>
+        </a>
+    </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<script>
+(function() {
+    const sidebar = document.getElementById('adminSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const closeBtn = document.getElementById('sidebarCloseBtn');
+    const toggleBtn = document.getElementById('sidebarToggleBtn');
+
+    function openSidebar() {
+        if (sidebar) sidebar.classList.add('is-open');
+        if (overlay) overlay.classList.add('is-open');
+    }
+    function closeSidebar() {
+        if (sidebar) sidebar.classList.remove('is-open');
+        if (overlay) overlay.classList.remove('is-open');
+    }
+
+    if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+})();
+</script>

@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - AutoFixPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+    <!-- Ambient Glowing Orbs -->
+    <div class="orb orb-orange"></div>
+    <div class="orb orb-blue"></div>
+
+    <div class="split-wrapper">
+
+        <!-- ── LEFT SHOWCASE PANEL ── -->
+        <div class="left-showcase-panel">
+
+            <!-- Brand Logo -->
+            <a href="{% url 'home' %}" class="showcase-brand">
+                <img src="{% static 'images/logo-light.png' %}" alt="AutoFixPro Logo">
+                <span>AutoFix<span class="highlight">Pro</span></span>
+            </a>
+
+            <!-- Middle Content & Features -->
+            <div class="showcase-content">
+                <div class="showcase-badge">
+                    <i class="fas fa-rocket"></i> Get Started Today
+                </div>
+                <h2 class="showcase-title">Join 20,000+ Smart Vehicle Owners</h2>
+                <p class="showcase-desc">
+                    Register in 60 seconds to unlock digital service booking, real-time repair tracking, and automated maintenance records.
+                </p>
+
+                <ul class="showcase-features">
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Instant online appointment booking &amp; doorstep pickup</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Live mechanical stage-by-stage status tracking</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Manage all your cars &amp; bikes in one digital garage</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Upfront transparent estimates &amp; online payment</span>
+                    </li>
+                </ul>
+
+                <!-- Live Status Card -->
+                <div class="live-status-card">
+                    <div class="live-status-left">
+                        <div class="live-pulse-dot"></div>
+                        <div>
+                            <div class="live-status-title">Fast Onboarding</div>
+                            <div class="live-status-sub">Zero paperwork &bull; Instant OTP</div>
+                        </div>
+                    </div>
+                    <div class="live-status-stat">100% Free</div>
+                </div>
+            </div>
+
+            <!-- Left Panel Footer -->
+            <div class="showcase-footer">
+                <span><i class="fas fa-shield-check"></i> Email OTP Verified</span>
+                <span><i class="fas fa-lock"></i> 100% Data Privacy</span>
+            </div>
+
+        </div>
+
+        <!-- ── RIGHT FORM PANEL ── -->
+        <div class="right-form-panel">
+
+            <!-- Mobile Brand Logo -->
+            <a href="{% url 'home' %}" class="mobile-brand">
+                <img src="{% static 'images/logo.png' %}" alt="AutoFixPro">
+                <span>AutoFix<span class="hl">Pro</span></span>
+            </a>
+
+            <div class="form-container wide">
+
+                <div class="form-header">
+                    <h1>Create Account</h1>
+                    <p>Register today to book your certified workshop service</p>
+                </div>
+
+                <!-- Django Messages / Alerts -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            <i class="fas {% if 'success' in message.tags %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Registration Form -->
+                <form method="post" action="{% url 'register' %}">
+                    {% csrf_token %}
+
+                    <div class="fields-grid">
+
+                        <div class="field full">
+                            <label for="reg-name">Full Name</label>
+                            <div class="input-wrap">
+                                <i class="fas fa-user field-icon"></i>
+                                <input type="text" id="reg-name" name="fullname" placeholder="e.g. Rajesh Kumar" required autocomplete="name" autofocus>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="reg-email">Email Address</label>
+                            <div class="input-wrap">
+                                <i class="fas fa-envelope field-icon"></i>
+                                <input type="email" id="reg-email" name="email" placeholder="name@example.com" required autocomplete="email">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="reg-phone">Phone Number</label>
+                            <div class="input-wrap">
+                                <i class="fas fa-phone field-icon"></i>
+                                <input type="tel" id="reg-phone" name="phone" placeholder="10-digit phone" required autocomplete="tel">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="reg-password">Password</label>
+                            <div class="input-wrap">
+                                <i class="fas fa-lock field-icon"></i>
+                                <input type="password" id="reg-password" name="password" placeholder="Min. 8 characters" required autocomplete="new-password">
+                                <i class="fas fa-eye password-toggle" id="toggleRegPassword" title="Show / Hide"></i>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="reg-confirm">Confirm Password</label>
+                            <div class="input-wrap">
+                                <i class="fas fa-shield-alt field-icon"></i>
+                                <input type="password" id="reg-confirm" name="confirm_password" placeholder="Re-enter password" required autocomplete="new-password">
+                                <i class="fas fa-eye password-toggle" id="toggleConfirmPassword" title="Show / Hide"></i>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 7px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-shield-alt" style="color: var(--primary, #ff4d30); font-size: 14px;"></i>
+                        <span style="font-size: 11.5px; color: #9a3412; line-height: 1.35;">A 6-digit OTP will be sent to your email to verify your account securely.</span>
+                    </div>
+
+                    <button class="btn-primary-action" type="submit">
+                        <span>Create &amp; Verify Account</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="form-footer-prompt">
+                    Already have an account? <a href="{% url 'login' %}">Sign in here</a>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="{% url 'home' %}" class="back-home-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Homepage
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function setupToggle(toggleId, inputId) {
+            const toggle = document.getElementById(toggleId);
+            const input = document.getElementById(inputId);
+            if (toggle && input) {
+                toggle.addEventListener('click', function() {
+                    const isPass = input.getAttribute('type') === 'password';
+                    input.setAttribute('type', isPass ? 'text' : 'password');
+                    this.classList.toggle('fa-eye', !isPass);
+                    this.classList.toggle('fa-eye-slash', isPass);
+                });
+            }
+        }
+        setupToggle('toggleRegPassword', 'reg-password');
+        setupToggle('toggleConfirmPassword', 'reg-confirm');
+    });
+    </script>
+</body>
+</html>

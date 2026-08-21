@@ -1,0 +1,466 @@
+/* =========================================================
+   AutoFixPro - My Bookings
+   ========================================================= */
+
+.page-main {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: calc(var(--navbar-h) + 36px) 32px 70px;
+}
+
+/* ================= PAGE HEADER ================= */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.page-header h1 {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.page-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ================= CTA ================= */
+
+.cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 11px 20px;
+
+    background: var(--primary);
+    color: #fff;
+
+    border-radius: var(--r-md);
+
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+
+    box-shadow: var(--shadow-primary);
+
+    transition:
+        transform var(--t-fast),
+        background var(--t-fast),
+        box-shadow var(--t-fast);
+}
+
+.cta-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+/* ================= BOOKINGS GRID ================= */
+
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+/* ================= BOOKING CARD ================= */
+
+.booking-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+
+    padding: 22px;
+
+    box-shadow: var(--shadow-md);
+
+    transition:
+        transform var(--t-base),
+        box-shadow var(--t-base),
+        border-color var(--t-base);
+}
+
+.booking-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-ring);
+}
+
+/* ================= CARD TOP ================= */
+
+.card-top {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.vehicle-badge {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: var(--r-lg);
+
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.vehicle-badge svg {
+    width: 25px;
+    height: 25px;
+}
+
+.vehicle-title {
+    min-width: 0;
+    flex: 1;
+}
+
+.vehicle-title h3 {
+    margin: 0 0 4px;
+
+    font-size: 17px;
+    font-weight: 800;
+
+    color: var(--text-main);
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.plate {
+    display: inline-block;
+
+    padding: 3px 8px;
+
+    border-radius: 6px;
+
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+
+    color: var(--text-muted);
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 0.5px;
+}
+
+/* ================= STATUS ================= */
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.status-badge.pending {
+    background: rgba(217, 119, 6, 0.12);
+    color: var(--warning);
+}
+
+.status-badge.progress {
+    background: rgba(37, 99, 235, 0.12);
+    color: #2563EB;
+}
+
+.status-badge.completed {
+    background: rgba(22, 163, 74, 0.12);
+    color: var(--success);
+}
+
+/* ================= DETAILS ================= */
+
+.card-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+
+    padding: 20px 0;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    min-width: 0;
+}
+
+.detail-item svg {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
+
+    margin-top: 2px;
+
+    color: var(--primary);
+}
+
+.detail-item > div {
+    min-width: 0;
+}
+
+.detail-label {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: var(--text-muted);
+
+    font-size: 10px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    display: block;
+
+    color: var(--text-main);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    line-height: 1.4;
+
+    word-break: break-word;
+}
+
+/* ================= ACTIONS ================= */
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding-top: 17px;
+
+    border-top: 1px solid var(--border);
+}
+
+.card-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+
+    border-radius: var(--r-md);
+
+    text-decoration: none;
+
+    font-size: 12.5px;
+    font-weight: 700;
+
+    transition:
+        transform var(--t-fast),
+        background var(--t-fast);
+}
+
+.btn-view {
+    flex: 1;
+
+    background: var(--primary);
+    color: #fff;
+
+    padding: 0 16px;
+}
+
+.btn-view:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-pay {
+    background: rgba(22, 163, 74, 0.10);
+    color: var(--success);
+
+    padding: 0 16px;
+}
+
+.btn-pay:hover {
+    background: rgba(22, 163, 74, 0.18);
+}
+
+.btn-cancel {
+    background: rgba(220, 38, 38, 0.08);
+    color: #DC2626;
+
+    padding: 0 14px;
+}
+
+.btn-cancel:hover {
+    background: rgba(220, 38, 38, 0.15);
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty-state {
+    padding: 70px 30px;
+
+    text-align: center;
+
+    background: var(--bg-card);
+
+    border: 1px dashed var(--border-strong);
+
+    border-radius: var(--r-xl);
+}
+
+.empty-icon {
+    width: 65px;
+    height: 65px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.empty-icon svg {
+    width: 30px;
+    height: 30px;
+}
+
+.empty-state h3 {
+    margin: 0 0 7px;
+
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.empty-state p {
+    margin: 0 0 20px;
+
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1000px) {
+
+    .bookings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-details {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .page-main {
+        padding:
+            calc(var(--navbar-h) + 24px)
+            16px
+            50px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .page-header h1 {
+        font-size: 27px;
+    }
+
+    .cta-btn {
+        width: 100%;
+    }
+
+    .card-details {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .card-actions {
+        flex-wrap: wrap;
+    }
+
+    .btn-view {
+        flex-basis: 100%;
+    }
+
+    .btn-pay,
+    .btn-cancel {
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .booking-card {
+        padding: 17px;
+    }
+
+    .card-top {
+        align-items: flex-start;
+    }
+
+    .vehicle-badge {
+        width: 42px;
+        height: 42px;
+    }
+
+    .vehicle-badge svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .vehicle-title h3 {
+        font-size: 15px;
+    }
+
+    .status-badge {
+        font-size: 10px;
+        padding: 5px 8px;
+    }
+}
+.btn-paid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: default;
+}

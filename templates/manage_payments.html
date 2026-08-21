@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Payments - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+
+<div class="admin-layout">
+    
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-left">
+                    <h1>Payments &amp; Invoices Ledger</h1>
+                    <p>Monitor transaction logs, customer payments, and workshop revenue</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="date-badge" style="background: rgba(16,185,129,0.12); color: #16a34a; border-color: rgba(16,185,129,0.3);">
+                    Total Revenue: ₹{{ total_revenue|default:"0.00" }}
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-content">
+            
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>Transactions Record ({{ payments|length }})</h2>
+                </div>
+                
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Booking ID</th>
+                            <th>Customer Name</th>
+                            <th>Vehicle</th>
+                            <th>Amount</th>
+                            <th>Payment Mode</th>
+                            <th>Gateway ID</th>
+                            <th>Status</th>
+                            <th>Transaction Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if payments %}
+                            {% for payment in payments %}
+                                <tr>
+                                    <td><strong>#TXN-{{ payment.id }}</strong></td>
+                                    <td><a href="{% url 'manage_bookings' %}?search={{ payment.booking.id }}" style="color: var(--primary); font-weight: 700; text-decoration: none;">#BKG-{{ payment.booking.id }}</a></td>
+                                    <td>
+                                        <strong>{{ payment.booking.vehicle.user.fullname }}</strong><br>
+                                        <span style="font-size: 12px; color: var(--text-muted);">{{ payment.booking.vehicle.user.phone }}</span>
+                                    </td>
+                                    <td>
+                                        {{ payment.booking.vehicle.brand }} {{ payment.booking.vehicle.model }} ({{ payment.booking.vehicle.vehicle_number }})
+                                    </td>
+                                    <td><span style="color: #16a34a; font-weight: 800; font-size: 14.5px;">₹{{ payment.amount }}</span></td>
+                                    <td><span class="pay-method-badge" style="background: rgba(59,130,246,0.1); color: #2563eb; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 12px;">{{ payment.payment_method|upper }}</span></td>
+                                    <td>
+                                        {% if payment.razorpay_payment_id %}
+                                            <code style="font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #475569;">{{ payment.razorpay_payment_id }}</code>
+                                        {% else %}
+                                            <span style="color: var(--text-muted); font-size: 12px;">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.payment_status == 'Paid' %}
+                                            <span style="background: rgba(16,185,129,0.15); color: #16a34a; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">✓ Paid</span>
+                                        {% else %}
+                                            <span style="background: rgba(245,158,11,0.15); color: #d97706; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px;">{{ payment.payment_status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payment.payment_date|date:"d M Y, h:i A" }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">No payment transactions recorded yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

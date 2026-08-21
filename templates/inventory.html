@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+
+<div class="admin-layout">
+    
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-left">
+                    <h1>Parts &amp; Fluids Inventory</h1>
+                    <p>Monitor workshop spare parts stock levels, availability, and retail pricing</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="date-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+                    Stock Catalog ({{ inventory|length }} Items)
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-content">
+            
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>Workshop Spare Parts Stock Directory</h2>
+                </div>
+                
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Part Name</th>
+                            <th>Category</th>
+                            <th>Available Stock</th>
+                            <th>Retail Price (Unit)</th>
+                            <th>Stock Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if inventory %}
+                            {% for item in inventory %}
+                                <tr>
+                                    <td><strong>#PRT-{{ item.id }}</strong></td>
+                                    <td><strong>{{ item.name }}</strong></td>
+                                    <td><span style="background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">{{ item.category }}</span></td>
+                                    <td><strong>{{ item.quantity }}</strong> units</td>
+                                    <td><strong style="color: var(--text-main);">₹{{ item.unit_price }}</strong></td>
+                                    <td>
+                                        {% if item.status == 'In Stock' %}
+                                            <span class="status-badge status-completed">In Stock</span>
+                                        {% elif item.status == 'Low Stock' %}
+                                            <span class="status-badge status-pending">Low Stock</span>
+                                        {% else %}
+                                            <span class="status-badge status-cancelled">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">No inventory items recorded.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

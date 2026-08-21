@@ -1,0 +1,235 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Payment - AutoFixPro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/payment.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+    {% include 'includes/navbar.html' %}
+
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <main class="page-main">
+
+        <div class="form-wrapper">
+            <div class="form-header">
+                <div class="header-badge">SECURE PAYMENT CHECKOUT</div>
+                <h1>Complete Service Payment</h1>
+                <p>Review invoice details and select your preferred payment mode for Booking #{{ booking.id }}.</p>
+            </div>
+
+        <form method="POST" class="form-box">
+            {% csrf_token %}
+
+            <div class="summary-card">
+                <div class="sum-row">
+                    <span class="sum-label">Booking Reference</span>
+                    <span class="sum-val">#{{ booking.id }}</span>
+                </div>
+                <div class="sum-row">
+                    <span class="sum-label">Vehicle</span>
+                    <span class="sum-val">{{ booking.vehicle.brand }} {{ booking.vehicle.model }} ({{ booking.vehicle.vehicle_number }})</span>
+                </div>
+                <div class="sum-row">
+                    <span class="sum-label">Service Package</span>
+                    <span class="sum-val">{{ booking.service_type }}</span>
+                </div>
+                <div class="sum-row">
+                    <span class="sum-label">Appointment Date</span>
+                    <span class="sum-val">{{ booking.service_date }} ({{ booking.service_time }})</span>
+                </div>
+                <div class="sum-row total">
+                    <span class="sum-label">Total Amount Payable</span>
+                    <span class="sum-val price">₹{{ amount }}</span>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h3>Select Payment Method</h3>
+
+                <label class="pay-option">
+                    <input type="radio" name="payment_method" value="UPI" checked>
+                    <div class="option-content">
+                        <span class="option-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+                        </span>
+                        <div>
+                            <strong>Instant UPI / QR Code</strong>
+                            <p>Pay via Google Pay, PhonePe, Paytm, BHIM or Cred</p>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="pay-option">
+                    <input type="radio" name="payment_method" value="CARD">
+                    <div class="option-content">
+                        <span class="option-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                        </span>
+                        <div>
+                            <strong>Credit / Debit Card</strong>
+                            <p>Visa, MasterCard, RuPay, Maestro</p>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="pay-option">
+                    <input type="radio" name="payment_method" value="NET_BANKING">
+                    <div class="option-content">
+                        <span class="option-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-5-7L2 6v2h19V6l-9.5-5z"/></svg>
+                        </span>
+                        <div>
+                            <strong>Net Banking</strong>
+                            <p>All major Indian banks supported</p>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="pay-option">
+                    <input type="radio" name="payment_method" value="CASH">
+                    <div class="option-content">
+                        <span class="option-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+                        </span>
+                        <div>
+                            <strong>Cash on Delivery / Pay at Workshop</strong>
+                            <p>Pay in cash upon vehicle delivery or pickup</p>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="razorpay-button" class="submit-btn">
+                    Pay ₹{{ amount }} &amp; Confirm
+                </button>
+                <a href="{% url 'my_bookings' %}" class="cancel-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</main>
+
+{% include 'includes/footer.html' %}
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    // Helper: submit hidden form to server
+    function submitPaymentToServer(orderIdVal, paymentIdVal, signatureVal, methodVal) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url 'payment_success' booking.id %}";
+
+        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+        const fields = {
+            csrfmiddlewaretoken : csrfToken,
+            razorpay_order_id   : orderIdVal,
+            razorpay_payment_id : paymentIdVal,
+            razorpay_signature  : signatureVal,
+            payment_method      : methodVal,
+        };
+
+        for (const [key, value] of Object.entries(fields)) {
+            const input = document.createElement("input");
+            input.type  = "hidden";
+            input.name  = key;
+            input.value = value || "";
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    document.getElementById("razorpay-button").onclick = function(e) {
+        e.preventDefault();
+
+        const selectedMethod = document.querySelector("input[name='payment_method']:checked").value;
+
+        // CASH — no Razorpay window needed, directly record as cash payment
+        if (selectedMethod === "CASH") {
+            if (!confirm("You selected Cash Payment. Your booking will be confirmed. Pay at the workshop on the service day.")) {
+                return;
+            }
+            submitPaymentToServer(
+                "{{ razorpay_order_id }}",  // order id kept for reference
+                "CASH_" + Date.now(),       // dummy payment id
+                "CASH_BYPASS",              // dummy signature — server handles this
+                "CASH"
+            );
+            return;
+        }
+
+        // Online payment via Razorpay
+        const callbackUrl = window.location.origin + "{% url 'payment_success' booking.id %}";
+
+        let rzpMethod = "";
+        if (selectedMethod === "UPI") rzpMethod = "upi";
+        else if (selectedMethod === "CARD") rzpMethod = "card";
+        else if (selectedMethod === "NET_BANKING") rzpMethod = "netbanking";
+
+        const options = {
+            key         : "{{ razorpay_key_id }}",
+            amount      : {{ amount|floatformat:0 }} * 100,   // paise
+            currency    : "INR",
+            name        : "AutoFixPro",
+            description : "{{ booking.service_type }} - Booking #{{ booking.id }}",
+            order_id    : "{{ razorpay_order_id }}",
+            callback_url: callbackUrl,
+
+            handler: function (response) {
+                submitPaymentToServer(
+                    response.razorpay_order_id,
+                    response.razorpay_payment_id,
+                    response.razorpay_signature,
+                    selectedMethod
+                );
+            },
+
+            prefill: {
+                name    : "{{ booking.vehicle.user.fullname }}",
+                email   : "{{ booking.vehicle.user.email }}",
+                contact : "{{ booking.vehicle.user.phone }}",
+                method  : rzpMethod
+            },
+
+            theme: { color: "#2563eb" },
+
+            modal: {
+                ondismiss: function() {
+                    console.log("Razorpay window closed.");
+                }
+            }
+        };
+
+        const rzp = new Razorpay(options);
+
+        rzp.on("payment.failed", function(response) {
+            alert("Payment failed: " + (response.error && response.error.description ? response.error.description : "Transaction could not be completed.") + "\nPlease try again.");
+            console.error("Razorpay error:", response.error);
+        });
+
+        rzp.open();
+    };
+</script>
+</body>
+</html>

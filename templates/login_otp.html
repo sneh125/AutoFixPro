@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instant OTP Login - AutoFixPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+    <!-- Ambient Glowing Orbs -->
+    <div class="orb orb-orange"></div>
+    <div class="orb orb-blue"></div>
+
+    <div class="split-wrapper">
+
+        <!-- ── LEFT SHOWCASE PANEL ── -->
+        <div class="left-showcase-panel">
+
+            <a href="{% url 'home' %}" class="showcase-brand">
+                <img src="{% static 'images/logo-light.png' %}" alt="AutoFixPro Logo">
+                <span>AutoFix<span class="highlight">Pro</span></span>
+            </a>
+
+            <div class="showcase-content">
+                <div class="showcase-badge">
+                    <i class="fas fa-bolt"></i> Passwordless Authentication
+                </div>
+                <h2 class="showcase-title">Instant &amp; Secure Access with Email OTP</h2>
+                <p class="showcase-desc">
+                    Forget remembering passwords. Sign in directly with a 6-digit verification code delivered straight to your email inbox.
+                </p>
+
+                <ul class="showcase-features">
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>100% passwordless &amp; phishing-resistant</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Direct delivery via official Google SMTP</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>5-minute timed security expiration</span>
+                    </li>
+                </ul>
+
+                <div class="live-status-card">
+                    <div class="live-status-left">
+                        <div class="live-pulse-dot"></div>
+                        <div>
+                            <div class="live-status-title">Email OTP Engine</div>
+                            <div class="live-status-sub">Instant Delivery (Avg 2s)</div>
+                        </div>
+                    </div>
+                    <div class="live-status-stat">Live</div>
+                </div>
+            </div>
+
+            <div class="showcase-footer">
+                <span><i class="fas fa-lock"></i> 256-Bit SSL Encrypted</span>
+                <span><i class="fas fa-shield-alt"></i> Safe &amp; Fast</span>
+            </div>
+
+        </div>
+
+        <!-- ── RIGHT FORM PANEL ── -->
+        <div class="right-form-panel">
+
+            <a href="{% url 'home' %}" class="mobile-brand">
+                <img src="{% static 'images/logo.png' %}" alt="AutoFixPro">
+                <span>AutoFix<span class="hl">Pro</span></span>
+            </a>
+
+            <div class="form-container">
+
+                <div class="form-header">
+                    <h1>Instant OTP Login</h1>
+                    <p>Enter your registered email to receive a secure login code</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            <i class="fas {% if 'success' in message.tags %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'login_otp' %}">
+                    {% csrf_token %}
+
+                    <div class="field">
+                        <label for="login-email">Registered Email Address</label>
+                        <div class="input-wrap">
+                            <i class="fas fa-envelope field-icon"></i>
+                            <input type="email" id="login-email" name="email" placeholder="name@example.com" required autocomplete="email" autofocus>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary-action" type="submit">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Send 6-Digit OTP</span>
+                    </button>
+                </form>
+
+                <div class="divider-separator">
+                    <div class="divider-line"></div>
+                    <span>Alternative</span>
+                    <div class="divider-line"></div>
+                </div>
+
+                <a href="{% url 'login' %}" class="btn-secondary-action">
+                    <i class="fas fa-key" style="color: var(--primary, #ff4d30);"></i>
+                    <span>Login with Regular Password</span>
+                </a>
+
+                <div class="form-footer-prompt">
+                    Don't have an account? <a href="{% url 'register' %}">Create account</a>
+                </div>
+
+                <div style="text-align: center;">
+                    <a href="{% url 'home' %}" class="back-home-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Homepage
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

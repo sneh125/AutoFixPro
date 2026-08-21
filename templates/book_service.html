@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Service - AutoFixPro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/book_service.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+{% include 'includes/navbar.html' %}
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="page-main">
+
+    <div class="form-wrapper">
+        <div class="form-header">
+            <div class="header-badge">WORKSHOP APPOINTMENT</div>
+            <h1>Book a Vehicle Service</h1>
+            <p>Select your vehicle and choose your preferred service type, date, and time slot.</p>
+        </div>
+
+        {% if not vehicles %}
+            <div class="no-vehicle-warning">
+                <p>You haven't added any vehicles to your account yet.</p>
+                <a href="{% url 'add_vehicle' %}" class="nav-btn">+ Add Vehicle First</a>
+            </div>
+        {% else %}
+            <form method="post" class="form-box">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <div class="input-group full-width">
+                        <label for="vehicle">Select Your Vehicle</label>
+                        <select name="vehicle" id="vehicle" required>
+                            <option value="">Choose a registered vehicle</option>
+                            {% for v in vehicles %}
+                            <option value="{{ v.id }}" {% if request.GET.vehicle == v.id|stringformat:"s" %}selected{% endif %}>
+                                {{ v.brand }} {{ v.model }} — ({{ v.vehicle_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label for="service_type">Select Service Package</label>
+                        <select name="service_type" id="service_type" required>
+                            <option value="">Choose a service package</option>
+                            <option value="General Service">General Maintenance &amp; 40-Point Inspection — ₹1,499</option>
+                            <option value="Oil Change">Full Synthetic Engine Oil &amp; Filter Replacement — ₹899</option>
+                            <option value="Tire Change">Tire Rotation, Alignment &amp; Dynamic Balancing — ₹1,200</option>
+                            <option value="Brake Service">Brake Pad Tuning &amp; Fluid Flush — ₹1,850</option>
+                            <option value="Full Vehicle Service">Full Vehicle Overhaul &amp; Engine Diagnostics — ₹3,499</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="service_date">Preferred Service Date</label>
+                        <input type="date" id="service_date" name="service_date" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="service_time">Preferred Time Slot</label>
+                        <input type="time" id="service_time" name="service_time" required>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label for="description">Problem / Mechanic Instructions</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Describe any issues, odd noises, vibrations, or custom requests for our technician..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">Confirm &amp; Book Service</button>
+                    <a href="{% url 'dashboard' %}" class="cancel-link">Cancel</a>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+
+</main>
+
+<script>
+// Ensure minimum selectable date is today
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('service_date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+    }
+});
+</script>
+
+{% include 'includes/footer.html' %}
+
+</body>
+</html>

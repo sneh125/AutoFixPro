@@ -1,0 +1,322 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ meta.title }} - AutoFixPro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+    <style>
+        .otp-icon-circle {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: rgba(255, 77, 48, 0.1);
+            color: var(--primary, #ff4d30);
+            border: 1.5px solid rgba(255, 77, 48, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+        .otp-boxes {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 24px 0 22px;
+        }
+        .otp-digit {
+            width: 50px;
+            height: 58px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+            background: #f8fafc;
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: var(--font-display, 'Outfit', sans-serif);
+        }
+        .otp-digit:focus {
+            border-color: var(--primary, #ff4d30);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(255, 77, 48, 0.16);
+            transform: translateY(-2px);
+        }
+        .otp-email-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 6px 0 16px;
+        }
+        .resend-box {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13.5px;
+            color: #64748b;
+            text-align: center;
+        }
+        .resend-link {
+            color: var(--primary, #ff4d30);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .resend-link:hover {
+            color: #e03a1e;
+            text-decoration: underline;
+        }
+        .resend-link.disabled {
+            color: #94a3b8;
+            pointer-events: none;
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+        .timer-badge {
+            display: inline-block;
+            font-weight: 700;
+            color: var(--primary, #ff4d30);
+        }
+        @media (max-width: 480px) {
+            .otp-digit { width: 42px; height: 50px; font-size: 20px; }
+            .otp-boxes { gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glowing Orbs -->
+    <div class="orb orb-orange"></div>
+    <div class="orb orb-blue"></div>
+
+    <div class="split-wrapper">
+
+        <!-- ── LEFT SHOWCASE PANEL ── -->
+        <div class="left-showcase-panel">
+
+            <a href="{% url 'home' %}" class="showcase-brand">
+                <img src="{% static 'images/logo-light.png' %}" alt="AutoFixPro Logo">
+                <span>AutoFix<span class="highlight">Pro</span></span>
+            </a>
+
+            <div class="showcase-content">
+                <div class="showcase-badge">
+                    <i class="fas fa-shield-alt"></i> Security Verification
+                </div>
+                <h2 class="showcase-title">Two-Step Identity Verification</h2>
+                <p class="showcase-desc">
+                    To keep your account, vehicles, and booking invoices safe, please enter the 6-digit confirmation code we sent to your email.
+                </p>
+
+                <ul class="showcase-features">
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Delivered instantly via Google SMTP Cloud</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>5-Minute timed security expiry</span>
+                    </li>
+                    <li>
+                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
+                        <span>Auto-cleared upon successful verification</span>
+                    </li>
+                </ul>
+
+                <div class="live-status-card">
+                    <div class="live-status-left">
+                        <div class="live-pulse-dot"></div>
+                        <div>
+                            <div class="live-status-title">OTP Gateway Status</div>
+                            <div class="live-status-sub">Dispatched &amp; Waiting Input</div>
+                        </div>
+                    </div>
+                    <div class="live-status-stat">Active</div>
+                </div>
+            </div>
+
+            <div class="showcase-footer">
+                <span><i class="fas fa-lock"></i> SSL Secured</span>
+                <span><i class="fas fa-user-shield"></i> Fraud Protection</span>
+            </div>
+
+        </div>
+
+        <!-- ── RIGHT FORM PANEL ── -->
+        <div class="right-form-panel">
+
+            <a href="{% url 'home' %}" class="mobile-brand">
+                <img src="{% static 'images/logo.png' %}" alt="AutoFixPro">
+                <span>AutoFix<span class="hl">Pro</span></span>
+            </a>
+
+            <div class="form-container" style="text-align: center;">
+
+                <div class="otp-icon-circle">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+
+                <div class="form-header">
+                    <h1>{{ meta.title }}</h1>
+                    <p>Enter the 6-digit verification code sent to:</p>
+                    <div class="otp-email-chip">
+                        <i class="fas fa-envelope" style="color: var(--primary, #ff4d30);"></i>
+                        <span>{{ email }}</span>
+                    </div>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            <i class="fas {% if 'success' in message.tags %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST" id="otpForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="otp" id="combinedOtp">
+
+                    <div class="otp-boxes">
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code" autofocus required>
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                        <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    </div>
+
+                    <button class="btn-primary-action" type="submit" id="verifyBtn">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ meta.button_text }}</span>
+                    </button>
+                </form>
+
+                <div class="resend-box">
+                    Didn't receive the email code? <br>
+                    <span id="timerText" style="display:inline;">Resend in <span class="timer-badge" id="countdown">60</span>s</span>
+                    <a href="{% url 'resend_otp' purpose %}" id="resendBtn" class="resend-link disabled" style="display:none;">
+                        <i class="fas fa-redo"></i> Resend OTP Code
+                    </a>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <a href="{% url 'login' %}" class="back-home-btn">
+                        <i class="fas fa-arrow-left"></i> Cancel &amp; Back to Login
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- OTP Input Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const digits = document.querySelectorAll('.otp-digit');
+        const form = document.getElementById('otpForm');
+        const hiddenOtp = document.getElementById('combinedOtp');
+        const resendBtn = document.getElementById('resendBtn');
+        const timerText = document.getElementById('timerText');
+        const countdownEl = document.getElementById('countdown');
+
+        // Focus first box automatically
+        digits[0].focus();
+
+        digits.forEach((input, idx) => {
+            input.addEventListener('input', function(e) {
+                // Only allow numbers
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
+                if (this.value.length === 1) {
+                    if (idx < digits.length - 1) {
+                        digits[idx + 1].focus();
+                    } else {
+                        // All 6 digits entered
+                        submitIfComplete();
+                    }
+                }
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value && idx > 0) {
+                    digits[idx - 1].focus();
+                }
+            });
+
+            // Handle Paste event (Ctrl+V)
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+                const pasteNums = pasteData.replace(/[^0-9]/g, '').slice(0, 6);
+                
+                if (pasteNums.length > 0) {
+                    pasteNums.split('').forEach((char, i) => {
+                        if (digits[i]) digits[i].value = char;
+                    });
+                    const nextIdx = Math.min(pasteNums.length, digits.length - 1);
+                    digits[nextIdx].focus();
+                    if (pasteNums.length === 6) {
+                        submitIfComplete();
+                    }
+                }
+            });
+        });
+
+        function submitIfComplete() {
+            let code = '';
+            digits.forEach(d => code += d.value);
+            if (code.length === 6) {
+                hiddenOtp.value = code;
+                form.submit();
+            }
+        }
+
+        form.addEventListener('submit', function(e) {
+            let code = '';
+            digits.forEach(d => code += d.value);
+            if (code.length < 6) {
+                e.preventDefault();
+                alert('Please enter all 6 digits of the OTP code.');
+                return;
+            }
+            hiddenOtp.value = code;
+        });
+
+        // 60-second countdown timer for resend OTP
+        let timeLeft = 60;
+        const timer = setInterval(() => {
+            timeLeft--;
+            countdownEl.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timerText.style.display = 'none';
+                resendBtn.style.display = 'inline';
+                resendBtn.classList.remove('disabled');
+            }
+        }, 1000);
+    });
+    </script>
+</body>
+</html>

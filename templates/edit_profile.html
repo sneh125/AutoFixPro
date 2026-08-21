@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - AutoFixPro</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+</head>
+<body>
+
+{% include 'includes/navbar.html' %}
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+        <div class="alert-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="page-main">
+
+    <div class="form-wrapper">
+        <div class="form-header">
+            <div class="header-badge">ACCOUNT PREFERENCES</div>
+            <h1>Edit Profile Information</h1>
+            <p>Keep your contact details up to date for invoices and appointment alerts.</p>
+        </div>
+
+        <form method="POST" class="form-box">
+            {% csrf_token %}
+
+            <div class="input-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" value="{{ name|default:user.fullname }}" required>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ email|default:user.email }}" required>
+            </div>
+
+            <div class="input-group">
+                <label for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" value="{{ phone|default:user.phone }}" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-btn">Save Profile Changes</button>
+                <a href="{% url 'profile' %}" class="cancel-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</main>
+
+{% include 'includes/footer.html' %}
+
+</body>
+</html>

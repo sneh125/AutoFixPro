@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+
+<div class="admin-layout">
+    
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-left">
+                    <h1>Service Bookings Management</h1>
+                    <p>Track mechanical repairs, schedule appointments, and update live service status</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <form method="get" class="admin-search-form">
+                    <input type="text" name="search" class="admin-search-input" placeholder="Search by customer, vehicle..." value="{{ search|default:'' }}">
+                    <button type="submit" class="admin-search-submit">Search</button>
+                    {% if search or status_filter %}
+                        <a href="{% url 'manage_bookings' %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-content">
+            
+            {% if messages %}
+                <div class="messages-container" style="padding:0; margin: 0 0 20px 0;">
+                    {% for message in messages %}
+                        <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(16,185,129,0.12); color: #16a34a; border: 1px solid rgba(16,185,129,0.3);">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h2>Workshop Service Bookings ({{ bookings|length }})</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{% url 'manage_bookings' %}" class="action-edit-btn" style="background: {% if not status_filter %}#0f172a{% else %}#f1f5f9{% endif %}; color: {% if not status_filter %}#fff{% else %}#475569{% endif %};">All</a>
+                        <a href="{% url 'manage_bookings' %}?status=Pending" class="action-edit-btn" style="background: {% if status_filter == 'Pending' %}#f59e0b{% else %}#fef3c7{% endif %}; color: {% if status_filter == 'Pending' %}#fff{% else %}#92400e{% endif %};">Pending</a>
+                        <a href="{% url 'manage_bookings' %}?status=In Progress" class="action-edit-btn" style="background: {% if status_filter == 'In Progress' %}#3b82f6{% else %}#dbeafe{% endif %}; color: {% if status_filter == 'In Progress' %}#fff{% else %}#1e40af{% endif %};">In Progress</a>
+                        <a href="{% url 'manage_bookings' %}?status=Completed" class="action-edit-btn" style="background: {% if status_filter == 'Completed' %}#10b981{% else %}#d1fae5{% endif %}; color: {% if status_filter == 'Completed' %}#fff{% else %}#065f46{% endif %};">Completed</a>
+                    </div>
+                </div>
+                
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Vehicle</th>
+                            <th>Service Package</th>
+                            <th>Appointment Schedule</th>
+                            <th>Current Status</th>
+                            <th>Update Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if bookings %}
+                            {% for booking in bookings %}
+                                <tr>
+                                    <td><strong>#{{ booking.id }}</strong></td>
+                                    <td>
+                                        <strong>{{ booking.vehicle.user.fullname }}</strong><br>
+                                        <span style="font-size: 12px; color: var(--text-muted);">{{ booking.vehicle.user.phone }}</span>
+                                    </td>
+                                    <td>
+                                        <span>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</span><br>
+                                        <span class="plate-badge">{{ booking.vehicle.vehicle_number }}</span>
+                                    </td>
+                                    <td>{{ booking.service_type }}</td>
+                                    <td>
+                                        {{ booking.service_date }}<br>
+                                        <span style="font-size: 12px; color: var(--text-muted);">{{ booking.service_time }}</span>
+                                    </td>
+                                    <td>
+                                        {% if booking.status|lower == 'pending' %}
+                                            <span class="status-badge status-pending">Pending</span>
+                                        {% elif booking.status|lower == 'in progress' or booking.status|lower == 'progress' %}
+                                            <span class="status-badge status-progress">In Progress</span>
+                                        {% else %}
+                                            <span class="status-badge status-completed">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form action="{% url 'update_booking_status' booking.id %}" method="POST" style="display: flex; gap: 8px; align-items: center;">
+                                            {% csrf_token %}
+                                            <select name="status" class="select-status">
+                                                <option value="Pending" {% if booking.status == "Pending" %}selected{% endif %}>Pending</option>
+                                                <option value="In Progress" {% if booking.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                                                <option value="Completed" {% if booking.status == "Completed" %}selected{% endif %}>Completed</option>
+                                            </select>
+                                            <button type="submit" class="btn-update">Save</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No service bookings match your criteria.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>
