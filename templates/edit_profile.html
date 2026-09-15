@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile - AutoFixPro</title>
+    <title>Edit Profile — AutoFixPro</title>
+    <meta name="description" content="Update your personal details and contact number on AutoFixPro.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,43 +27,205 @@
 </div>
 {% endif %}
 
-<main class="page-main">
+<main class="edit-profile-page">
 
-    <div class="form-wrapper">
-        <div class="form-header">
-            <div class="header-badge">ACCOUNT PREFERENCES</div>
-            <h1>Edit Profile Information</h1>
-            <p>Keep your contact details up to date for invoices and appointment alerts.</p>
+    <div class="edit-container">
+
+        <!-- Top Navigation / Breadcrumb -->
+        <div class="edit-top-nav">
+            <a href="{% url 'profile' %}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to My Profile
+            </a>
+            <span class="nav-badge">Account Settings</span>
         </div>
 
-        <form method="POST" class="form-box">
-            {% csrf_token %}
-
-            <div class="input-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" value="{{ name|default:user.fullname }}" required>
+        <!-- Main Form Card -->
+        <div class="settings-card">
+            
+            <!-- Card Header Banner -->
+            <div class="settings-header">
+                <div class="header-content">
+                    <div class="avatar-badge-wrap">
+                        <div class="user-avatar-large" id="avatarPreview">
+                            {{ name|first|upper }}
+                        </div>
+                        <div class="avatar-edit-icon" title="Active Account Profile">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                    <div class="header-text">
+                        <div class="title-pill"><i class="fas fa-id-card"></i> Profile Customization</div>
+                        <h1 id="headerName">{{ name }}</h1>
+                        <p class="user-meta-sub">
+                            <span class="status-dot"></span> Verified Client Account &bull; <span id="headerEmail">{{ email }}</span>
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <div class="input-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" value="{{ email|default:user.email }}" required>
-            </div>
+            <!-- Form Body -->
+            <form method="POST" id="profileEditForm" class="settings-form-body">
+                {% csrf_token %}
 
-            <div class="input-group">
-                <label for="phone">Phone Number</label>
-                <input type="text" id="phone" name="phone" value="{{ phone|default:user.phone }}" required>
-            </div>
+                <div class="form-sections-wrapper">
+                    
+                    <!-- Left Column: Personal Inputs -->
+                    <div class="form-main-fields">
+                        <div class="section-title-bar">
+                            <i class="fas fa-user-edit"></i>
+                            <h3>Personal Information</h3>
+                        </div>
 
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">Save Profile Changes</button>
-                <a href="{% url 'profile' %}" class="cancel-link">Cancel</a>
-            </div>
-        </form>
+                        <!-- Full Name -->
+                        <div class="input-field-block">
+                            <label for="name">
+                                Full Name <span class="required-star">*</span>
+                            </label>
+                            <div class="input-box-wrap">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="name" name="name" value="{{ name|default:user.fullname }}" placeholder="Enter your full name" required autocomplete="name">
+                            </div>
+                            <small class="input-helper">This name appears on your workshop booking receipts &amp; GST invoices.</small>
+                        </div>
+
+                        <!-- Email Address -->
+                        <div class="input-field-block">
+                            <label for="email">
+                                Email Address <span class="required-star">*</span>
+                                <span class="verified-tag"><i class="fas fa-shield-alt"></i> OTP Verified</span>
+                            </label>
+                            <div class="input-box-wrap">
+                                <i class="fas fa-envelope input-icon"></i>
+                                <input type="email" id="email" name="email" value="{{ email|default:user.email }}" placeholder="your.email@example.com" required autocomplete="email">
+                            </div>
+                            <small class="input-helper">Used for password recovery, instant OTP logins, and invoice delivery.</small>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="input-field-block">
+                            <label for="phone">
+                                Mobile Contact Number <span class="required-star">*</span>
+                                <span class="digit-count-badge" id="digitBadge">10/10 digits</span>
+                            </label>
+                            <div class="input-box-wrap phone-input-box">
+                                <div class="country-prefix">
+                                    <span class="flag">🇮🇳</span> +91
+                                </div>
+                                <input type="tel" id="phone" name="phone" value="{{ phone|default:user.phone }}" placeholder="9876543210" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required autocomplete="tel">
+                            </div>
+                            <small class="input-helper">Strict 10-digit number used by mechanics for repair status calls.</small>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Security & Preferences Side-Card -->
+                    <div class="form-side-panel">
+                        <div class="section-title-bar">
+                            <i class="fas fa-shield-check"></i>
+                            <h3>Security &amp; Shortcuts</h3>
+                        </div>
+
+                        <div class="security-box">
+                            <div class="sec-item">
+                                <div class="sec-item-icon icon-pass"><i class="fas fa-key"></i></div>
+                                <div class="sec-item-content">
+                                    <h4>Account Password</h4>
+                                    <p>Encrypted with PBKDF2 / SHA-256</p>
+                                </div>
+                                <a href="{% url 'change_password' %}" class="btn-sec-action">Change</a>
+                            </div>
+
+                            <div class="sec-item">
+                                <div class="sec-item-icon icon-otp"><i class="fas fa-mobile-screen"></i></div>
+                                <div class="sec-item-content">
+                                    <h4>Instant OTP Login</h4>
+                                    <p>Login anytime with a 6-digit email code</p>
+                                </div>
+                                <span class="active-badge"><i class="fas fa-check"></i> Active</span>
+                            </div>
+
+                            <div class="sec-item">
+                                <div class="sec-item-icon icon-veh"><i class="fas fa-car-side"></i></div>
+                                <div class="sec-item-content">
+                                    <h4>Vehicle Fleet</h4>
+                                    <p>Manage your registered cars &amp; bikes</p>
+                                </div>
+                                <a href="{% url 'my_vehicle' %}" class="btn-sec-action">View</a>
+                            </div>
+                        </div>
+
+                        <div class="privacy-note-card">
+                            <i class="fas fa-user-shield privacy-icon"></i>
+                            <div>
+                                <h5>Your Data is Secure</h5>
+                                <p>AutoFixPro uses strict role-based access control and 256-bit encryption to protect your records.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Form Action Buttons -->
+                <div class="settings-action-bar">
+                    <button type="submit" class="btn-save-main">
+                        <i class="fas fa-save"></i> Save Profile Changes
+                    </button>
+                    <a href="{% url 'profile' %}" class="btn-cancel-main">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
 
 </main>
 
 {% include 'includes/footer.html' %}
+
+<script>
+    // Live preview & 10-digit phone enforcement
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const phoneInput = document.getElementById('phone');
+    const avatarPreview = document.getElementById('avatarPreview');
+    const headerName = document.getElementById('headerName');
+    const headerEmail = document.getElementById('headerEmail');
+    const digitBadge = document.getElementById('digitBadge');
+
+    if (nameInput) {
+        nameInput.addEventListener('input', function() {
+            const val = this.value.trim();
+            headerName.textContent = val || 'Your Name';
+            avatarPreview.textContent = val ? val.charAt(0).toUpperCase() : 'U';
+        });
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            headerEmail.textContent = this.value.trim() || 'your.email@example.com';
+        });
+    }
+
+    if (phoneInput) {
+        function enforceDigits() {
+            let digits = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+            phoneInput.value = digits;
+            
+            if (digitBadge) {
+                digitBadge.textContent = `${digits.length}/10 digits`;
+                if (digits.length === 10) {
+                    digitBadge.className = 'digit-count-badge is-valid';
+                } else {
+                    digitBadge.className = 'digit-count-badge is-invalid';
+                }
+            }
+        }
+        phoneInput.addEventListener('input', enforceDigits);
+        enforceDigits();
+    }
+</script>
 
 </body>
 </html>

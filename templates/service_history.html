@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service History — AutoFixPro</title>
-    <meta name="description" content="View your complete vehicle service history, past appointments, and completed repairs.">
+    <title>Service History &amp; Vehicle Passport — AutoFixPro</title>
+    <meta name="description" content="Official vehicle maintenance logbook, lifetime service passport, parts warranty records, and GST tax invoices.">
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/service_history.css' %}">
     <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
@@ -27,172 +30,407 @@
 
 <main class="page-main">
 
-    <!-- Page Header -->
+    <!-- Page Header (Digital Service Passport) -->
     <div class="page-header">
         <div>
-            <h1>Service History</h1>
-            <p>Archive of all completed maintenance, repairs, and past service appointments</p>
+            <div class="passport-kicker-badge">
+                <i class="fas fa-passport"></i> DIGITAL SERVICE PASSPORT
+            </div>
+            <h1>Service History &amp; Maintenance Logbook</h1>
+            <p>Official verified archive of completed repairs, warranty coverage certificates, and GST tax invoices</p>
         </div>
-        <a href="{% url 'book_service' %}" class="cta-btn">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            Book New Service
-        </a>
-    </div>
-
-    <!-- Summary Stats Row -->
-    <div class="history-stats">
-        <div class="stat-chip">
-            <div class="stat-chip-icon green">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-            </div>
-            <div class="stat-chip-text">
-                <span>Completed</span>
-                <strong>{{ completed_services|length }}</strong>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <div class="stat-chip-icon blue">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5C3.89 3 3.01 3.9 3.01 5L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-            </div>
-            <div class="stat-chip-text">
-                <span>Services Booked</span>
-                <strong>{{ completed_services|length }}</strong>
-            </div>
-        </div>
-        <div class="stat-chip">
-            <div class="stat-chip-icon amber">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            </div>
-            <div class="stat-chip-text">
-                <span>All Time</span>
-                <strong>AutoFixPro</strong>
-            </div>
+        <div class="header-action-cluster">
+            <a href="{% url 'export_service_history_csv' %}" class="btn-logbook-export" title="Export complete maintenance records as CSV spreadsheet">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <button onclick="window.print()" class="btn-logbook-print" title="Print physical maintenance passport">
+                <i class="fas fa-print"></i> Print Passport
+            </button>
+            <a href="{% url 'book_service' %}" class="cta-btn">
+                <i class="fas fa-calendar-plus"></i> Book Service
+            </a>
         </div>
     </div>
 
-    <!-- History Cards -->
-    <div class="history-list">
-
-        {% for booking in completed_services %}
-        <div class="history-card">
-            <!-- Top: Vehicle + Status -->
-            <div class="history-top">
-                <div class="vehicle-info">
-                    <h3>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</h3>
-                    <span class="plate">{{ booking.vehicle.vehicle_number }}</span>
-                </div>
-                <span class="completed-badge">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                    Completed
-                </span>
-            </div>
-
-            <!-- Detail grid -->
-            <div class="history-details">
-                <div class="hd-item">
-                    <span class="hd-label">Service ID</span>
-                    <span class="hd-value">#{{ booking.id }}</span>
-                </div>
-                <div class="hd-item">
-                    <span class="hd-label">Service Package</span>
-                    <span class="hd-value">{{ booking.service_type }}</span>
-                </div>
-                <div class="hd-item">
-                    <span class="hd-label">Date</span>
-                    <span class="hd-value">{{ booking.service_date }}</span>
-                </div>
-                <div class="hd-item">
-                    <span class="hd-label">Time Slot</span>
-                    <span class="hd-value">{{ booking.service_time }}</span>
+    <!-- ── History Skeleton Screen ── -->
+    <div id="history-skeleton" class="history-skeleton-wrapper" aria-hidden="true">
+        <div class="history-stats">
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 60px; margin-bottom: 0;"></div>
                 </div>
             </div>
-            {% if booking.payment %}
-            <div class="history-payment">
-                <div class="payment-title">
-                    <span>Payment Information</span>
-                    <span class="history-paid">✓ Paid</span>
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 80px; margin-bottom: 0;"></div>
                 </div>
+            </div>
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 90px; margin-bottom: 0;"></div>
+                </div>
+            </div>
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 70px; margin-bottom: 0;"></div>
+                </div>
+            </div>
+        </div>
 
-                <div class="payment-info-grid">
-                    <div>
-                        <span class="payment-label">Amount</span>
-                        <strong>₹{{ booking.payment.amount }}</strong>
+        <div style="height: 52px; border-radius: 12px; margin-bottom: 24px;" class="skeleton"></div>
+
+        <div class="history-list">
+            <div class="skeleton-history-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                        <div>
+                            <div class="skeleton skeleton-text lg" style="width: 180px; margin-bottom: 6px;"></div>
+                            <div class="skeleton skeleton-text sm" style="width: 100px; margin: 0;"></div>
+                        </div>
                     </div>
+                    <div class="skeleton skeleton-btn" style="width: 110px; height: 28px; border-radius: 20px;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">
+                    <div class="skeleton" style="height: 52px; border-radius: 8px;"></div>
+                    <div class="skeleton" style="height: 52px; border-radius: 8px;"></div>
+                    <div class="skeleton" style="height: 52px; border-radius: 8px;"></div>
+                    <div class="skeleton" style="height: 52px; border-radius: 8px;"></div>
+                </div>
+                <div class="skeleton" style="height: 76px; border-radius: 10px;"></div>
+            </div>
+        </div>
+    </div>
 
-                    <div>
-                        <span class="payment-label">Payment Method</span>
-                        <strong>{{ booking.payment.payment_method }}</strong>
-                    </div>
+    <!-- ── History Content ── -->
+    <div id="history-content" class="history-content-wrapper is-loading">
 
-                    <div>
-                        <span class="payment-label">Payment Date</span>
-                        <strong>
-                            {{ booking.payment.payment_date|date:"d M Y, h:i A" }}
-                        </strong>
-                    </div>
+        <!-- Balanced 4-Metric Stats Row -->
+        <div class="history-stats">
+            <div class="stat-chip">
+                <div class="stat-chip-icon green">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Lifetime Completed</span>
+                    <strong>{{ total_completed }} Services</strong>
                 </div>
             </div>
-            {% else %}
-            <div class="history-payment unpaid-payment">
-                <div class="payment-title">
-                    <span>Payment Information</span>
-                    <span class="history-pending">Payment Pending</span>
+            
+            <div class="stat-chip">
+                <div class="stat-chip-icon blue">
+                    <i class="fas fa-receipt"></i>
                 </div>
-
-                <div class="payment-info-grid">
-                    <div>
-                        <span class="payment-label">Amount</span>
-                        <strong>Payment not received</strong>
-                    </div>
+                <div class="stat-chip-text">
+                    <span>Total Investment</span>
+                    <strong>₹{{ total_spent|floatformat:0 }}</strong>
                 </div>
             </div>
-            {% endif %}
 
-            {% if booking.description %}
-            <div class="description-box">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-                <p>{{ booking.description }}</p>
+            <div class="stat-chip">
+                <div class="stat-chip-icon amber">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Active Warranty</span>
+                    <strong>100% Protected</strong>
+                </div>
             </div>
-            {% endif %}
 
-            <div class="history-footer" style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
-                {% if booking.review %}
-                    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 20px; background: rgba(245, 158, 11, 0.12); color: #b45309; font-size: 12px; font-weight: 700; border: 1px solid rgba(245, 158, 11, 0.25);">
-                        <i class="fas fa-star" style="color: #f59e0b;"></i> {{ booking.review.rating }} / 5 Rated
-                    </span>
-                {% else %}
-                    <a href="{% url 'view_booking' booking.id %}" class="view-btn" style="background: rgba(245, 158, 11, 0.1); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.3);">
-                        <i class="fas fa-star"></i> Rate Service
+            <div class="stat-chip">
+                <div class="stat-chip-icon purple">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Parts Authenticity</span>
+                    <strong>Genuine OEM</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Logbook Selector & Filter Bar -->
+        <div class="history-filter-bar">
+            
+            <div class="logbook-selector-row">
+                <div class="logbook-select-group">
+                    <label for="vehicleSelect"><i class="fas fa-car"></i> Select Vehicle Logbook:</label>
+                    <select id="vehicleSelect" onchange="filterVehiclePassport(this.value)" class="vehicle-passport-select">
+                        <option value="{% url 'service_history' %}">All Fleet Vehicles ({{ total_completed }} Total Logs)</option>
+                        {% for v in vehicles %}
+                            <option value="{% url 'service_history' %}?vehicle_id={{ v.id }}" {% if selected_vehicle_id == v.id|stringformat:"s" %}selected{% endif %}>
+                                {{ v.brand }} {{ v.model }} ({{ v.vehicle_number }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Cross-Link to Active Bookings -->
+                <div class="active-bookings-callout-link">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <span>Have active repairs in progress?</span>
+                    <a href="{% url 'my_bookings' %}">View Live Work Orders &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <form method="GET" action="{% url 'service_history' %}" class="history-search-form">
+                {% if selected_vehicle_id %}
+                    <input type="hidden" name="vehicle_id" value="{{ selected_vehicle_id }}">
+                {% endif %}
+                <div class="history-search-input-wrap">
+                    <i class="fas fa-magnifying-glass search-icon"></i>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search by service package, technician notes, or license plate..." autocomplete="off">
+                </div>
+                <button type="submit" class="history-filter-submit">
+                    <i class="fas fa-filter"></i> Search Logbook
+                </button>
+                {% if search_query or selected_vehicle_id %}
+                    <a href="{% url 'service_history' %}" class="history-filter-clear">
+                        <i class="fas fa-times"></i> Reset Filter
                     </a>
                 {% endif %}
+            </form>
 
+            <!-- Quick Filter Chips -->
+            <div class="quick-filter-chips">
+                <span class="chips-label">Quick filter package:</span>
+                <a href="{% url 'service_history' %}{% if selected_vehicle_id %}?vehicle_id={{ selected_vehicle_id }}{% endif %}" class="filter-pill {% if not search_query %}is-active{% endif %}">All Packages</a>
+                <a href="{% url 'service_history' %}?q=General+Service{% if selected_vehicle_id %}&vehicle_id={{ selected_vehicle_id }}{% endif %}" class="filter-pill {% if search_query == 'General Service' %}is-active{% endif %}">General Service</a>
+                <a href="{% url 'service_history' %}?q=Oil+Change{% if selected_vehicle_id %}&vehicle_id={{ selected_vehicle_id }}{% endif %}" class="filter-pill {% if search_query == 'Oil Change' %}is-active{% endif %}">Oil Change</a>
+                <a href="{% url 'service_history' %}?q=Brake+Service{% if selected_vehicle_id %}&vehicle_id={{ selected_vehicle_id }}{% endif %}" class="filter-pill {% if search_query == 'Brake Service' %}is-active{% endif %}">Brake Service</a>
+                <a href="{% url 'service_history' %}?q=Tire+Change{% if selected_vehicle_id %}&vehicle_id={{ selected_vehicle_id }}{% endif %}" class="filter-pill {% if search_query == 'Tire Change' %}is-active{% endif %}">Tire Change</a>
+                <a href="{% url 'service_history' %}?q=Full+Vehicle+Service{% if selected_vehicle_id %}&vehicle_id={{ selected_vehicle_id }}{% endif %}" class="filter-pill {% if search_query == 'Full Vehicle Service' %}is-active{% endif %}">Full Vehicle Service</a>
+            </div>
+        </div>
+
+        <!-- History Cards List (Passport Entries) -->
+        <div class="history-list">
+
+            {% for booking in completed_services %}
+            <div class="history-card">
+                
+                <!-- Card Top: Vehicle Avatar & Status -->
+                <div class="history-top">
+                    <div class="history-vehicle-col">
+                        <div class="history-car-badge">
+                            <i class="fas {{ booking.vehicle.icon_class|default:'fa-car' }}"></i>
+                        </div>
+                        <div class="history-vehicle-meta">
+                            <div class="history-name-row">
+                                <h3>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</h3>
+                                <span class="category-badge-pill"><i class="fas {{ booking.vehicle.icon_class|default:'fa-car' }}"></i> {{ booking.vehicle.category }}</span>
+                                <span class="passport-entry-tag"><i class="fas fa-stamp"></i> Verified Logbook Entry</span>
+                            </div>
+                            <div class="history-tags-row">
+                                <span class="plate">{{ booking.vehicle.vehicle_number }}</span>
+                                {% if booking.vehicle.fuel_type %}
+                                    <span class="fuel-chip {{ booking.vehicle.fuel_badge_color }}">{{ booking.vehicle.fuel_type }}</span>
+                                {% endif %}
+                                {% if booking.vehicle.year %}
+                                    <span class="year-chip">{{ booking.vehicle.year }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="history-status-col">
+                        <span class="completed-badge">
+                            <i class="fas fa-circle-check"></i>
+                            Service Completed
+                        </span>
+                        <span class="completion-date-sub">Completed on {{ booking.service_date|date:"d M Y" }}</span>
+                    </div>
+                </div>
+
+                <!-- 4-Column Specs Details Grid -->
+                <div class="history-details-grid">
+                    <div class="hd-box">
+                        <span class="hd-label"><i class="fas fa-hashtag"></i> Booking Reference</span>
+                        <strong class="hd-value">#BK-{{ booking.id }}</strong>
+                    </div>
+                    <div class="hd-box">
+                        <span class="hd-label"><i class="fas fa-wrench"></i> Service Package</span>
+                        <strong class="hd-value text-primary">{{ booking.service_type }}</strong>
+                    </div>
+                    <div class="hd-box">
+                        <span class="hd-label"><i class="far fa-calendar-check"></i> Work Order Date</span>
+                        <strong class="hd-value">{{ booking.service_date }}</strong>
+                    </div>
+                    <div class="hd-box">
+                        <span class="hd-label"><i class="far fa-clock"></i> Completion Time</span>
+                        <strong class="hd-value">{{ booking.service_time }}</strong>
+                    </div>
+                </div>
+
+                <!-- Payment Receipt Slip Box -->
                 {% if booking.payment %}
-                <a href="{% url 'download_invoice' booking.id %}" class="view-btn" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: 1px solid #334155;">
-                    <i class="fas fa-file-pdf" style="color: #ff4d30; margin-right: 6px;"></i> Download PDF Invoice
-                </a>
+                <div class="history-payment-slip">
+                    <div class="payment-title-bar">
+                        <div class="payment-title-left">
+                            <i class="fas fa-receipt payment-icon"></i>
+                            <div>
+                                <h4>Verified Payment Receipt</h4>
+                                <span class="payment-sub">Official workshop transaction record &bull; GST Invoice Available</span>
+                            </div>
+                        </div>
+                        <span class="history-paid-badge">
+                            <i class="fas fa-shield-check"></i> Paid &amp; Cleared Online
+                        </span>
+                    </div>
+
+                    <div class="payment-info-grid">
+                        <div class="pig-item">
+                            <span class="payment-label">Amount Paid (Incl. GST)</span>
+                            <strong class="amount-value">₹{{ booking.payment.amount }}</strong>
+                        </div>
+
+                        <div class="pig-item">
+                            <span class="payment-label">Payment Mode</span>
+                            <strong class="method-value">
+                                <i class="fas fa-credit-card"></i> {{ booking.payment.payment_method }}
+                            </strong>
+                        </div>
+
+                        <div class="pig-item">
+                            <span class="payment-label">Cleared On</span>
+                            <strong class="date-value">
+                                <i class="far fa-clock"></i> {{ booking.payment.payment_date|date:"d M Y, h:i A" }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="history-payment-slip unpaid-payment">
+                    <div class="payment-title-bar">
+                        <div class="payment-title-left">
+                            <i class="fas fa-clock-rotate-left payment-icon amber"></i>
+                            <div>
+                                <h4>Pending Settlement</h4>
+                                <span class="payment-sub">Mechanical service completed &bull; Pending invoice payment</span>
+                            </div>
+                        </div>
+                        <span class="history-pending-badge">Pending Settlement</span>
+                    </div>
+
+                    <div class="payment-unpaid-actions">
+                        <span class="unpaid-note">Settle this invoice securely online via UPI, Card, or NetBanking.</span>
+                        <a href="{% url 'payment' booking.id %}" class="btn-pay-now">
+                            <i class="fas fa-lock"></i> Settle Invoice Now
+                        </a>
+                    </div>
+                </div>
                 {% endif %}
-                <a href="{% url 'view_booking' booking.id %}" class="view-btn">
-                    View Details &rarr;
-                </a>
+
+                <!-- Mechanic Work Description Box -->
+                {% if booking.description %}
+                <div class="description-callout">
+                    <i class="fas fa-clipboard-check"></i>
+                    <div class="desc-content">
+                        <strong>Technician Job Notes:</strong>
+                        <p>{{ booking.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Card Actions Footer Bar -->
+                <div class="history-footer">
+                    <div class="footer-left">
+                        {% if booking.review %}
+                            <div class="rating-display-chip">
+                                <div class="rating-stars">
+                                    <i class="fas fa-star"></i>
+                                    <strong>{{ booking.review.rating }} / 5</strong>
+                                </div>
+                                <span class="rating-text">Client Review</span>
+                            </div>
+                        {% else %}
+                            <a href="{% url 'view_booking' booking.id %}" class="rate-service-btn">
+                                <i class="far fa-star"></i> Rate This Service
+                            </a>
+                        {% endif %}
+                        <span class="warranty-badge">
+                            <i class="fas fa-shield-halved"></i> 6-Month Active Spares Warranty
+                        </span>
+                    </div>
+
+                    <div class="footer-right">
+                        {% if booking.payment %}
+                        <a href="{% url 'download_invoice' booking.id %}" class="btn-download-invoice" title="Download Official GST Tax Invoice (PDF)">
+                            <i class="fas fa-file-arrow-down"></i> Tax Invoice (PDF)
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'book_service' %}?vehicle={{ booking.vehicle.id }}&service_type={{ booking.service_type|urlencode }}" class="btn-repeat-service" title="Repeat this service for {{ booking.vehicle.brand }} {{ booking.vehicle.model }}">
+                            <i class="fas fa-rotate-right"></i> Book Again
+                        </a>
+                        <a href="{% url 'view_booking' booking.id %}" class="btn-view-details">
+                            <span>View Full Log</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
             </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-passport"></i>
+                </div>
+                {% if search_query or selected_vehicle_id %}
+                    <h3>No Matching Passport Records Found</h3>
+                    <p>We couldn't find any completed service entries matching your selected criteria.</p>
+                    <a href="{% url 'service_history' %}" class="cta-btn" style="margin-top: 10px;">
+                        <i class="fas fa-list"></i> View All Vehicle Passports
+                    </a>
+                {% else %}
+                    <h3>No Completed Services in Logbook</h3>
+                    <p>Once your booked services are marked as Completed by our workshop technicians, they will automatically appear here in your permanent digital service passport.</p>
+                    <a href="{% url 'book_service' %}" class="cta-btn" style="margin-top: 10px;">
+                        <i class="fas fa-calendar-plus"></i> Book Your First Service
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+
         </div>
 
-        {% empty %}
-        <div class="empty-state">
-            <div class="empty-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
-            </div>
-            <h3>No Completed Services Yet</h3>
-            <p>Once your booked services are marked as Completed by our team, they'll appear here for your records.</p>
-            <a href="{% url 'book_service' %}" class="cta-btn" style="margin-top: 6px;">Book a Service Now</a>
-        </div>
-        {% endfor %}
-
-    </div>
+    </div><!-- End #history-content -->
 
 </main>
 
 {% include 'includes/footer.html' %}
+
+<script>
+function filterVehiclePassport(url) {
+    if (url) {
+        window.location.href = url;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        const skeleton = document.getElementById("history-skeleton");
+        const content = document.getElementById("history-content");
+        if (skeleton && content) {
+            content.style.display = "block";
+            requestAnimationFrame(function() {
+                skeleton.classList.add("fade-out");
+                content.classList.remove("is-loading");
+                setTimeout(function() {
+                    skeleton.style.display = "none";
+                }, 350);
+            });
+        }
+    }, 400);
+});
+</script>
 
 </body>
 </html>

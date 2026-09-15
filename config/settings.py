@@ -11,15 +11,22 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import sys
+import warnings
 from pathlib import Path
 from dotenv import load_dotenv
+
+# Suppress 3rd-party library deprecation warnings (e.g. razorpay pkg_resources)
+warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
+warnings.filterwarnings("ignore", category=UserWarning, module=".*razorpay.*")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module=".*pkg_resources.*")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-change-me-in-env')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY', 'django-insecure-default-change-me-in-env')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
 
@@ -111,26 +118,79 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Media files (User uploaded images and documents)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Razorpay API Credentials
 RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
 
-# Email Settings (Gmail SMTP / Loaded securely from .env)
+# ============================================================
+# EMAIL / OTP PRODUCTION CONFIGURATION (Step 7)
+# ============================================================
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'AutoFixPro <support@autofixpro.com>')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').replace(' ', '').strip()
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"AutoFixPro <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "webmaster@localhost")
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER or 'root@localhost')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
+
+# OTP Security Parameters
 EMAIL_OTP_EXPIRY_MINUTES = int(os.getenv('EMAIL_OTP_EXPIRY_MINUTES', 5))
+EMAIL_OTP_RESEND_SECONDS = int(os.getenv('EMAIL_OTP_RESEND_SECONDS', 30))
+EMAIL_OTP_RESEND_COOLDOWN = int(os.getenv('EMAIL_OTP_RESEND_COOLDOWN', EMAIL_OTP_RESEND_SECONDS))
+EMAIL_OTP_MAX_RESENDS = int(os.getenv('EMAIL_OTP_MAX_RESENDS', 5))
+EMAIL_OTP_MAX_ATTEMPTS = int(os.getenv('EMAIL_OTP_MAX_ATTEMPTS', 5))
+
+# ============================================================
+# PRODUCTION DEPLOYMENT & SECURITY SETTINGS (Step 9)
+# ============================================================
+
+# Session security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+
+# Automatically enable secure cookies in Production (HTTPS)
+SESSION_COOKIE_SECURE = not DEBUG
+
+# CSRF security
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = not DEBUG
+
+# CSRF Trusted Origins for live domain/hosting
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+]
+
+# SSL Redirect (Enable in production once SSL/HTTPS domain is live)
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False').lower() in ('true', '1', 't') if not DEBUG else False
+
+# HSTS (HTTP Strict Transport Security)
+if not DEBUG and os.getenv('ENABLE_HSTS', 'False').lower() in ('true', '1', 't'):
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', 31536000))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# Browser Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 

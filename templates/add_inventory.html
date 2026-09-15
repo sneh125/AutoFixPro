@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Spare Part - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+<body>
+
+<div class="admin-layout">
+    
+    {% include 'includes/admin_sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="admin-container">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="header-left">
+                    <h1>Add New Spare Part</h1>
+                    <p>Register a new mechanical component, fluid, or accessory into the workshop warehouse</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="{% url 'inventory' %}" class="admin-btn-cancel">
+                    <i class="fas fa-arrow-left" style="margin-right: 4px;"></i> Back to Inventory
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <main class="admin-content">
+            
+            {% if messages %}
+                <div class="messages-container" style="padding:0; margin: 0 0 24px 0;">
+                    {% for message in messages %}
+                        <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="admin-form-card">
+                <form method="POST" enctype="multipart/form-data" class="admin-form-grid">
+                    {% csrf_token %}
+
+                    <div class="admin-input-group">
+                        <label for="name">Spare Part / Fluid Name *</label>
+                        <input type="text" id="name" name="name" placeholder="e.g. Premium Synthetic Engine Oil 5W-40 (4L)" required>
+                    </div>
+
+                    <div class="admin-input-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="" disabled selected>-- Select Part Category --</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                            <option value="Other">Other Miscellaneous</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="admin-input-group">
+                            <label for="quantity">Initial Stock Quantity *</label>
+                            <input type="number" id="quantity" name="quantity" min="0" step="1" placeholder="e.g. 25" required>
+                        </div>
+
+                        <div class="admin-input-group">
+                            <label for="price">Retail Unit Price (₹) *</label>
+                            <input type="number" id="price" name="price" min="1" step="0.01" placeholder="e.g. 1499.00" required>
+                        </div>
+                    </div>
+
+                    <!-- Spare Part Image Upload Section -->
+                    <div class="admin-input-group" style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 18px; margin-top: 4px;">
+                        <label style="display: block; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+                            <i class="fas fa-camera" style="color: var(--primary); margin-right: 6px;"></i> Spare Part Photo (Recommended)
+                        </label>
+                        <p style="font-size: 12.5px; color: #64748b; margin: 0 0 14px 0;">
+                            Upload a high-quality product photo or container image so staff and mechanics can instantly recognize the item.
+                        </p>
+
+                        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                            <!-- Preview Box -->
+                            <div id="imagePreviewContainer" style="width: 80px; height: 80px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                                <img id="imagePreview" src="/static/images/service_periodic.jpg" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+
+                            <div style="flex: 1; min-width: 220px;">
+                                <input type="file" id="image" name="image" accept="image/*" onchange="previewSelectedImage(this)" style="display: block; width: 100%; font-size: 13px; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; background: #fff; cursor: pointer;">
+                                <div style="margin-top: 10px;">
+                                    <span style="font-size: 12px; color: #64748b;">Or paste direct image URL:</span>
+                                    <input type="url" id="image_url" name="image_url" placeholder="https://example.com/part-photo.jpg" oninput="previewUrlImage(this.value)" style="margin-top: 4px; font-size: 12.5px; padding: 7px 12px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="admin-form-actions">
+                        <button type="submit" class="admin-btn-primary">
+                            <i class="fas fa-plus-circle" style="margin-right: 4px;"></i> Save Spare Part
+                        </button>
+                        <a href="{% url 'inventory' %}" class="admin-btn-cancel">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <script>
+            function previewSelectedImage(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('imagePreview').src = e.target.result;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
+            function previewUrlImage(url) {
+                if (url && url.trim().length > 5) {
+                    const img = document.getElementById('imagePreview');
+                    img.src = url.trim();
+                }
+            }
+            </script>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+        </footer>
+    </div>
+</div>
+
+</body>
+</html>

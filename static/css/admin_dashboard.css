@@ -231,6 +231,56 @@ body { background: var(--bg-body); color: var(--text-main); }
 .admin-search-submit { padding: 10px 18px; background: var(--text-main); color: #fff; border: none; border-radius: var(--r-md); font-size: 13px; font-weight: 700; cursor: pointer; transition: background var(--t-fast); }
 .admin-search-submit:hover { background: #1E293B; }
 
+/* ── Admin Charts ── */
+.admin-charts-section { margin-top: 30px; }
+.admin-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+.chart-card {
+  background: var(--bg-card);
+  border-radius: var(--r-xl);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 24px 28px;
+}
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.chart-tag {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--primary);
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.chart-card-header h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+}
+.chart-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* Footer */
 .admin-footer { background: var(--bg-card); border-top: 1px solid var(--border); padding: 18px 36px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
@@ -256,3 +306,61 @@ body { background: var(--bg-body); color: var(--text-main); }
   .admin-content { padding: 16px; }
   .admin-footer { padding: 14px 20px; }
 }
+
+/* =========================================================
+   Admin Portal Skeleton Screen Styles
+   ========================================================= */
+
+.admin-skeleton-wrapper {
+  display: block;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-skeleton-wrapper.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-content-wrapper {
+  display: block;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-content-wrapper.is-loading {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.skeleton-admin-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.skeleton-admin-table {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.skeleton-admin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.skeleton-admin-row:last-child {
+  border-bottom: none;
+}
+

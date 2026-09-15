@@ -3,11 +3,12 @@ from django.urls import path
 from django.http import HttpResponse
 from workshop import views
 
+
 def favicon(request):
     return HttpResponse(status=204)
 
+
 urlpatterns = [
-    # Customer Portal & Authentication
     path('', views.home, name='home'),
     path('contact/', views.contact, name='contact'),
     path('register/', views.register, name='register'),
@@ -33,12 +34,13 @@ urlpatterns = [
     path('cancel_booking/<int:booking_id>/', views.cancel_booking, name='cancel_booking'),
     path('payment/<int:booking_id>/', views.payment, name='payment'),
     path('payment/<int:booking_id>/success/', views.payment_success, name='payment_success'),
+    path('payment/<int:booking_id>/cash/', views.cash_payment, name='cash_payment'),
     path('service_history/', views.service_history, name='service_history'),
+    path('service_history/export-csv/', views.export_service_history_csv, name='export_service_history_csv'),
     path('profile/', views.profile, name='profile'),
     path('edit_profile/', views.edit_profile, name='edit_profile'),
     path('change_password/', views.change_password, name='change_password'),
 
-    # Admin Management Portal
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin-dashboard/users/', views.manage_users, name='manage_users'),
     path('admin-dashboard/users/add/', views.add_user, name='add_user'),
@@ -46,18 +48,26 @@ urlpatterns = [
     path('admin-dashboard/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
     path('admin-dashboard/vehicles/', views.manage_vehicles, name='manage_vehicles'),
     path('admin-dashboard/bookings/', views.manage_bookings, name='manage_bookings'),
+    path('admin-dashboard/bookings/export-csv/', views.export_bookings_csv, name='export_bookings_csv'),
     path('admin-dashboard/bookings/update-status/<int:booking_id>/', views.update_booking_status, name='update_booking_status'),
     path('admin-dashboard/payments/', views.manage_payments, name='manage_payments'),
+    path('admin-dashboard/payments/export-csv/', views.export_payments_csv, name='export_payments_csv'),
     path('admin-dashboard/inventory/', views.inventory, name='inventory'),
+    path('admin-dashboard/inventory/add/', views.add_inventory, name='add_inventory'),
+    path('admin-dashboard/inventory/edit/<int:item_id>/', views.edit_inventory, name='edit_inventory'),
+    path('admin-dashboard/inventory/delete/<int:item_id>/', views.delete_inventory, name='delete_inventory'),
+    path('admin-dashboard/messages/', views.manage_messages, name='manage_messages'),
+    path('admin-dashboard/messages/toggle/<int:message_id>/', views.toggle_message_status, name='toggle_message_status'),
+    path('admin-dashboard/messages/delete/<int:message_id>/', views.delete_message, name='delete_message'),
+    path('admin-dashboard/reviews/', views.manage_reviews, name='manage_reviews'),
+    path('admin-dashboard/reviews/delete/<int:review_id>/', views.delete_review, name='delete_review'),
 
-    # Fallback shortcuts
-    path('manage-users/', views.manage_users),
-    path('add_user/', views.add_user),
-    path('edit-user/<int:user_id>/', views.edit_user),
-    path('delete_user/<int:user_id>/', views.delete_user),
-    path('manage_vehicles/', views.manage_vehicles),
-
-    # System & Django Admin
     path('favicon.ico', favicon, name='favicon'),
     path('admin/', admin.site.urls),
 ]
+
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

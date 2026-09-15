@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
 </head>
@@ -33,69 +35,256 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="date-badge" style="background: rgba(16,185,129,0.12); color: #16a34a; border-color: rgba(16,185,129,0.3);">
-                    Total Revenue: ₹{{ total_revenue|default:"0.00" }}
-                </div>
+                <form method="get" class="admin-search-form">
+                    {% if status_filter %}
+                        <input type="hidden" name="status" value="{{ status_filter }}">
+                    {% endif %}
+                    <input type="text" name="search" class="admin-search-input" placeholder="Search TXN, booking, client, plate..." value="{{ search|default:'' }}">
+                    <button type="submit" class="admin-search-submit">
+                        <i class="fas fa-search" style="margin-right: 4px;"></i> Search
+                    </button>
+                    {% if search or status_filter %}
+                        <a href="{% url 'manage_payments' %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 600; margin-left: 4px;">Clear</a>
+                    {% endif %}
+                </form>
             </div>
         </header>
 
         <!-- Main Body -->
         <main class="admin-content">
             
+            {% if messages %}
+                <div class="messages-container" style="padding:0; margin: 0 0 24px 0;">
+                    {% for message in messages %}
+                        <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(16,185,129,0.12); color: #16a34a; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-info-circle"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Stats Overview Cards -->
+            <div class="admin-cards">
+                <div class="card card-green">
+                    <div class="card-info">
+                        <h2>₹{{ total_revenue|floatformat:2 }}</h2>
+                        <p>Total Revenue (Settled)</p>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-indian-rupee-sign" style="font-size: 24px;"></i>
+                    </div>
+                </div>
+
+                <div class="card card-blue">
+                    <div class="card-info">
+                        <h2>{{ total_count|default:0 }}</h2>
+                        <p>Total Transactions</p>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-receipt" style="font-size: 24px;"></i>
+                    </div>
+                </div>
+
+                <div class="card card-purple">
+                    <div class="card-info">
+                        <h2>{{ paid_count|default:0 }}</h2>
+                        <p>Paid &amp; Invoiced</p>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-circle-check" style="font-size: 24px;"></i>
+                    </div>
+                </div>
+
+                <div class="card card-orange">
+                    <div class="card-info">
+                        <h2>{{ pending_count|default:0 }}</h2>
+                        <p>Pending / Incomplete</p>
+                    </div>
+                    <div class="card-icon">
+                        <i class="fas fa-clock" style="font-size: 24px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Table Container -->
             <div class="table-container">
                 <div class="table-header">
-                    <h2>Transactions Record ({{ payments|length }})</h2>
+                    <div>
+                        <h2>Transactions Record ({{ payments|length }})</h2>
+                        {% if search %}
+                            <span style="font-size: 13px; color: var(--text-muted);">Filtered by: "<strong>{{ search }}</strong>"</span>
+                        {% endif %}
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <a href="{% url 'manage_payments' %}{% if search %}?search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if not status_filter %}#0f172a{% else %}#f1f5f9{% endif %}; color: {% if not status_filter %}#fff{% else %}#475569{% endif %}; border: none;">
+                            All ({{ total_count|default:0 }})
+                        </a>
+                        <a href="{% url 'manage_payments' %}?status=Paid{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if status_filter == 'Paid' %}#10b981{% else %}#d1fae5{% endif %}; color: {% if status_filter == 'Paid' %}#fff{% else %}#065f46{% endif %}; border: none;">
+                            <i class="fas fa-check-circle" style="margin-right: 4px; font-size: 11px;"></i> Paid ({{ paid_count|default:0 }})
+                        </a>
+                        <a href="{% url 'manage_payments' %}?status=Pending{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if status_filter == 'Pending' %}#f59e0b{% else %}#fef3c7{% endif %}; color: {% if status_filter == 'Pending' %}#fff{% else %}#92400e{% endif %}; border: none;">
+                            <i class="fas fa-clock" style="margin-right: 4px; font-size: 11px;"></i> Pending ({{ pending_count|default:0 }})
+                        </a>
+                        {% if failed_count %}
+                            <a href="{% url 'manage_payments' %}?status=Failed{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if status_filter == 'Failed' %}#ef4444{% else %}#fee2e2{% endif %}; color: {% if status_filter == 'Failed' %}#fff{% else %}#991b1b{% endif %}; border: none;">
+                                <i class="fas fa-times-circle" style="margin-right: 4px; font-size: 11px;"></i> Failed ({{ failed_count }})
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'export_payments_csv' %}{% if status_filter %}?status={{ status_filter }}{% endif %}{% if search %}{% if status_filter %}&{% else %}?{% endif %}search={{ search }}{% endif %}" class="action-edit-btn" style="background: #059669; color: #ffffff; border: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; box-shadow: 0 2px 4px rgba(5,150,105,0.2);">
+                            <i class="fas fa-file-excel"></i> Export CSV
+                        </a>
+                    </div>
                 </div>
                 
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>Transaction ID</th>
-                            <th>Booking ID</th>
+                            <th>Transaction</th>
+                            <th>Booking Ref</th>
                             <th>Customer Name</th>
                             <th>Vehicle</th>
                             <th>Amount</th>
                             <th>Payment Mode</th>
-                            <th>Gateway ID</th>
+                            <th>Gateway Ref</th>
                             <th>Status</th>
-                            <th>Transaction Date</th>
+                            <th>Date &amp; Time</th>
+                            <th style="text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if payments %}
                             {% for payment in payments %}
                                 <tr>
-                                    <td><strong>#TXN-{{ payment.id }}</strong></td>
-                                    <td><a href="{% url 'manage_bookings' %}?search={{ payment.booking.id }}" style="color: var(--primary); font-weight: 700; text-decoration: none;">#BKG-{{ payment.booking.id }}</a></td>
                                     <td>
-                                        <strong>{{ payment.booking.vehicle.user.fullname }}</strong><br>
-                                        <span style="font-size: 12px; color: var(--text-muted);">{{ payment.booking.vehicle.user.phone }}</span>
+                                        <span style="font-family: monospace; font-weight: 800; color: #0f172a; font-size: 13.5px; background: #f8fafc; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                            #TXN-{{ payment.id }}
+                                        </span>
                                     </td>
                                     <td>
-                                        {{ payment.booking.vehicle.brand }} {{ payment.booking.vehicle.model }} ({{ payment.booking.vehicle.vehicle_number }})
+                                        <a href="{% url 'manage_bookings' %}?search={{ payment.booking.id }}" style="color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="View Booking Details">
+                                            #BKG-{{ payment.booking.id }}
+                                            <i class="fas fa-arrow-up-right-from-square" style="font-size: 10px;"></i>
+                                        </a>
                                     </td>
-                                    <td><span style="color: #16a34a; font-weight: 800; font-size: 14.5px;">₹{{ payment.amount }}</span></td>
-                                    <td><span class="pay-method-badge" style="background: rgba(59,130,246,0.1); color: #2563eb; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 12px;">{{ payment.payment_method|upper }}</span></td>
+                                    <td>
+                                        <div class="table-user-cell" style="display: flex; align-items: center; gap: 9px;">
+                                            <div class="user-mini-avatar" style="width: 30px; height: 30px; font-size: 11.5px;">
+                                                {{ payment.booking.vehicle.user.fullname|first|upper|default:payment.booking.user.fullname|first|upper }}
+                                            </div>
+                                            <div>
+                                                <strong style="color: #0f172a; font-size: 13.5px;">{{ payment.booking.vehicle.user.fullname|default:payment.booking.user.fullname }}</strong><br>
+                                                <a href="tel:{{ payment.booking.vehicle.user.phone|default:payment.booking.user.phone }}" style="font-size: 12px; color: var(--text-muted); text-decoration: none;">
+                                                    <i class="fas fa-phone-alt" style="font-size: 9.5px; margin-right: 3px;"></i>{{ payment.booking.vehicle.user.phone|default:payment.booking.user.phone }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div class="user-mini-avatar" style="background: rgba(255,77,48,0.12); color: var(--primary); width: 26px; height: 26px; font-size: 11px;">
+                                                <i class="fas {{ payment.booking.vehicle.icon_class|default:'fa-car' }}"></i>
+                                            </div>
+                                            <div>
+                                                <span style="font-weight: 600; font-size: 13px; color: #1e293b;">{{ payment.booking.vehicle.brand }} {{ payment.booking.vehicle.model }}</span><br>
+                                                <span class="plate-badge" style="font-size: 11px; padding: 1px 7px;">{{ payment.booking.vehicle.vehicle_number }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span style="color: #16a34a; font-weight: 800; font-size: 15px; letter-spacing: -0.2px;">₹{{ payment.amount }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="pay-method-badge" style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 11.5px;">
+                                            {% if 'razorpay' in payment.payment_method|lower or 'online' in payment.payment_method|lower %}
+                                                <i class="fas fa-shield-alt" style="color: #2563eb;"></i> Razorpay
+                                            {% elif 'upi' in payment.payment_method|lower %}
+                                                <i class="fas fa-mobile-alt" style="color: #059669;"></i> UPI
+                                            {% elif 'card' in payment.payment_method|lower %}
+                                                <i class="fas fa-credit-card" style="color: #7c3aed;"></i> Card
+                                            {% elif 'cash' in payment.payment_method|lower %}
+                                                <i class="fas fa-money-bill-wave" style="color: #16a34a;"></i> Cash
+                                            {% else %}
+                                                <i class="fas fa-wallet" style="color: #64748b;"></i> {{ payment.payment_method|upper }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
                                     <td>
                                         {% if payment.razorpay_payment_id %}
-                                            <code style="font-size: 11px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #475569;">{{ payment.razorpay_payment_id }}</code>
+                                            <code style="font-size: 11px; background: #f1f5f9; padding: 3px 7px; border-radius: 4px; color: #334155; font-family: monospace; display: inline-flex; align-items: center; gap: 4px;" title="Razorpay Payment ID: {{ payment.razorpay_payment_id }}">
+                                                <i class="fas fa-fingerprint" style="color: #94a3b8; font-size: 10px;"></i>
+                                                {{ payment.razorpay_payment_id }}
+                                            </code>
+                                        {% elif payment.razorpay_order_id %}
+                                            <code style="font-size: 11px; background: #f8fafc; padding: 3px 7px; border-radius: 4px; color: #64748b; font-family: monospace;" title="Order ID: {{ payment.razorpay_order_id }}">
+                                                {{ payment.razorpay_order_id|truncatechars:14 }}
+                                            </code>
                                         {% else %}
-                                            <span style="color: var(--text-muted); font-size: 12px;">-</span>
+                                            <span style="color: var(--text-muted); font-size: 12px; font-style: italic;">Offline / Direct</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if payment.payment_status == 'Paid' %}
-                                            <span style="background: rgba(16,185,129,0.15); color: #16a34a; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">✓ Paid</span>
+                                        {% if payment.payment_status|lower == 'paid' or payment.payment_status|lower == 'completed' or payment.payment_status|lower == 'success' %}
+                                            <span class="status-badge status-completed" style="font-size: 11.5px; padding: 4px 10px;">
+                                                <i class="fas fa-check-circle" style="font-size: 10px;"></i> Paid
+                                            </span>
+                                        {% elif payment.payment_status|lower == 'pending' or payment.payment_status|lower == 'created' %}
+                                            <span class="status-badge status-pending" style="font-size: 11.5px; padding: 4px 10px;">
+                                                <i class="fas fa-clock" style="font-size: 10px;"></i> {{ payment.payment_status }}
+                                            </span>
                                         {% else %}
-                                            <span style="background: rgba(245,158,11,0.15); color: #d97706; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 12px;">{{ payment.payment_status }}</span>
+                                            <span class="status-badge status-cancelled" style="font-size: 11.5px; padding: 4px 10px;">
+                                                <i class="fas fa-times-circle" style="font-size: 10px;"></i> {{ payment.payment_status }}
+                                            </span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ payment.payment_date|date:"d M Y, h:i A" }}</td>
+                                    <td>
+                                        <div style="font-size: 13px; color: #1e293b; font-weight: 500;">{{ payment.payment_date|date:"d M Y" }}</div>
+                                        <div style="font-size: 11.5px; color: var(--text-muted);">{{ payment.payment_date|date:"h:i A" }}</div>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                                            {% if payment.payment_status|lower == 'paid' or payment.payment_status|lower == 'completed' or payment.payment_status|lower == 'success' %}
+                                                <a href="{% url 'download_invoice' payment.booking.id %}" class="action-edit-btn" style="padding: 5px 10px; font-size: 12px; gap: 5px; background: rgba(239,68,68,0.08); color: #dc2626; border-color: rgba(239,68,68,0.25);" title="Download Official GST Tax Invoice PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                    <span>Invoice</span>
+                                                </a>
+                                                <a href="{% url 'preview_invoice' payment.booking.id %}" target="_blank" class="action-edit-btn" style="padding: 5px 8px; font-size: 12px; background: #f8fafc; color: #475569; border-color: #e2e8f0;" title="Preview Invoice in new tab">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'manage_bookings' %}?search={{ payment.booking.id }}" class="action-edit-btn" style="padding: 5px 10px; font-size: 12px; gap: 4px; background: #f1f5f9; color: #475569; border-color: #cbd5e1;" title="View Booking">
+                                                    <i class="fas fa-calendar-check"></i> Booking
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">No payment transactions recorded yet.</td>
+                                <td colspan="10" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                        <div style="width: 56px; height: 56px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 24px;">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <div>
+                                            <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">No Payment Records Found</h3>
+                                            <p style="font-size: 13.5px; color: #64748b; margin: 0;">
+                                                {% if search or status_filter %}
+                                                    No transactions matched your current search and filter criteria.
+                                                {% else %}
+                                                    There are currently no customer payment transactions recorded in the system.
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                        {% if search or status_filter %}
+                                            <a href="{% url 'manage_payments' %}" class="action-edit-btn" style="margin-top: 6px; padding: 7px 16px; font-size: 13px;">
+                                                <i class="fas fa-rotate-left" style="margin-right: 5px;"></i> Reset All Filters
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
                             </tr>
                         {% endif %}
                     </tbody>

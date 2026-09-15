@@ -474,3 +474,392 @@ body {
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .hero-simple-img { height: 240px; }
 }
+
+/* =========================================================
+   Interactive Service Cost Estimator Section
+   ========================================================= */
+
+.cost-estimator-section {
+  padding: 80px 80px;
+  background: var(--bg-subtle, #f8fafc);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.estimator-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.estimator-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 48px;
+}
+
+.estimator-header h2 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 10px 0 14px;
+}
+
+.estimator-header p {
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.estimator-box {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+.estimator-controls {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.calc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calc-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calc-label i {
+  color: var(--primary);
+}
+
+/* Segment Tabs */
+.calc-segment-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.segment-tab {
+  background: var(--bg-subtle);
+  border: 2px solid transparent;
+  border-radius: var(--r-lg);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--text-main);
+}
+
+.segment-tab i {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  transition: color 0.2s ease;
+}
+
+.segment-tab span {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.segment-tab small {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.segment-tab:hover {
+  background: rgba(255, 77, 48, 0.05);
+  border-color: rgba(255, 77, 48, 0.3);
+}
+
+.segment-tab.active {
+  background: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(255, 77, 48, 0.15);
+}
+
+.segment-tab.active i {
+  color: var(--primary);
+}
+
+/* Service Package Cards */
+.calc-package-select-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pkg-card {
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pkg-card:hover {
+  border-color: rgba(255, 77, 48, 0.4);
+}
+
+.pkg-card.active {
+  background: rgba(255, 77, 48, 0.04);
+  border-color: var(--primary);
+}
+
+.pkg-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.pkg-top strong {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.pkg-price {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.pkg-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Addons Grid */
+.calc-addons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.addon-checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.addon-checkbox-card:hover {
+  border-color: rgba(255, 77, 48, 0.35);
+}
+
+.addon-checkbox-card input {
+  display: none;
+}
+
+.addon-custom-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong, #cbd5e1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  background: var(--bg-card);
+}
+
+.addon-checkbox-card input:checked + .addon-custom-check {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.addon-checkbox-card input:checked + .addon-custom-check::after {
+  content: '✓';
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.addon-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.addon-text strong {
+  font-size: 12.5px;
+  color: var(--text-main);
+}
+
+.addon-text span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.addon-cost {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+/* Summary Card Receipt */
+.estimator-summary {
+  position: sticky;
+  top: calc(var(--navbar-h, 72px) + 30px);
+}
+
+.summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.summary-package-name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.summary-segment-name {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.summary-line-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.summary-item strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.summary-item.discount span,
+.summary-item.discount strong {
+  color: var(--success);
+}
+
+.summary-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+.summary-total-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+
+.total-label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.total-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+}
+
+.summary-footnote {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.est-book-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(255, 77, 48, 0.35);
+  transition: all 0.2s ease;
+}
+
+.est-book-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 77, 48, 0.45);
+}
+
+@media (max-width: 992px) {
+  .cost-estimator-section { padding: 60px 24px; }
+  .estimator-box { grid-template-columns: 1fr; }
+  .calc-addons-grid { grid-template-columns: 1fr; }
+  .estimator-summary { position: static; }
+}
+
+@media (max-width: 600px) {
+  .calc-segment-tabs { grid-template-columns: repeat(2, 1fr); }
+  .estimator-header h2 { font-size: 28px; }
+  .estimator-controls { padding: 20px; }
+  .summary-card { padding: 22px; }
+}
+

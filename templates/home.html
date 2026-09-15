@@ -200,6 +200,181 @@
     </div>
 </section>
 
+<!-- ── Interactive Service Cost Estimator Section ── -->
+<section class="cost-estimator-section" id="cost-estimator">
+    <div class="estimator-container">
+        <div class="estimator-header">
+            <span class="sub-heading"><i class="fas fa-calculator"></i> INSTANT TRANSPARENT ESTIMATOR</span>
+            <h2>Estimate Your Service Bill</h2>
+            <p>Select your vehicle category, service package, and optional add-on parts to get an accurate upfront estimate with zero hidden charges.</p>
+        </div>
+
+        <div class="estimator-box">
+            <div class="estimator-controls">
+                <!-- Step 1: Vehicle Segment -->
+                <div class="calc-group">
+                    <label class="calc-label"><i class="fas fa-car-side"></i> 1. Vehicle Segment</label>
+                    <div class="calc-segment-tabs" id="vehicleSegmentTabs">
+                        <button type="button" class="segment-tab active" data-segment="hatchback" data-multiplier="1.0">
+                            <i class="fas fa-car-side"></i>
+                            <span>Hatchback</span>
+                            <small>Swift, i20, Tiago</small>
+                        </button>
+                        <button type="button" class="segment-tab" data-segment="sedan" data-multiplier="1.15">
+                            <i class="fas fa-car"></i>
+                            <span>Sedan</span>
+                            <small>City, Verna, Ciaz</small>
+                        </button>
+                        <button type="button" class="segment-tab" data-segment="suv" data-multiplier="1.30">
+                            <i class="fas fa-truck-pickup"></i>
+                            <span>SUV / Compact</span>
+                            <small>Creta, Nexon, Thar</small>
+                        </button>
+                        <button type="button" class="segment-tab" data-segment="luxury" data-multiplier="1.65">
+                            <i class="fas fa-gem"></i>
+                            <span>Luxury</span>
+                            <small>BMW, Audi, Merc</small>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Service Package -->
+                <div class="calc-group">
+                    <label class="calc-label"><i class="fas fa-wrench"></i> 2. Core Service Package</label>
+                    <div class="calc-package-select-grid" id="servicePackageGrid">
+                        <div class="pkg-card active" data-name="General Service" data-base="1499">
+                            <div class="pkg-top">
+                                <strong>General Service</strong>
+                                <span class="pkg-price">₹1,499</span>
+                            </div>
+                            <p>40-Point vehicle inspection, fluid top-ups &amp; wash</p>
+                        </div>
+                        <div class="pkg-card" data-name="Oil Change" data-base="899">
+                            <div class="pkg-top">
+                                <strong>Oil Change</strong>
+                                <span class="pkg-price">₹899</span>
+                            </div>
+                            <p>Full synthetic engine oil &amp; OEM filter replacement</p>
+                        </div>
+                        <div class="pkg-card" data-name="Brake Service" data-base="1850">
+                            <div class="pkg-top">
+                                <strong>Brake Service</strong>
+                                <span class="pkg-price">₹1,850</span>
+                            </div>
+                            <p>Brake pad replacement, caliper lube &amp; disc rotor check</p>
+                        </div>
+                        <div class="pkg-card" data-name="Tire Change" data-base="1200">
+                            <div class="pkg-top">
+                                <strong>Tire Care &amp; Alignment</strong>
+                                <span class="pkg-price">₹1,200</span>
+                            </div>
+                            <p>3D laser alignment, alloy dynamic balancing &amp; rotation</p>
+                        </div>
+                        <div class="pkg-card" data-name="Full Vehicle Service" data-base="3499">
+                            <div class="pkg-top">
+                                <strong>Full Overhaul &amp; Engine Tuning</strong>
+                                <span class="pkg-price">₹3,499</span>
+                            </div>
+                            <p>Complete mechanical tuning, engine scan &amp; AC overhaul</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Optional Genuine Maintenance Add-ons -->
+                <div class="calc-group">
+                    <label class="calc-label"><i class="fas fa-plus-circle"></i> 3. Optional Genuine Add-ons (Select to add)</label>
+                    <div class="calc-addons-grid">
+                        <label class="addon-checkbox-card">
+                            <input type="checkbox" class="addon-check" value="450" data-addon="AC Cabin Filter">
+                            <span class="addon-custom-check"></span>
+                            <div class="addon-text">
+                                <strong>AC Cabin Filter</strong>
+                                <span>Anti-bacterial PM2.5 filter</span>
+                            </div>
+                            <span class="addon-cost">+₹450</span>
+                        </label>
+                        <label class="addon-checkbox-card">
+                            <input type="checkbox" class="addon-check" value="550" data-addon="Engine Flush">
+                            <span class="addon-custom-check"></span>
+                            <div class="addon-text">
+                                <strong>Engine Flush &amp; Decarbonizer</strong>
+                                <span>Removes internal sludge &amp; carbon</span>
+                            </div>
+                            <span class="addon-cost">+₹550</span>
+                        </label>
+                        <label class="addon-checkbox-card">
+                            <input type="checkbox" class="addon-check" value="900" data-addon="Synthetic Gear Oil">
+                            <span class="addon-custom-check"></span>
+                            <div class="addon-text">
+                                <strong>Synthetic Gear Oil</strong>
+                                <span>Smoother shifting &amp; transmission care</span>
+                            </div>
+                            <span class="addon-cost">+₹900</span>
+                        </label>
+                        <label class="addon-checkbox-card">
+                            <input type="checkbox" class="addon-check" value="250" data-addon="Battery Health Test">
+                            <span class="addon-custom-check"></span>
+                            <div class="addon-text">
+                                <strong>Battery Diagnostic</strong>
+                                <span>Cold-crank load test &amp; terminal lube</span>
+                            </div>
+                            <span class="addon-cost">+₹250</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time Calculation Receipt Box -->
+            <div class="estimator-summary">
+                <div class="summary-card">
+                    <div class="summary-badge"><i class="fas fa-receipt"></i> ESTIMATED BILL BREAKDOWN</div>
+                    <div class="summary-package-name" id="estPackageName">General Service</div>
+                    <div class="summary-segment-name" id="estSegmentName">Hatchback Segment</div>
+
+                    <div class="summary-line-items">
+                        <div class="summary-item">
+                            <span>Base Service &amp; Labor</span>
+                            <strong id="estBaseCost">₹1,499</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Segment Adjustment</span>
+                            <strong id="estSegmentAdj">+₹0</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Selected Add-ons</span>
+                            <strong id="estAddonCost">+₹0</strong>
+                        </div>
+                        <div class="summary-item discount">
+                            <span>AutoFixPro Web Discount (10%)</span>
+                            <strong id="estDiscount">-₹150</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span>Applicable Taxes (GST 18%)</span>
+                            <strong id="estTax">+₹243</strong>
+                        </div>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-total-wrap">
+                        <span class="total-label">Total Estimated Cost</span>
+                        <span class="total-value" id="estTotalCost">₹1,592</span>
+                    </div>
+
+                    <p class="summary-footnote">
+                        <i class="fas fa-shield-alt"></i> 100% Genuine OEM parts &bull; 6 Months / 5,000 KM Warranty
+                    </p>
+
+                    <a href="{% url 'book_service' %}?service_type=General%20Service" id="estBookBtn" class="btn-primary est-book-btn">
+                        <span>Book with this Estimate</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ── Why Choose Us Section ── -->
 <section class="why-us" id="why-us">
     <div class="why-container">
@@ -348,6 +523,96 @@
 </section>
 
 {% include 'includes/footer.html' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentMultiplier = 1.0;
+    let currentSegmentName = "Hatchback Segment";
+    let currentBasePrice = 1499;
+    let currentPackageName = "General Service";
+
+    const segmentTabs = document.querySelectorAll('.segment-tab');
+    const packageCards = document.querySelectorAll('.pkg-card');
+    const addonChecks = document.querySelectorAll('.addon-check');
+
+    const estPackageName = document.getElementById('estPackageName');
+    const estSegmentName = document.getElementById('estSegmentName');
+    const estBaseCost = document.getElementById('estBaseCost');
+    const estSegmentAdj = document.getElementById('estSegmentAdj');
+    const estAddonCost = document.getElementById('estAddonCost');
+    const estDiscount = document.getElementById('estDiscount');
+    const estTax = document.getElementById('estTax');
+    const estTotalCost = document.getElementById('estTotalCost');
+    const estBookBtn = document.getElementById('estBookBtn');
+
+    function updateCalculations() {
+        // Base cost and segment adjustments
+        const adjustedBase = Math.round(currentBasePrice * currentMultiplier);
+        const segmentDifference = adjustedBase - currentBasePrice;
+
+        // Addons total
+        let addonsTotal = 0;
+        addonChecks.forEach(cb => {
+            if (cb.checked) {
+                addonsTotal += parseInt(cb.value, 10) || 0;
+            }
+        });
+
+        const grossTotal = adjustedBase + addonsTotal;
+        const discount = Math.round(grossTotal * 0.10); // 10% AutoFixPro web discount
+        const taxableAmount = grossTotal - discount;
+        const tax = Math.round(taxableAmount * 0.18); // 18% GST
+        const finalPayable = taxableAmount + tax;
+
+        // Update UI
+        if (estPackageName) estPackageName.textContent = currentPackageName;
+        if (estSegmentName) estSegmentName.textContent = currentSegmentName;
+        if (estBaseCost) estBaseCost.textContent = '₹' + currentBasePrice.toLocaleString('en-IN');
+        if (estSegmentAdj) {
+            estSegmentAdj.textContent = (segmentDifference >= 0 ? '+₹' : '-₹') + Math.abs(segmentDifference).toLocaleString('en-IN');
+        }
+        if (estAddonCost) estAddonCost.textContent = '+₹' + addonsTotal.toLocaleString('en-IN');
+        if (estDiscount) estDiscount.textContent = '-₹' + discount.toLocaleString('en-IN');
+        if (estTax) estTax.textContent = '+₹' + tax.toLocaleString('en-IN');
+        if (estTotalCost) estTotalCost.textContent = '₹' + finalPayable.toLocaleString('en-IN');
+
+        if (estBookBtn) {
+            estBookBtn.href = "{% url 'book_service' %}?service_type=" + encodeURIComponent(currentPackageName);
+        }
+    }
+
+    // Segment tab click event
+    segmentTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            segmentTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentMultiplier = parseFloat(this.getAttribute('data-multiplier')) || 1.0;
+            const spanText = this.querySelector('span');
+            currentSegmentName = (spanText ? spanText.textContent.trim() : "Standard") + " Segment";
+            updateCalculations();
+        });
+    });
+
+    // Package card click event
+    packageCards.forEach(card => {
+        card.addEventListener('click', function() {
+            packageCards.forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            currentBasePrice = parseInt(this.getAttribute('data-base'), 10) || 1499;
+            currentPackageName = this.getAttribute('data-name') || "General Service";
+            updateCalculations();
+        });
+    });
+
+    // Addons checkbox change event
+    addonChecks.forEach(cb => {
+        cb.addEventListener('change', updateCalculations);
+    });
+
+    // Initial run
+    updateCalculations();
+});
+</script>
 
 </body>
 </html>

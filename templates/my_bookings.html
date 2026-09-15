@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Bookings - AutoFixPro</title>
+    <title>My Bookings — AutoFixPro</title>
+    <meta name="description" content="Track live workshop repairs, schedule new service appointments, view stage progress, and download tax invoices.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/my_bookings.css' %}">
     <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
@@ -27,104 +30,383 @@
 
 <main class="page-main">
 
+    <!-- Page Header -->
     <div class="page-header">
         <div>
             <h1>My Bookings</h1>
-            <p>Track repair progress, schedule new appointments, and manage invoices</p>
+            <p>Real-time repair tracking, upcoming appointment schedules, and service invoices</p>
         </div>
         <a href="{% url 'book_service' %}" class="cta-btn">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <i class="fas fa-calendar-plus"></i>
             Book New Service
         </a>
     </div>
 
-    <div class="bookings-grid">
-
-        {% for booking in bookings %}
-        <div class="booking-card">
-            <div class="card-top">
-                <div class="vehicle-badge">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99z"/></svg>
-                </div>
-                <div class="vehicle-title">
-                    <h3>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</h3>
-                    <span class="plate">{{ booking.vehicle.vehicle_number }}</span>
-                </div>
-                {% if booking.status|lower == 'pending' %}
-                    <span class="status-badge pending">Pending</span>
-                {% elif booking.status|lower == 'in progress' or booking.status|lower == 'progress' %}
-                    <span class="status-badge progress">In Progress</span>
-                {% elif booking.status|lower == 'completed' %}
-                    <span class="status-badge completed">Completed</span>
-                {% else %}
-                    <span class="status-badge pending">{{ booking.status }}</span>
-                {% endif %}
-            </div>
-
-            <div class="card-details">
-                <div class="detail-item">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
-                    <div>
-                        <span class="detail-label">Service Date</span>
-                        <span class="detail-value">{{ booking.service_date }} ({{ booking.service_time }})</span>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.3C.5 6.7.9 9.8 2.9 11.8c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.6z"/></svg>
-                    <div>
-                        <span class="detail-label">Service Type</span>
-                        <span class="detail-value">{{ booking.service_type }}</span>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
-                    <div>
-                        <span class="detail-label">Booking Reference</span>
-                        <span class="detail-value">#{{ booking.id }}</span>
-                    </div>
+    <!-- ── Bookings Skeleton Screen ── -->
+    <div id="bookings-skeleton" class="bookings-skeleton-wrapper" aria-hidden="true">
+        <div class="bookings-stats">
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 90px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 50px; margin-bottom: 0;"></div>
                 </div>
             </div>
-
-            <div class="card-actions">
-                <a href="{% url 'view_booking' booking.id %}" class="btn-view">
-                    View Details
-                </a>
-
-                {% if booking.payment %}
-                <a href="{% url 'download_invoice' booking.id %}" class="btn-paid" style="background: #0f172a; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="Download Tax Invoice PDF">
-                    <i class="fas fa-file-pdf" style="color: #ff4d30;"></i> Invoice PDF
-                </a>
-                {% else %}
-                <a href="{% url 'payment' booking.id %}" class="btn-pay">
-                    Pay Now
-                </a>
-                {% endif %}
-
-                {% if booking.status|lower == 'pending' %}
-                <a href="{% url 'cancel_booking' booking.id %}"
-                class="btn-cancel"
-                onclick="return confirm('Are you sure you want to cancel booking #{{ booking.id }}?')">
-                    Cancel
-                </a>
-                {% endif %}
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 50px; margin-bottom: 0;"></div>
                 </div>
             </div>
-
-        {% empty %}
-        <div class="empty-state" style="grid-column: 1/-1;">
-            <div class="empty-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 50px; margin-bottom: 0;"></div>
+                </div>
             </div>
-            <h3>No Bookings Found</h3>
-            <p>You haven't booked any vehicle service appointments yet.</p>
-            <a href="{% url 'book_service' %}" class="cta-btn">Book Your First Service</a>
+            <div class="stat-chip">
+                <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text sm" style="width: 90px;"></div>
+                    <div class="skeleton skeleton-text lg" style="width: 50px; margin-bottom: 0;"></div>
+                </div>
+            </div>
         </div>
-        {% endfor %}
 
+        <div style="height: 54px; border-radius: 12px; margin-bottom: 24px;" class="skeleton"></div>
+
+        <div class="bookings-grid">
+            <div class="skeleton-booking-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                        <div>
+                            <div class="skeleton skeleton-text" style="width: 160px; height: 18px; margin-bottom: 6px;"></div>
+                            <div class="skeleton skeleton-text sm" style="width: 100px; margin-bottom: 0;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-btn" style="width: 90px; height: 26px; border-radius: 20px;"></div>
+                </div>
+                <div style="height: 60px; border-radius: 8px; margin: 16px 0;" class="skeleton"></div>
+                <div style="height: 24px; border-radius: 4px; margin-bottom: 16px;" class="skeleton"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton" style="flex: 1; height: 38px; border-radius: 8px;"></div>
+                    <div class="skeleton" style="flex: 1; height: 38px; border-radius: 8px;"></div>
+                </div>
+            </div>
+            <div class="skeleton-booking-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                        <div>
+                            <div class="skeleton skeleton-text" style="width: 160px; height: 18px; margin-bottom: 6px;"></div>
+                            <div class="skeleton skeleton-text sm" style="width: 100px; margin-bottom: 0;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton skeleton-btn" style="width: 90px; height: 26px; border-radius: 20px;"></div>
+                </div>
+                <div style="height: 60px; border-radius: 8px; margin: 16px 0;" class="skeleton"></div>
+                <div style="height: 24px; border-radius: 4px; margin-bottom: 16px;" class="skeleton"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton" style="flex: 1; height: 38px; border-radius: 8px;"></div>
+                    <div class="skeleton" style="flex: 1; height: 38px; border-radius: 8px;"></div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- ── Bookings Content ── -->
+    <div id="bookings-content" class="bookings-content-wrapper is-loading">
+
+        <!-- 4-Stat Metric Summary Row -->
+        <div class="bookings-stats">
+            <div class="stat-chip">
+                <div class="stat-chip-icon blue">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Total Bookings</span>
+                    <strong>{{ total_count|default:"0" }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-chip">
+                <div class="stat-chip-icon primary">
+                    <i class="fas fa-screwdriver-wrench"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Active In-Service</span>
+                    <strong>{{ active_count|default:"0" }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-chip">
+                <div class="stat-chip-icon amber">
+                    <i class="fas fa-clock-rotate-left"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Pending Approval</span>
+                    <strong>{{ pending_count|default:"0" }}</strong>
+                </div>
+            </div>
+
+            <div class="stat-chip">
+                <div class="stat-chip-icon green">
+                    <i class="fas fa-circle-check"></i>
+                </div>
+                <div class="stat-chip-text">
+                    <span>Completed</span>
+                    <strong>{{ completed_count|default:"0" }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- SaaS Service History Notice Banner -->
+        <div class="passport-banner">
+            <div class="passport-banner-left">
+                <div class="passport-banner-icon">
+                    <i class="fas fa-passport"></i>
+                </div>
+                <div>
+                    <strong>Need Permanent Maintenance Records or Tax Invoices?</strong>
+                    <p>Access your complete vehicle health logs, parts warranty certificates, and official GST invoices in your Digital Service Passport.</p>
+                </div>
+            </div>
+            <a href="{% url 'service_history' %}" class="btn-passport-link">
+                <i class="fas fa-arrow-up-right-from-square"></i> Open Service Passport &rarr;
+            </a>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="bookings-filter-bar">
+            <form method="GET" action="{% url 'my_bookings' %}" class="bookings-search-form">
+                <div class="search-input-wrap">
+                    <i class="fas fa-magnifying-glass search-icon"></i>
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search by vehicle, plate number, service package, or booking ID..." autocomplete="off">
+                </div>
+                {% if status_filter %}
+                    <input type="hidden" name="status" value="{{ status_filter }}">
+                {% endif %}
+                <button type="submit" class="filter-submit-btn">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                {% if search_query or status_filter %}
+                    <a href="{% url 'my_bookings' %}" class="filter-clear-btn">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                {% endif %}
+            </form>
+
+            <!-- Quick Status Filter Pills -->
+            <div class="quick-status-pills">
+                <span class="pills-label">Filter status:</span>
+                <a href="{% url 'my_bookings' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="status-pill {% if not status_filter %}is-active{% endif %}">
+                    All <span class="pill-count">{{ total_count|default:"0" }}</span>
+                </a>
+                <a href="{% url 'my_bookings' %}?status=active{% if search_query %}&q={{ search_query }}{% endif %}" class="status-pill active-pill {% if status_filter == 'active' %}is-active{% endif %}">
+                    <span class="pulse-dot-sm"></span> Active <span class="pill-count">{{ active_count|default:"0" }}</span>
+                </a>
+                <a href="{% url 'my_bookings' %}?status=pending{% if search_query %}&q={{ search_query }}{% endif %}" class="status-pill pending-pill {% if status_filter == 'pending' %}is-active{% endif %}">
+                    Pending <span class="pill-count">{{ pending_count|default:"0" }}</span>
+                </a>
+                <a href="{% url 'my_bookings' %}?status=completed{% if search_query %}&q={{ search_query }}{% endif %}" class="status-pill completed-pill {% if status_filter == 'completed' %}is-active{% endif %}">
+                    Completed <span class="pill-count">{{ completed_count|default:"0" }}</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Bookings Grid -->
+        <div class="bookings-grid">
+
+            {% for booking in bookings %}
+            <div class="booking-card">
+                
+                <!-- Card Top: Vehicle Avatar & Live Status -->
+                <div class="card-top">
+                    <div class="vehicle-col">
+                        <div class="vehicle-badge">
+                            <i class="fas {{ booking.vehicle.icon_class|default:'fa-car' }}"></i>
+                        </div>
+                        <div class="vehicle-meta">
+                            <div class="title-row">
+                                <h3>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</h3>
+                                <span class="category-badge-pill">
+                                    <i class="fas {{ booking.vehicle.icon_class|default:'fa-car' }}"></i> {{ booking.vehicle.category }}
+                                </span>
+                            </div>
+                            <div class="tags-row">
+                                <span class="plate">{{ booking.vehicle.vehicle_number }}</span>
+                                {% if booking.vehicle.fuel_type %}
+                                    <span class="fuel-chip {{ booking.vehicle.fuel_badge_color }}">{{ booking.vehicle.fuel_type }}</span>
+                                {% endif %}
+                                {% if booking.vehicle.year %}
+                                    <span class="year-chip">{{ booking.vehicle.year }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-col">
+                        {% if booking.is_cancelled or booking.status|lower == 'cancelled' %}
+                            <span class="status-badge cancelled">
+                                <i class="fas fa-ban"></i> Cancelled
+                            </span>
+                        {% elif booking.status|lower == 'completed' %}
+                            <span class="status-badge completed">
+                                <i class="fas fa-circle-check"></i> Completed
+                            </span>
+                        {% elif booking.status|lower == 'in progress' or booking.status|lower == 'progress' %}
+                            <span class="status-badge progress">
+                                <span class="live-dot-pulse"></span> In Progress
+                            </span>
+                        {% else %}
+                            <span class="status-badge pending">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 4-Box Specs Grid -->
+                <div class="card-specs-grid">
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="fas fa-hashtag"></i> Reference</span>
+                        <strong class="spec-val">#BK-{{ booking.id }}</strong>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="fas fa-wrench"></i> Package</span>
+                        <strong class="spec-val text-primary">{{ booking.service_type }}</strong>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="far fa-calendar"></i> Appointment</span>
+                        <strong class="spec-val">{{ booking.service_date|date:"d M Y" }}</strong>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label"><i class="far fa-clock"></i> Slot Time</span>
+                        <strong class="spec-val">{{ booking.service_time }}</strong>
+                    </div>
+                </div>
+
+                <!-- Live Progress Stepper Bar -->
+                <div class="card-stepper-wrap">
+                    <div class="stepper-meta-row">
+                        <span class="stepper-label">
+                            {% if booking.is_cancelled or booking.status|lower == 'cancelled' %}
+                                <i class="fas fa-ban text-danger"></i> Appointment Cancelled
+                            {% elif booking.stage_number == 5 or booking.status|lower == 'completed' %}
+                                <i class="fas fa-check-circle text-success"></i> Stage 5/5: <strong>Service Complete &bull; Ready for Pickup</strong>
+                            {% else %}
+                                <span class="live-dot-pulse"></span> Stage {{ booking.stage_number|default:1 }} of 5: <strong>{{ booking.stage_title|default:'Booking Confirmed' }}</strong>
+                            {% endif %}
+                        </span>
+                        <span class="stepper-pct">{{ booking.stage_percent|default:20 }}%</span>
+                    </div>
+                    <div class="stepper-track">
+                        <div class="stepper-fill {% if booking.is_cancelled or booking.status|lower == 'cancelled' %}cancelled{% elif booking.stage_number == 5 or booking.status|lower == 'completed' %}completed{% endif %}" style="width: {{ booking.stage_percent|default:20 }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Card Actions -->
+                <div class="card-actions">
+                    <a href="{% url 'view_booking' booking.id %}" class="btn-action btn-view" title="View Full Inspection &amp; Live Tracking Details">
+                        <i class="fas fa-route"></i> Live Tracker
+                    </a>
+
+                    {% if booking.payment %}
+                        <a href="{% url 'download_invoice' booking.id %}" class="btn-action btn-invoice" title="Download Official Tax Invoice (PDF)">
+                            <i class="fas fa-file-pdf"></i> Tax Invoice
+                        </a>
+                    {% elif not booking.is_cancelled and booking.status|lower != 'cancelled' %}
+                        <a href="{% url 'payment' booking.id %}" class="btn-action btn-pay" title="Pay Online via Card, UPI or NetBanking">
+                            <i class="fas fa-credit-card"></i> Pay Now
+                        </a>
+                    {% endif %}
+
+                    {% if booking.status|lower == 'completed' %}
+                        <a href="{% url 'book_service' %}?vehicle={{ booking.vehicle.id }}&service_type={{ booking.service_type|urlencode }}" class="btn-action btn-repeat" title="Book this service again">
+                            <i class="fas fa-rotate-right"></i> Book Again
+                        </a>
+                    {% endif %}
+
+                    {% if booking.status|lower == 'pending' %}
+                        <form method="POST" action="{% url 'cancel_booking' booking.id %}" class="cancel-form" onsubmit="return confirm('Are you sure you want to cancel booking #{{ booking.id }} for your {{ booking.vehicle.brand }} {{ booking.vehicle.model }}?')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-action btn-cancel" title="Cancel this service appointment">
+                                <i class="fas fa-ban"></i> Cancel
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1/-1;">
+                <div class="empty-icon">
+                    <i class="fas fa-calendar-xmark"></i>
+                </div>
+                {% if search_query or status_filter %}
+                    <h3>No Matching Bookings Found</h3>
+                    <p>No service appointments match your filter criteria.</p>
+                    <a href="{% url 'my_bookings' %}" class="cta-btn" style="margin-top: 10px;">
+                        <i class="fas fa-list"></i> View All Bookings
+                    </a>
+                {% else %}
+                    <h3>No Bookings Found</h3>
+                    <p>You haven't booked any vehicle service appointments yet. Schedule your first appointment in seconds.</p>
+                    <a href="{% url 'book_service' %}" class="cta-btn" style="margin-top: 10px;">
+                        <i class="fas fa-calendar-plus"></i> Book Your First Service
+                    </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div><!-- End #bookings-content -->
+
 </main>
 
 {% include 'includes/footer.html' %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        const skeleton = document.getElementById("bookings-skeleton");
+        const content = document.getElementById("bookings-content");
+        if (skeleton && content) {
+            content.style.display = "block";
+            requestAnimationFrame(function() {
+                skeleton.classList.add("fade-out");
+                content.classList.remove("is-loading");
+                setTimeout(function() {
+                    skeleton.style.display = "none";
+                }, 350);
+            });
+        }
+    }, 400);
+});
+
+window.previewBookingsSkeleton = function(durationMs = 2500) {
+    const skeleton = document.getElementById("bookings-skeleton");
+    const content = document.getElementById("bookings-content");
+    if (!skeleton || !content) return;
+    skeleton.style.display = "block";
+    skeleton.classList.remove("fade-out");
+    content.classList.add("is-loading");
+    setTimeout(function() {
+        content.style.display = "block";
+        requestAnimationFrame(function() {
+            skeleton.classList.add("fade-out");
+            content.classList.remove("is-loading");
+            setTimeout(function() {
+                skeleton.style.display = "none";
+            }, 350);
+        });
+    }, durationMs);
+};
+</script>
 
 </body>
 </html>

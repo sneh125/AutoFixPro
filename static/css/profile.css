@@ -656,3 +656,59 @@ body {
     justify-content: center;
   }
 }
+
+/* =========================================================
+   Profile Skeleton Screen Styles
+   ========================================================= */
+
+.profile-skeleton-wrapper {
+  display: block;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-skeleton-wrapper.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profile-content-wrapper {
+  display: block;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-content-wrapper.is-loading {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.skeleton-profile-sidebar {
+  background: #ffffff;
+  border-radius: var(--r-xl, 16px);
+  border: 1px solid var(--border, #e2e8f0);
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.skeleton-profile-stat {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--r-xl, 16px);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.skeleton-profile-card {
+  background: #ffffff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--r-xl, 16px);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}

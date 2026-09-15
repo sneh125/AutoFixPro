@@ -4,13 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Vehicle - AutoFixPro</title>
+    <title>Edit Vehicle — AutoFixPro</title>
+    <meta name="description" content="Update registered vehicle specifications, color, and license registration in your digital fleet.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/edit_vehicle.css' %}">
+    <link rel="stylesheet" href="{% static 'css/add_vehicle.css' %}">
     <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
 </head>
 <body>
@@ -27,64 +30,206 @@
 
 <main class="page-main">
 
-    <div class="form-wrapper">
-        <div class="form-header">
-            <div class="header-badge">EDIT VEHICLE</div>
-            <h1>Edit Vehicle Details</h1>
-            <p>Update vehicle records for {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.vehicle_number }})</p>
+    <div class="vehicle-studio-layout">
+        
+        <!-- Left: Form Wrapper -->
+        <div class="form-wrapper">
+            <div class="form-header">
+                <div class="header-badge">
+                    <i class="fas fa-pen-to-square"></i> ASSET MODIFICATION STUDIO
+                </div>
+                <h1>Edit Vehicle Details</h1>
+                <p>Update vehicle parameters for <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong> ({{ vehicle.vehicle_number }}).</p>
+            </div>
+
+            <form method="post" class="form-box" id="vehicleForm">
+                {% csrf_token %}
+
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="brand"><i class="fas fa-industry"></i> Vehicle Brand *</label>
+                        <input type="text" id="brand" name="brand" value="{{ vehicle.brand }}" required autocomplete="off">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="model"><i class="fas fa-car-side"></i> Model Name *</label>
+                        <input type="text" id="model" name="model" value="{{ vehicle.model }}" required autocomplete="off">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="vehicle_number"><i class="fas fa-id-card"></i> License Plate Number *</label>
+                        <input type="text" id="vehicle_number" name="vehicle_number" value="{{ vehicle.vehicle_number }}" required autocomplete="off" style="text-transform: uppercase;">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="year"><i class="far fa-calendar"></i> Manufacturing Year *</label>
+                        <input type="number" id="year" name="year" value="{{ vehicle.year }}" min="1990" max="2027" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="fuel_type"><i class="fas fa-gas-pump"></i> Powertrain / Fuel *</label>
+                        <select id="fuel_type" name="fuel_type" required>
+                            <option value="Petrol" {% if vehicle.fuel_type == "Petrol" %}selected{% endif %}>Petrol</option>
+                            <option value="Diesel" {% if vehicle.fuel_type == "Diesel" %}selected{% endif %}>Diesel</option>
+                            <option value="CNG" {% if vehicle.fuel_type == "CNG" %}selected{% endif %}>CNG</option>
+                            <option value="Electric" {% if vehicle.fuel_type == "Electric" %}selected{% endif %}>Electric (EV)</option>
+                            <option value="Hybrid" {% if vehicle.fuel_type == "Hybrid" %}selected{% endif %}>Hybrid</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="color"><i class="fas fa-palette"></i> Exterior Color *</label>
+                        <input type="text" id="color" name="color" value="{{ vehicle.color }}" required autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <a href="{% url 'my_vehicle' %}" class="cancel-link">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
         </div>
 
-        <form method="post" class="form-box">
-            {% csrf_token %}
-
-            <div class="form-grid">
-                <div class="input-group">
-                    <label for="vehicle_number">Vehicle Registration Number</label>
-                    <input type="text" id="vehicle_number" name="vehicle_number" value="{{ vehicle.vehicle_number }}" required>
+        <!-- Right: Live Interactive Vehicle Smart Card Preview -->
+        <aside class="preview-sidebar">
+            <div class="preview-sticky-card">
+                <div class="preview-kicker">
+                    <span class="live-dot-pulse"></span>
+                    <span>LIVE GARAGE ASSET PREVIEW</span>
                 </div>
 
-                <div class="input-group">
-                    <label for="brand">Vehicle Brand</label>
-                    <input type="text" id="brand" name="brand" value="{{ vehicle.brand }}" required>
+                <!-- Virtual Smart Vehicle Card -->
+                <div class="virtual-smart-card" id="virtualCard">
+                    <div class="v-card-top">
+                        <div class="v-card-icon-wrap" id="vIconWrap">
+                            <i class="fas {{ vehicle.icon_class|default:'fa-car-side' }}" id="vIcon"></i>
+                        </div>
+                        <div class="v-card-type-chip" id="vCategory">
+                            {{ vehicle.category|default:'Vehicle' }}
+                        </div>
+                    </div>
+
+                    <div class="v-card-body">
+                        <h2 id="vTitle">{{ vehicle.brand }} {{ vehicle.model }}</h2>
+                        <span class="v-card-sub" id="vSub">{{ vehicle.year }} &bull; {{ vehicle.fuel_type }}</span>
+                    </div>
+
+                    <!-- Realistic Embossed License Plate -->
+                    <div class="v-license-plate">
+                        <div class="v-plate-ind">
+                            <span class="v-ind-flag">IND</span>
+                            <div class="v-ind-chakra"></div>
+                        </div>
+                        <div class="v-plate-number" id="vPlate">
+                            {{ vehicle.vehicle_number }}
+                        </div>
+                    </div>
+
+                    <div class="v-card-meta-row">
+                        <span class="v-fuel-chip" id="vFuel">{{ vehicle.fuel_type }}</span>
+                        <span class="v-year-chip" id="vYear">{{ vehicle.year }}</span>
+                        <div class="v-color-indicator">
+                            <span class="v-color-swatch" id="vColorSwatch" style="background-color: {{ vehicle.color|lower }};"></span>
+                            <span id="vColorText">{{ vehicle.color }}</span>
+                        </div>
+                    </div>
+
+                    <div class="v-card-footer-seal">
+                        <i class="fas fa-shield-halved"></i>
+                        <span>AutoFixPro Verified Garage Pass #VEH-{{ vehicle.id }}</span>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="model">Model Name</label>
-                    <input type="text" id="model" name="model" value="{{ vehicle.model }}" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="year">Manufacturing Year</label>
-                    <input type="number" id="year" name="year" value="{{ vehicle.year }}" min="1990" max="2026" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="fuel_type">Fuel Type</label>
-                    <select id="fuel_type" name="fuel_type" required>
-                        <option value="Petrol" {% if vehicle.fuel_type == "Petrol" %}selected{% endif %}>Petrol</option>
-                        <option value="Diesel" {% if vehicle.fuel_type == "Diesel" %}selected{% endif %}>Diesel</option>
-                        <option value="CNG" {% if vehicle.fuel_type == "CNG" %}selected{% endif %}>CNG</option>
-                        <option value="Electric" {% if vehicle.fuel_type == "Electric" %}selected{% endif %}>Electric</option>
-                        <option value="Hybrid" {% if vehicle.fuel_type == "Hybrid" %}selected{% endif %}>Hybrid</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="color">Vehicle Color</label>
-                    <input type="text" id="color" name="color" value="{{ vehicle.color }}" required>
+                <!-- Benefits List Card -->
+                <div class="preview-perks-box">
+                    <h4><i class="fas fa-circle-check text-success"></i> Registered Asset</h4>
+                    <ul>
+                        <li><i class="fas fa-wrench"></i> Active Maintenance History Linked</li>
+                        <li><i class="fas fa-calendar-check"></i> Lifetime Workshop Passport Access</li>
+                        <li><i class="fas fa-shield-halved"></i> 6-Month Spares Warranty Protection</li>
+                    </ul>
                 </div>
             </div>
+        </aside>
 
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">Update Vehicle Information</button>
-                <a href="{% url 'my_vehicle' %}" class="cancel-link">Cancel</a>
-            </div>
-        </form>
     </div>
 
 </main>
 
 {% include 'includes/footer.html' %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const brandInput = document.getElementById("brand");
+    const modelInput = document.getElementById("model");
+    const plateInput = document.getElementById("vehicle_number");
+    const yearInput = document.getElementById("year");
+    const fuelSelect = document.getElementById("fuel_type");
+    const colorInput = document.getElementById("color");
+
+    const vIcon = document.getElementById("vIcon");
+    const vCategory = document.getElementById("vCategory");
+    const vTitle = document.getElementById("vTitle");
+    const vSub = document.getElementById("vSub");
+    const vPlate = document.getElementById("vPlate");
+    const vFuel = document.getElementById("vFuel");
+    const vYear = document.getElementById("vYear");
+    const vColorSwatch = document.getElementById("vColorSwatch");
+    const vColorText = document.getElementById("vColorText");
+
+    function detectCategory(brand, model, fuel) {
+        const full = (brand + " " + model).toLowerCase();
+        if (full.match(/(bullet|bike|pulsar|activa|royalenfield|ktm|ninja|splendor|jupiter|scooter|himalayan|r15|apache|duke)/i)) {
+            return { cat: "Motorcycle / Two-Wheeler", icon: "fa-motorcycle" };
+        } else if (full.match(/(creta|harrier|scorpio|thar|fortuner|safari|brezza|nexon|seltos|xuv|suv|hector|compass|innova)/i)) {
+            return { cat: "SUV / Crossover", icon: "fa-truck-pickup" };
+        } else if (full.match(/(swift|i20|baleno|wagonr|altroz|polo|tiago|hatchback|kwid|grand i10|glanza)/i)) {
+            return { cat: "Hatchback", icon: "fa-car-side" };
+        } else if (full.match(/(bmw|mercedes|audi|porsche|jaguar|mustang)/i)) {
+            return { cat: "Luxury / Performance", icon: "fa-tachometer-alt" };
+        } else if (fuel.toLowerCase() === "electric") {
+            return { cat: "Electric EV", icon: "fa-bolt" };
+        } else {
+            return { cat: "Premium Sedan", icon: "fa-car-side" };
+        }
+    }
+
+    function updatePreview() {
+        const brand = brandInput.value.trim() || "Brand";
+        const model = modelInput.value.trim() || "Model";
+        const plate = plateInput.value.trim().toUpperCase() || "GJ01AB1234";
+        const year = yearInput.value.trim() || "2024";
+        const fuel = fuelSelect.value || "Petrol";
+        const color = colorInput.value.trim() || "Black";
+
+        const categoryInfo = detectCategory(brand, model, fuel);
+
+        vTitle.textContent = (brand !== "Brand" || model !== "Model") ? (brand + " " + model) : "Vehicle Brand & Model";
+        vSub.textContent = (brand !== "Brand" || model !== "Model") ? (year + " • " + fuel) : "Live Asset Preview";
+        vPlate.textContent = plate;
+        vYear.textContent = year;
+        vFuel.textContent = fuel;
+        vColorText.textContent = color;
+        vCategory.textContent = categoryInfo.cat;
+
+        vIcon.className = "fas " + categoryInfo.icon;
+        vColorSwatch.style.backgroundColor = color.toLowerCase();
+    }
+
+    [brandInput, modelInput, plateInput, yearInput, fuelSelect, colorInput].forEach(el => {
+        if (el) {
+            el.addEventListener("input", updatePreview);
+            el.addEventListener("change", updatePreview);
+        }
+    });
+
+    updatePreview();
+});
+</script>
 
 </body>
 </html>

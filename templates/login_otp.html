@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=3.0">
 </head>
 <body>
 
@@ -30,43 +30,41 @@
 
             <div class="showcase-content">
                 <div class="showcase-badge">
-                    <i class="fas fa-bolt"></i> Passwordless Authentication
+                    <i class="fas fa-bolt"></i> Fast &amp; Secure
                 </div>
-                <h2 class="showcase-title">Instant &amp; Secure Access with Email OTP</h2>
+                <h2 class="showcase-title">Instant Passwordless Login</h2>
                 <p class="showcase-desc">
-                    Forget remembering passwords. Sign in directly with a 6-digit verification code delivered straight to your email inbox.
+                    Sign in effortlessly with a 6-digit one-time code sent directly to your registered email.
                 </p>
 
                 <ul class="showcase-features">
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>100% passwordless &amp; phishing-resistant</span>
+                        <span class="feature-check-icon"><i class="fas fa-key"></i></span>
+                        <div class="feature-text">
+                            <strong>No Passwords Needed</strong>
+                            <span>Simple, fast, and phishing-resistant</span>
+                        </div>
                     </li>
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Direct delivery via official Google SMTP</span>
+                        <span class="feature-check-icon"><i class="fas fa-envelope-circle-check"></i></span>
+                        <div class="feature-text">
+                            <strong>Direct to Inbox</strong>
+                            <span>Delivered in seconds via secure SMTP</span>
+                        </div>
                     </li>
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>5-minute timed security expiration</span>
+                        <span class="feature-check-icon"><i class="fas fa-stopwatch"></i></span>
+                        <div class="feature-text">
+                            <strong>Timed Expiration</strong>
+                            <span>Automatic 5-minute security lock</span>
+                        </div>
                     </li>
                 </ul>
-
-                <div class="live-status-card">
-                    <div class="live-status-left">
-                        <div class="live-pulse-dot"></div>
-                        <div>
-                            <div class="live-status-title">Email OTP Engine</div>
-                            <div class="live-status-sub">Instant Delivery (Avg 2s)</div>
-                        </div>
-                    </div>
-                    <div class="live-status-stat">Live</div>
-                </div>
             </div>
 
             <div class="showcase-footer">
-                <span><i class="fas fa-lock"></i> 256-Bit SSL Encrypted</span>
-                <span><i class="fas fa-shield-alt"></i> Safe &amp; Fast</span>
+                <span><i class="fas fa-shield-alt"></i> Safe &amp; Encrypted</span>
+                <span><i class="fas fa-lock"></i> 256-Bit SSL</span>
             </div>
 
         </div>
@@ -139,5 +137,28 @@
 
     </div>
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert, .alert-message');
+        alerts.forEach(function(alert) {
+            alert.style.cursor = 'pointer';
+            alert.title = 'Click to dismiss';
+            let timer = setTimeout(function() {
+                dismissAlert(alert);
+            }, 3000);
+            alert.addEventListener('mouseenter', () => clearTimeout(timer));
+            alert.addEventListener('mouseleave', () => {
+                timer = setTimeout(() => dismissAlert(alert), 1200);
+            });
+            alert.addEventListener('click', () => dismissAlert(alert));
+        });
+
+        function dismissAlert(alert) {
+            if (!alert || alert.classList.contains('fade-out')) return;
+            alert.classList.add('fade-out');
+            setTimeout(() => alert.remove(), 400);
+        }
+    });
+    </script>
 </body>
 </html>

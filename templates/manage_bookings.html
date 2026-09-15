@@ -59,11 +59,14 @@
             <div class="table-container">
                 <div class="table-header">
                     <h2>Workshop Service Bookings ({{ bookings|length }})</h2>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                         <a href="{% url 'manage_bookings' %}" class="action-edit-btn" style="background: {% if not status_filter %}#0f172a{% else %}#f1f5f9{% endif %}; color: {% if not status_filter %}#fff{% else %}#475569{% endif %};">All</a>
                         <a href="{% url 'manage_bookings' %}?status=Pending" class="action-edit-btn" style="background: {% if status_filter == 'Pending' %}#f59e0b{% else %}#fef3c7{% endif %}; color: {% if status_filter == 'Pending' %}#fff{% else %}#92400e{% endif %};">Pending</a>
                         <a href="{% url 'manage_bookings' %}?status=In Progress" class="action-edit-btn" style="background: {% if status_filter == 'In Progress' %}#3b82f6{% else %}#dbeafe{% endif %}; color: {% if status_filter == 'In Progress' %}#fff{% else %}#1e40af{% endif %};">In Progress</a>
                         <a href="{% url 'manage_bookings' %}?status=Completed" class="action-edit-btn" style="background: {% if status_filter == 'Completed' %}#10b981{% else %}#d1fae5{% endif %}; color: {% if status_filter == 'Completed' %}#fff{% else %}#065f46{% endif %};">Completed</a>
+                        <a href="{% url 'export_bookings_csv' %}{% if status_filter %}?status={{ status_filter }}{% endif %}{% if search %}{% if status_filter %}&{% else %}?{% endif %}search={{ search }}{% endif %}" class="action-edit-btn" style="background: #059669; color: #ffffff; border: none; display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; box-shadow: 0 2px 4px rgba(5,150,105,0.2);">
+                            <i class="fas fa-file-excel"></i> Export CSV
+                        </a>
                     </div>
                 </div>
                 
@@ -97,26 +100,37 @@
                                         {{ booking.service_date }}<br>
                                         <span style="font-size: 12px; color: var(--text-muted);">{{ booking.service_time }}</span>
                                     </td>
-                                    <td>
-                                        {% if booking.status|lower == 'pending' %}
-                                            <span class="status-badge status-pending">Pending</span>
-                                        {% elif booking.status|lower == 'in progress' or booking.status|lower == 'progress' %}
-                                            <span class="status-badge status-progress">In Progress</span>
-                                        {% else %}
-                                            <span class="status-badge status-completed">Completed</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <form action="{% url 'update_booking_status' booking.id %}" method="POST" style="display: flex; gap: 8px; align-items: center;">
-                                            {% csrf_token %}
-                                            <select name="status" class="select-status">
-                                                <option value="Pending" {% if booking.status == "Pending" %}selected{% endif %}>Pending</option>
-                                                <option value="In Progress" {% if booking.status == "In Progress" %}selected{% endif %}>In Progress</option>
-                                                <option value="Completed" {% if booking.status == "Completed" %}selected{% endif %}>Completed</option>
-                                            </select>
-                                            <button type="submit" class="btn-update">Save</button>
-                                        </form>
-                                    </td>
+                                     <td>
+                                         {% if booking.status|lower == 'pending' %}
+                                             <span class="status-badge status-pending"><i class="fas fa-clock" style="font-size: 11px;"></i> Pending</span>
+                                         {% elif booking.status|lower == 'confirmed' %}
+                                             <span class="status-badge" style="background: rgba(59,130,246,0.12); color: #2563eb; border: 1px solid rgba(59,130,246,0.3);"><i class="fas fa-check" style="font-size: 11px;"></i> Confirmed</span>
+                                         {% elif booking.status|lower == 'in progress' or booking.status|lower == 'progress' %}
+                                             <span class="status-badge status-progress"><i class="fas fa-wrench" style="font-size: 11px;"></i> In Progress</span>
+                                         {% elif booking.status|lower == 'quality check' %}
+                                             <span class="status-badge" style="background: rgba(168,85,247,0.12); color: #9333ea; border: 1px solid rgba(168,85,247,0.3);"><i class="fas fa-sparkles" style="font-size: 11px;"></i> Quality Check</span>
+                                         {% elif booking.status|lower == 'completed' %}
+                                             <span class="status-badge status-completed"><i class="fas fa-check-circle" style="font-size: 11px;"></i> Completed</span>
+                                         {% elif booking.status|lower == 'cancelled' %}
+                                             <span class="status-badge" style="background: rgba(239,68,68,0.12); color: #dc2626; border: 1px solid rgba(239,68,68,0.3);"><i class="fas fa-ban" style="font-size: 11px;"></i> Cancelled</span>
+                                         {% else %}
+                                             <span class="status-badge">{{ booking.status }}</span>
+                                         {% endif %}
+                                     </td>
+                                     <td>
+                                         <form action="{% url 'update_booking_status' booking.id %}" method="POST" style="display: flex; gap: 8px; align-items: center;">
+                                             {% csrf_token %}
+                                             <select name="status" class="select-status" style="border-radius: 8px; padding: 6px 10px; font-size: 13px;">
+                                                 <option value="Pending" {% if booking.status == "Pending" %}selected{% endif %}>Pending</option>
+                                                 <option value="Confirmed" {% if booking.status == "Confirmed" %}selected{% endif %}>Vehicle Received (Confirmed)</option>
+                                                 <option value="In Progress" {% if booking.status == "In Progress" %}selected{% endif %}>In Progress (Servicing)</option>
+                                                 <option value="Quality Check" {% if booking.status == "Quality Check" %}selected{% endif %}>Quality Check</option>
+                                                 <option value="Completed" {% if booking.status == "Completed" %}selected{% endif %}>Completed (Ready)</option>
+                                                 <option value="Cancelled" {% if booking.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
+                                             </select>
+                                             <button type="submit" class="btn-update">Save</button>
+                                         </form>
+                                     </td>
                                 </tr>
                             {% endfor %}
                         {% else %}

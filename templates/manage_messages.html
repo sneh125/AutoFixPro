@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Inquiries - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        {% include 'includes/admin_sidebar.html' %}
+
+        <!-- Main Content Area -->
+        <div class="admin-container">
+
+            <!-- Header -->
+            <header class="admin-header">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <div class="header-left">
+                        <h1>Contact Inquiries &amp; Support</h1>
+                        <p>Review customer feedback, service queries, and workshop inquiries</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <form method="get" class="admin-search-form">
+                        {% if status_filter %}
+                            <input type="hidden" name="status" value="{{ status_filter }}">
+                        {% endif %}
+                        <input type="text" name="search" class="admin-search-input" placeholder="Search by name, email, subject..." value="{{ search|default:'' }}">
+                        <button type="submit" class="admin-search-submit">Search</button>
+                        {% if search %}
+                            <a href="{% url 'manage_messages' %}{% if status_filter %}?status={{ status_filter }}{% endif %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none; margin-left: 8px;">Clear</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </header>
+
+            <!-- Main Body -->
+            <main class="admin-content">
+
+                {% if messages %}
+                    <div class="messages-container" style="padding:0; margin: 0 0 20px 0;">
+                        {% for message in messages %}
+                            <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(16,185,129,0.12); color: #16a34a; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-check-circle"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Metric Cards -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(59,130,246,0.12); color: #2563eb;">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ total_count }}</span>
+                            <span class="metric-label">Total Inquiries</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">
+                            <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ pending_count }}</span>
+                            <span class="metric-label">Pending / Unresolved</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">
+                            <i class="fas fa-circle-check"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ resolved_count }}</span>
+                            <span class="metric-label">Resolved / Answered</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="admin-table-container">
+                    <div class="table-header-row" style="flex-wrap: wrap; gap: 12px;">
+                        <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">
+                            Customer Inquiries
+                            <span style="font-size: 13px; font-weight: 600; color: #64748b; margin-left: 6px;">({{ contact_messages.count }} records)</span>
+                        </h2>
+
+                        <!-- Filter Pills -->
+                        <div class="action-btns" style="flex-wrap: wrap;">
+                            <a href="{% url 'manage_messages' %}{% if search %}?search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if not status_filter %}#0f172a{% else %}#f1f5f9{% endif %}; color: {% if not status_filter %}#fff{% else %}#475569{% endif %}; border: none;">
+                                All ({{ total_count }})
+                            </a>
+                            <a href="{% url 'manage_messages' %}?status=pending{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if status_filter == 'pending' %}#f59e0b{% else %}#fef3c7{% endif %}; color: {% if status_filter == 'pending' %}#fff{% else %}#92400e{% endif %}; border: none;">
+                                <i class="fas fa-clock" style="margin-right: 4px; font-size: 11px;"></i> Pending ({{ pending_count }})
+                            </a>
+                            <a href="{% url 'manage_messages' %}?status=resolved{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if status_filter == 'resolved' %}#16a34a{% else %}#dcfce7{% endif %}; color: {% if status_filter == 'resolved' %}#fff{% else %}#15803d{% endif %}; border: none;">
+                                <i class="fas fa-check" style="margin-right: 4px; font-size: 11px;"></i> Resolved ({{ resolved_count }})
+                            </a>
+                        </div>
+                    </div>
+
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Inquiry ID</th>
+                                <th>Sender Information</th>
+                                <th>Subject &amp; Message</th>
+                                <th>Received On</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if contact_messages %}
+                                {% for msg in contact_messages %}
+                                    <tr style="{% if not msg.is_resolved %}background: rgba(254,243,199,0.15);{% endif %}">
+                                        <td>
+                                            <span style="font-family: monospace; font-weight: 800; color: #0f172a; font-size: 12.5px; background: #f8fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                                #INQ-{{ msg.id }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div class="user-mini-avatar" style="background: {% if msg.is_resolved %}rgba(16,185,129,0.12){% else %}rgba(255,77,48,0.12){% endif %}; color: {% if msg.is_resolved %}#10b981{% else %}var(--primary){% endif %};">
+                                                    {{ msg.name|slice:":2"|upper }}
+                                                </div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-size: 14px; display: block;">{{ msg.name }}</strong>
+                                                    <a href="mailto:{{ msg.email }}" style="color: #2563eb; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <i class="fas fa-envelope" style="font-size: 10px;"></i> {{ msg.email }}
+                                                    </a>
+                                                    {% if msg.phone %}
+                                                        <br>
+                                                        <a href="tel:{{ msg.phone }}" style="color: #64748b; font-size: 11.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;">
+                                                            <i class="fas fa-phone" style="font-size: 10px;"></i> {{ msg.phone }}
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style="max-width: 320px;">
+                                            <strong style="color: #0f172a; font-size: 13.5px; display: block; margin-bottom: 4px;">{{ msg.subject }}</strong>
+                                            <p style="color: #475569; font-size: 13px; margin: 0; line-height: 1.5; white-space: pre-line;">{{ msg.message }}</p>
+                                        </td>
+                                        <td>
+                                            <span style="font-size: 13px; font-weight: 600; color: #0f172a;">{{ msg.created_at|date:"d M Y" }}</span><br>
+                                            <span style="font-size: 11.5px; color: var(--text-muted);">{{ msg.created_at|date:"h:i A" }}</span>
+                                        </td>
+                                        <td>
+                                            {% if msg.is_resolved %}
+                                                <span class="status-badge status-completed">
+                                                    <i class="fas fa-check-circle" style="font-size: 11px;"></i> Resolved
+                                                </span>
+                                            {% else %}
+                                                <span class="status-badge status-pending">
+                                                    <i class="fas fa-clock" style="font-size: 11px;"></i> Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <div class="action-btns" style="justify-content: flex-end;">
+                                                <!-- Toggle Resolve / Reopen -->
+                                                <form action="{% url 'toggle_message_status' msg.id %}" method="POST" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    {% if msg.is_resolved %}
+                                                        <button type="submit" class="action-edit-btn" style="background: #f1f5f9; color: #475569; cursor: pointer; border: 1px solid #cbd5e1;" title="Mark as Pending">
+                                                            <i class="fas fa-rotate-left"></i> Reopen
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="submit" class="action-edit-btn" style="background: #dcfce7; color: #15803d; cursor: pointer; border: 1px solid rgba(22,163,74,0.3);" title="Mark as Resolved">
+                                                            <i class="fas fa-check"></i> Mark Resolved
+                                                        </button>
+                                                    {% endif %}
+                                                </form>
+
+                                                <!-- Direct Email Reply -->
+                                                <a href="mailto:{{ msg.email }}?subject=Re:%20{{ msg.subject|urlencode }}%20-%20AutoFixPro%20Support" class="action-edit-btn" style="background: #eff6ff; color: #2563eb; border: 1px solid rgba(59,130,246,0.3);" title="Reply via Email">
+                                                    <i class="fas fa-reply"></i> Reply
+                                                </a>
+
+                                                <!-- Delete Message -->
+                                                <form action="{% url 'delete_message' msg.id %}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this message from {{ msg.name|escapejs }}?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="action-del-btn" style="cursor: pointer;" title="Delete Message">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                                        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                            <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 22px;">
+                                                <i class="fas fa-inbox"></i>
+                                            </div>
+                                            <h3 style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0;">No Inquiries Found</h3>
+                                            <p style="font-size: 13.5px; color: #64748b; margin: 0;">
+                                                {% if search or status_filter %}
+                                                    No messages match your active filters.
+                                                {% else %}
+                                                    No customer inquiries received yet.
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </main>
+
+            <!-- Footer -->
+            <footer class="admin-footer">
+                <p>&copy; 2026 AutoFixPro Technologies Inc. | Workshop Administration Control Panel</p>
+            </footer>
+        </div>
+    </div>
+
+</body>
+</html>

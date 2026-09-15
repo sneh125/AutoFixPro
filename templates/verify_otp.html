@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=3.0">
 
     <style>
         .otp-icon-circle {
@@ -119,43 +119,41 @@
 
             <div class="showcase-content">
                 <div class="showcase-badge">
-                    <i class="fas fa-shield-alt"></i> Security Verification
+                    <i class="fas fa-shield-alt"></i> Security Check
                 </div>
-                <h2 class="showcase-title">Two-Step Identity Verification</h2>
+                <h2 class="showcase-title">Verify Your Identity</h2>
                 <p class="showcase-desc">
-                    To keep your account, vehicles, and booking invoices safe, please enter the 6-digit confirmation code we sent to your email.
+                    Enter the 6-digit verification code sent to your email to safely access your account.
                 </p>
 
                 <ul class="showcase-features">
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Delivered instantly via Google SMTP Cloud</span>
+                        <span class="feature-check-icon"><i class="fas fa-lock"></i></span>
+                        <div class="feature-text">
+                            <strong>Account Protection</strong>
+                            <span>Prevents unauthorized profile access</span>
+                        </div>
                     </li>
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>5-Minute timed security expiry</span>
+                        <span class="feature-check-icon"><i class="fas fa-rotate"></i></span>
+                        <div class="feature-text">
+                            <strong>Quick Resend</strong>
+                            <span>Request a fresh code if expired</span>
+                        </div>
                     </li>
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Auto-cleared upon successful verification</span>
+                        <span class="feature-check-icon"><i class="fas fa-user-shield"></i></span>
+                        <div class="feature-text">
+                            <strong>Attempt Limiting</strong>
+                            <span>Protected against automated brute force</span>
+                        </div>
                     </li>
                 </ul>
-
-                <div class="live-status-card">
-                    <div class="live-status-left">
-                        <div class="live-pulse-dot"></div>
-                        <div>
-                            <div class="live-status-title">OTP Gateway Status</div>
-                            <div class="live-status-sub">Dispatched &amp; Waiting Input</div>
-                        </div>
-                    </div>
-                    <div class="live-status-stat">Active</div>
-                </div>
             </div>
 
             <div class="showcase-footer">
-                <span><i class="fas fa-lock"></i> SSL Secured</span>
-                <span><i class="fas fa-user-shield"></i> Fraud Protection</span>
+                <span><i class="fas fa-shield-alt"></i> Protected Session</span>
+                <span><i class="fas fa-lock"></i> 256-Bit SSL</span>
             </div>
 
         </div>
@@ -316,6 +314,27 @@
                 resendBtn.classList.remove('disabled');
             }
         }, 1000);
+
+        // Auto-dismiss Alerts / Flash Messages after 3 seconds
+        const alerts = document.querySelectorAll('.alert, .alert-message');
+        alerts.forEach(function(alert) {
+            alert.style.cursor = 'pointer';
+            alert.title = 'Click to dismiss';
+            let timer = setTimeout(function() {
+                dismissAlert(alert);
+            }, 3000);
+            alert.addEventListener('mouseenter', () => clearTimeout(timer));
+            alert.addEventListener('mouseleave', () => {
+                timer = setTimeout(() => dismissAlert(alert), 1200);
+            });
+            alert.addEventListener('click', () => dismissAlert(alert));
+        });
+
+        function dismissAlert(alert) {
+            if (!alert || alert.classList.contains('fade-out')) return;
+            alert.classList.add('fade-out');
+            setTimeout(() => alert.remove(), 400);
+        }
     });
     </script>
 </body>

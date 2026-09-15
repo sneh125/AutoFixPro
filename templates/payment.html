@@ -130,106 +130,86 @@
 {% include 'includes/footer.html' %}
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
 <script>
-    // Helper: submit hidden form to server
-    function submitPaymentToServer(orderIdVal, paymentIdVal, signatureVal, methodVal) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = "{% url 'payment_success' booking.id %}";
+    const payButton = document.getElementById("razorpay-button");
 
-        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    const paymentOptions = {
+        key: "{{ razorpay_key_id }}",
+        amount: "{{ amount|floatformat:0 }}00",
+        currency: "INR",
+        name: "AutoFixPro",
+        description: "Vehicle Service Payment",
+        order_id: "{{ razorpay_order_id }}",
 
-        const fields = {
-            csrfmiddlewaretoken : csrfToken,
-            razorpay_order_id   : orderIdVal,
-            razorpay_payment_id : paymentIdVal,
-            razorpay_signature  : signatureVal,
-            payment_method      : methodVal,
-        };
+        handler: function (response) {
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "{% url 'payment_success' booking.id %}";
 
-        for (const [key, value] of Object.entries(fields)) {
-            const input = document.createElement("input");
-            input.type  = "hidden";
-            input.name  = key;
-            input.value = value || "";
-            form.appendChild(input);
-        }
+            const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
-        document.body.appendChild(form);
-        form.submit();
-    }
+            const fields = {
+                csrfmiddlewaretoken: csrfToken,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+            };
 
-    document.getElementById("razorpay-button").onclick = function(e) {
-        e.preventDefault();
-
-        const selectedMethod = document.querySelector("input[name='payment_method']:checked").value;
-
-        // CASH — no Razorpay window needed, directly record as cash payment
-        if (selectedMethod === "CASH") {
-            if (!confirm("You selected Cash Payment. Your booking will be confirmed. Pay at the workshop on the service day.")) {
-                return;
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = key;
+                input.value = value || "";
+                form.appendChild(input);
             }
-            submitPaymentToServer(
-                "{{ razorpay_order_id }}",  // order id kept for reference
-                "CASH_" + Date.now(),       // dummy payment id
-                "CASH_BYPASS",              // dummy signature — server handles this
-                "CASH"
-            );
+
+            document.body.appendChild(form);
+            form.submit();
+        },
+
+        prefill: {
+            name: "{{ booking.user.fullname|escapejs }}",
+            email: "{{ booking.user.email|escapejs }}",
+            contact: "{{ booking.user.phone|escapejs }}"
+        },
+
+        theme: {
+            color: "#2563eb"
+        },
+
+        modal: {
+            ondismiss: function () {
+                console.log("Razorpay checkout closed.");
+            }
+        }
+    };
+
+    const razorpayCheckout = new Razorpay(paymentOptions);
+
+    payButton.addEventListener("click", function (event) {
+        event.preventDefault();
+
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+        if (selectedMethod === "CASH") {
+            const cashForm = document.createElement("form");
+            cashForm.method = "POST";
+            cashForm.action = "{% url 'cash_payment' booking.id %}";
+
+            const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+            const csrfInput = document.createElement("input");
+            csrfInput.type = "hidden";
+            csrfInput.name = "csrfmiddlewaretoken";
+            csrfInput.value = csrfToken;
+
+            cashForm.appendChild(csrfInput);
+            document.body.appendChild(cashForm);
+            cashForm.submit();
             return;
         }
 
-        // Online payment via Razorpay
-        const callbackUrl = window.location.origin + "{% url 'payment_success' booking.id %}";
-
-        let rzpMethod = "";
-        if (selectedMethod === "UPI") rzpMethod = "upi";
-        else if (selectedMethod === "CARD") rzpMethod = "card";
-        else if (selectedMethod === "NET_BANKING") rzpMethod = "netbanking";
-
-        const options = {
-            key         : "{{ razorpay_key_id }}",
-            amount      : {{ amount|floatformat:0 }} * 100,   // paise
-            currency    : "INR",
-            name        : "AutoFixPro",
-            description : "{{ booking.service_type }} - Booking #{{ booking.id }}",
-            order_id    : "{{ razorpay_order_id }}",
-            callback_url: callbackUrl,
-
-            handler: function (response) {
-                submitPaymentToServer(
-                    response.razorpay_order_id,
-                    response.razorpay_payment_id,
-                    response.razorpay_signature,
-                    selectedMethod
-                );
-            },
-
-            prefill: {
-                name    : "{{ booking.vehicle.user.fullname }}",
-                email   : "{{ booking.vehicle.user.email }}",
-                contact : "{{ booking.vehicle.user.phone }}",
-                method  : rzpMethod
-            },
-
-            theme: { color: "#2563eb" },
-
-            modal: {
-                ondismiss: function() {
-                    console.log("Razorpay window closed.");
-                }
-            }
-        };
-
-        const rzp = new Razorpay(options);
-
-        rzp.on("payment.failed", function(response) {
-            alert("Payment failed: " + (response.error && response.error.description ? response.error.description : "Transaction could not be completed.") + "\nPlease try again.");
-            console.error("Razorpay error:", response.error);
-        });
-
-        rzp.open();
-    };
+        razorpayCheckout.open();
+    });
 </script>
 </body>
 </html>

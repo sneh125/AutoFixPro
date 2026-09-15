@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
 </head>
@@ -32,7 +33,7 @@
                     <p>Welcome back, Workshop Administrator</p>
                 </div>
             </div>
-            <div class="header-right">
+            <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
                 <div class="date-badge">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
                     Live Workshop System
@@ -52,6 +53,102 @@
                     {% endfor %}
                 </div>
             {% endif %}
+
+            <!-- Skeleton Shimmer Placeholder for Admin Dashboard -->
+            <div id="admin-dash-skeleton" class="admin-skeleton-wrapper" aria-hidden="true">
+                <!-- 4 Skeleton Stat Cards -->
+                <div class="admin-cards">
+                    <div class="skeleton-admin-card">
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-title" style="width: 70px; height: 32px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 120px; height: 14px;"></div>
+                        </div>
+                        <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                    </div>
+                    <div class="skeleton-admin-card">
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-title" style="width: 70px; height: 32px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 130px; height: 14px;"></div>
+                        </div>
+                        <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                    </div>
+                    <div class="skeleton-admin-card">
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-title" style="width: 70px; height: 32px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 140px; height: 14px;"></div>
+                        </div>
+                        <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                    </div>
+                    <div class="skeleton-admin-card">
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-title" style="width: 70px; height: 32px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 110px; height: 14px;"></div>
+                        </div>
+                        <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                    </div>
+                </div>
+
+                <!-- Skeleton Charts Grid -->
+                <div class="admin-charts-grid" style="margin-top: 30px;">
+                    <div class="skeleton-admin-table" style="height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <div class="skeleton skeleton-text" style="width: 100px; height: 10px; margin-bottom: 6px;"></div>
+                                <div class="skeleton skeleton-title" style="width: 180px; height: 20px;"></div>
+                            </div>
+                            <div class="skeleton skeleton-btn" style="width: 110px; height: 26px;"></div>
+                        </div>
+                        <div class="skeleton" style="flex: 1; border-radius: var(--r-md); width: 100%;"></div>
+                    </div>
+                    <div class="skeleton-admin-table" style="height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <div class="skeleton skeleton-text" style="width: 100px; height: 10px; margin-bottom: 6px;"></div>
+                                <div class="skeleton skeleton-title" style="width: 180px; height: 20px;"></div>
+                            </div>
+                            <div class="skeleton skeleton-btn" style="width: 110px; height: 26px;"></div>
+                        </div>
+                        <div class="skeleton" style="flex: 1; border-radius: var(--r-md); width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Skeleton Recent Appointments Table -->
+                <div style="margin-top: 30px;">
+                    <div class="skeleton-admin-table">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div class="skeleton skeleton-title" style="width: 220px; height: 22px;"></div>
+                            <div class="skeleton skeleton-btn" style="width: 140px; height: 32px;"></div>
+                        </div>
+                        <div class="skeleton-admin-row">
+                            <div class="skeleton skeleton-text" style="width: 70px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 130px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 140px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 110px;"></div>
+                            <div class="skeleton skeleton-btn" style="width: 80px; height: 24px;"></div>
+                        </div>
+                        <div class="skeleton-admin-row">
+                            <div class="skeleton skeleton-text" style="width: 70px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 140px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 130px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 90px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 110px;"></div>
+                            <div class="skeleton skeleton-btn" style="width: 80px; height: 24px;"></div>
+                        </div>
+                        <div class="skeleton-admin-row">
+                            <div class="skeleton skeleton-text" style="width: 70px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 125px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 150px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 105px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 110px;"></div>
+                            <div class="skeleton skeleton-btn" style="width: 80px; height: 24px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actual Admin Content Wrapper -->
+            <div id="admin-dash-content" class="admin-content-wrapper is-loading">
 
             <!-- Cards Grid -->
             <section class="admin-cards">
@@ -98,6 +195,77 @@
 
             </section>
 
+            <!-- Analytics & Charts Grid (Graph 1 & Graph 2) -->
+            <section class="admin-charts-section">
+                <div class="admin-charts-grid">
+                    
+                    <!-- Graph 1: Bookings by Service Type -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <span class="chart-tag">SERVICE DISTRIBUTION</span>
+                                <h3>Bookings by Service Type</h3>
+                            </div>
+                            <div class="chart-badge">
+                                <i class="fas fa-chart-bar"></i> Service Analytics
+                            </div>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 320px;">
+                            <canvas id="serviceBookingChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Graph 2: Monthly Bookings Trend -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <span class="chart-tag" style="color: #3b82f6;">GROWTH TIMELINE</span>
+                                <h3>Monthly Bookings Trend</h3>
+                            </div>
+                            <div class="chart-badge" style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                                <i class="fas fa-chart-line"></i> Monthly Growth
+                            </div>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 320px;">
+                            <canvas id="monthlyBookingChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Graph 3: Booking Status Distribution -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <span class="chart-tag" style="color: #f59e0b;">STATUS OVERVIEW</span>
+                                <h3>Booking Status</h3>
+                            </div>
+                            <div class="chart-badge" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                                <i class="fas fa-chart-pie"></i> Status Split
+                            </div>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 320px;">
+                            <canvas id="bookingStatusChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Graph 4: Monthly Revenue -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <span class="chart-tag" style="color: #10b981;">FINANCIAL PERFORMANCE</span>
+                                <h3>Monthly Revenue</h3>
+                            </div>
+                            <div class="chart-badge" style="background: rgba(16, 185, 129, 0.12); color: #16a34a;">
+                                <i class="fas fa-indian-rupee-sign"></i> Paid Invoices
+                            </div>
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 320px;">
+                            <canvas id="monthlyRevenueChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
             <!-- Quick Management Shortcuts -->
             <section style="margin-top: 30px;">
                 <div class="table-header">
@@ -135,7 +303,7 @@
                                     <td>{{ b.service_date }}<br><span style="font-size: 12px; color: var(--text-muted);">{{ b.service_time }}</span></td>
                                     <td>
                                         {% if b.status|lower == 'pending' %}
-                                            <span class="status-badge status-pending">Pending</span>
+                                             <span class="status-badge status-pending">Pending</span>
                                         {% elif b.status|lower == 'in progress' or b.status|lower == 'progress' %}
                                             <span class="status-badge status-progress">In Progress</span>
                                         {% else %}
@@ -165,6 +333,8 @@
                 </div>
             </section>
 
+            </div><!-- End #admin-dash-content -->
+
         </main>
 
         <!-- Footer -->
@@ -173,6 +343,308 @@
         </footer>
     </div>
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Graph 1: Bookings by Service Type ---
+        const serviceLabels = {{ service_labels|safe }};
+        const serviceCounts = {{ service_counts|safe }};
+
+        const serviceCtx = document.getElementById('serviceBookingChart');
+        if (serviceCtx) {
+            new Chart(serviceCtx, {
+                type: 'bar',
+                data: {
+                    labels: serviceLabels && serviceLabels.length > 0 ? serviceLabels : ['General Service', 'Oil Change', 'Brake Service', 'Tire Change', 'Full Vehicle Service'],
+                    datasets: [{
+                        label: 'Total Bookings',
+                        data: serviceCounts && serviceCounts.length > 0 ? serviceCounts : [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(255, 77, 48, 0.85)',
+                            'rgba(59, 130, 246, 0.85)',
+                            'rgba(16, 185, 129, 0.85)',
+                            'rgba(245, 158, 11, 0.85)',
+                            'rgba(139, 92, 246, 0.85)',
+                            'rgba(236, 72, 153, 0.85)'
+                        ],
+                        borderColor: [
+                            '#ff4d30',
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#ec4899'
+                        ],
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        maxBarThickness: 42
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13, weight: '700' },
+                            bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: { family: 'Plus Jakarta Sans', size: 12 },
+                                color: '#64748b'
+                            },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
+                                color: '#334155'
+                            },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Graph 2: Monthly Bookings Trend ---
+        const monthlyLabels = {{ monthly_labels|safe }};
+        const monthlyCounts = {{ monthly_counts|safe }};
+
+        const monthlyCtx = document.getElementById('monthlyBookingChart');
+        if (monthlyCtx) {
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels && monthlyLabels.length > 0 ? monthlyLabels : ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026'],
+                    datasets: [{
+                        label: 'Monthly Bookings',
+                        data: monthlyCounts && monthlyCounts.length > 0 ? monthlyCounts : [0, 0, 0, 0, 0, 0],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#2563eb',
+                        pointBorderWidth: 2.5,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13, weight: '700' },
+                            bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: { family: 'Plus Jakarta Sans', size: 12 },
+                                color: '#64748b'
+                            },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
+                                color: '#334155'
+                            },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Graph 3: Booking Status Distribution ---
+        const statusLabels = {{ status_labels|safe }};
+        const statusCounts = {{ status_counts|safe }};
+
+        const statusCtx = document.getElementById('bookingStatusChart');
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusLabels && statusLabels.length > 0 ? statusLabels : ['Pending', 'In Progress', 'Completed'],
+                    datasets: [{
+                        label: 'Total Bookings',
+                        data: statusCounts && statusCounts.length > 0 ? statusCounts : [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.85)',   // Amber / Orange for Pending
+                            'rgba(59, 130, 246, 0.85)',   // Blue for In Progress
+                            'rgba(16, 185, 129, 0.85)',   // Green for Completed
+                            'rgba(239, 68, 68, 0.85)',    // Red for Cancelled
+                            'rgba(139, 92, 246, 0.85)'    // Purple for Others
+                        ],
+                        borderColor: [
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#10b981',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 2,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
+                                color: '#334155',
+                                padding: 16,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13, weight: '700' },
+                            bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Graph 4: Monthly Revenue ---
+        const revenueLabels = {{ revenue_labels|safe }};
+        const revenueCounts = {{ revenue_counts|safe }};
+
+        const revenueCtx = document.getElementById('monthlyRevenueChart');
+        if (revenueCtx) {
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: revenueLabels && revenueLabels.length > 0 ? revenueLabels : ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026'],
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revenueCounts && revenueCounts.length > 0 ? revenueCounts : [0, 0, 0, 0, 0, 0],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2.5,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Outfit', size: 13, weight: '700' },
+                            bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Revenue: ₹' + Number(context.raw).toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: { family: 'Plus Jakarta Sans', size: 12 },
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return '₹' + Number(value).toLocaleString('en-IN');
+                                }
+                            },
+                            grid: { color: 'rgba(226, 232, 240, 0.6)' }
+                        },
+                        x: {
+                            ticks: {
+                                font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
+                                color: '#334155'
+                            },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    // Smooth transition from Admin Dashboard Skeleton Loader to Content
+    document.addEventListener('DOMContentLoaded', function() {
+        const skeleton = document.getElementById('admin-dash-skeleton');
+        const content = document.getElementById('admin-dash-content');
+        
+        if (skeleton && content) {
+            setTimeout(function() {
+                content.style.display = 'block';
+                skeleton.classList.add('fade-out');
+                content.classList.remove('is-loading');
+                
+                // Trigger chart redraw to perfectly match parent dimensions
+                window.dispatchEvent(new Event('resize'));
+                
+                setTimeout(function() {
+                    skeleton.style.display = 'none';
+                }, 350);
+            }, 380);
+        }
+    });
+
+    // Helper for previewing admin skeleton
+    window.previewAdminSkeleton = function(durationMs = 3000) {
+        const skeleton = document.getElementById('admin-dash-skeleton');
+        const content = document.getElementById('admin-dash-content');
+        if (!skeleton || !content) return;
+        skeleton.style.display = 'block';
+        skeleton.classList.remove('fade-out');
+        content.classList.add('is-loading');
+        content.style.display = 'none';
+        setTimeout(() => {
+            content.style.display = 'block';
+            skeleton.classList.add('fade-out');
+            content.classList.remove('is-loading');
+            window.dispatchEvent(new Event('resize'));
+            setTimeout(() => { skeleton.style.display = 'none'; }, 350);
+        }, durationMs);
+    };
+</script>
 
 </body>
 </html>

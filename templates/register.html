@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=3.0">
 </head>
 <body>
 
@@ -32,49 +32,42 @@
             <!-- Middle Content & Features -->
             <div class="showcase-content">
                 <div class="showcase-badge">
-                    <i class="fas fa-rocket"></i> Get Started Today
+                    <i class="fas fa-user-plus"></i> Join AutoFixPro
                 </div>
-                <h2 class="showcase-title">Join 20,000+ Smart Vehicle Owners</h2>
+                <h2 class="showcase-title">Your Digital Garage Awaits</h2>
                 <p class="showcase-desc">
-                    Register in 60 seconds to unlock digital service booking, real-time repair tracking, and automated maintenance records.
+                    Register in seconds to manage all your vehicles, maintenance history, and bookings in one place.
                 </p>
 
                 <ul class="showcase-features">
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Instant online appointment booking &amp; doorstep pickup</span>
+                        <span class="feature-check-icon"><i class="fas fa-car"></i></span>
+                        <div class="feature-text">
+                            <strong>Multi-Vehicle Garage</strong>
+                            <span>Manage cars and bikes in one dashboard</span>
+                        </div>
                     </li>
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Live mechanical stage-by-stage status tracking</span>
+                        <span class="feature-check-icon"><i class="fas fa-receipt"></i></span>
+                        <div class="feature-text">
+                            <strong>Automated Job Cards</strong>
+                            <span>Digital invoices &amp; transparent billing</span>
+                        </div>
                     </li>
                     <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Manage all your cars &amp; bikes in one digital garage</span>
-                    </li>
-                    <li>
-                        <span class="feature-check-icon"><i class="fas fa-check"></i></span>
-                        <span>Upfront transparent estimates &amp; online payment</span>
+                        <span class="feature-check-icon"><i class="fas fa-bell"></i></span>
+                        <div class="feature-text">
+                            <strong>Service Reminders</strong>
+                            <span>Timely alerts for oil &amp; part maintenance</span>
+                        </div>
                     </li>
                 </ul>
-
-                <!-- Live Status Card -->
-                <div class="live-status-card">
-                    <div class="live-status-left">
-                        <div class="live-pulse-dot"></div>
-                        <div>
-                            <div class="live-status-title">Fast Onboarding</div>
-                            <div class="live-status-sub">Zero paperwork &bull; Instant OTP</div>
-                        </div>
-                    </div>
-                    <div class="live-status-stat">100% Free</div>
-                </div>
             </div>
 
             <!-- Left Panel Footer -->
             <div class="showcase-footer">
-                <span><i class="fas fa-shield-check"></i> Email OTP Verified</span>
-                <span><i class="fas fa-lock"></i> 100% Data Privacy</span>
+                <span><i class="fas fa-shield-check"></i> Zero Paperwork</span>
+                <span><i class="fas fa-lock"></i> 100% Free Account</span>
             </div>
 
         </div>
@@ -131,7 +124,7 @@
                             <label for="reg-phone">Phone Number</label>
                             <div class="input-wrap">
                                 <i class="fas fa-phone field-icon"></i>
-                                <input type="tel" id="reg-phone" name="phone" placeholder="10-digit phone" required autocomplete="tel">
+                                <input type="tel" id="reg-phone" name="phone" placeholder="10-digit mobile number" value="{{ phone|default:'' }}" maxlength="10" minlength="10" pattern="[0-9]{10}" inputmode="numeric" required autocomplete="tel" title="Please enter a 10-digit mobile number">
                             </div>
                         </div>
 
@@ -198,6 +191,35 @@
         }
         setupToggle('toggleRegPassword', 'reg-password');
         setupToggle('toggleConfirmPassword', 'reg-confirm');
+
+        // Restrict phone number to exactly digits and max 10 chars
+        const phoneInput = document.getElementById('reg-phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 10);
+            });
+        }
+
+        // Auto-dismiss Alerts / Flash Messages after 3 seconds
+        const alerts = document.querySelectorAll('.alert, .alert-message');
+        alerts.forEach(function(alert) {
+            alert.style.cursor = 'pointer';
+            alert.title = 'Click to dismiss';
+            let timer = setTimeout(function() {
+                dismissAlert(alert);
+            }, 3000);
+            alert.addEventListener('mouseenter', () => clearTimeout(timer));
+            alert.addEventListener('mouseleave', () => {
+                timer = setTimeout(() => dismissAlert(alert), 1200);
+            });
+            alert.addEventListener('click', () => dismissAlert(alert));
+        });
+
+        function dismissAlert(alert) {
+            if (!alert || alert.classList.contains('fade-out')) return;
+            alert.classList.add('fade-out');
+            setTimeout(() => alert.remove(), 400);
+        }
     });
     </script>
 </body>

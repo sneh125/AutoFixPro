@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'css/site-footer.css' %}?v=3.0">
 </head>
 <body>
 
@@ -29,6 +29,145 @@
 <!-- ── Main Content ── -->
 <main class="dash-main">
 
+    <!-- ── Dashboard Skeleton Screen (Shimmer Placeholder) ── -->
+    <div id="dashboard-skeleton" class="dash-skeleton-wrapper" aria-hidden="true">
+        <!-- Header Skeleton -->
+        <div class="dash-header">
+            <div>
+                <div class="skeleton skeleton-title" style="width: 280px; height: 32px; margin-bottom: 8px;"></div>
+                <div class="skeleton skeleton-text" style="width: 380px; height: 16px;"></div>
+            </div>
+            <div class="skeleton skeleton-btn" style="width: 160px; height: 44px; border-radius: var(--r-md);"></div>
+        </div>
+
+        <!-- Radar Skeleton -->
+        <div class="skeleton-radar-card">
+            <div class="skeleton-radar-header">
+                <div class="skeleton-radar-title-group">
+                    <div class="skeleton skeleton-circle" style="width: 46px; height: 46px;"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton skeleton-text sm" style="width: 180px;"></div>
+                        <div class="skeleton skeleton-text lg" style="width: 320px; margin-bottom: 0;"></div>
+                    </div>
+                </div>
+                <div class="skeleton skeleton-btn" style="width: 140px; height: 32px; border-radius: 30px;"></div>
+            </div>
+            <div class="skeleton-radar-grid">
+                <div class="skeleton-radar-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div class="skeleton skeleton-text" style="width: 140px; height: 18px; margin: 0;"></div>
+                        <div class="skeleton skeleton-text sm" style="width: 80px; margin: 0;"></div>
+                    </div>
+                    <div class="skeleton skeleton-text" style="width: 85%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-btn" style="width: 100%; height: 38px; margin-top: 8px;"></div>
+                </div>
+                <div class="skeleton-radar-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div class="skeleton skeleton-text" style="width: 140px; height: 18px; margin: 0;"></div>
+                        <div class="skeleton skeleton-text sm" style="width: 80px; margin: 0;"></div>
+                    </div>
+                    <div class="skeleton skeleton-text" style="width: 85%;"></div>
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-btn" style="width: 100%; height: 38px; margin-top: 8px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Skeleton Grid -->
+        <div class="stats-row">
+            <div class="skeleton-stat-card">
+                <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text lg" style="width: 60px; height: 28px; margin-bottom: 6px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90px; margin-bottom: 0;"></div>
+                </div>
+            </div>
+            <div class="skeleton-stat-card">
+                <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text lg" style="width: 60px; height: 28px; margin-bottom: 6px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90px; margin-bottom: 0;"></div>
+                </div>
+            </div>
+            <div class="skeleton-stat-card">
+                <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text lg" style="width: 60px; height: 28px; margin-bottom: 6px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90px; margin-bottom: 0;"></div>
+                </div>
+            </div>
+            <div class="skeleton-stat-card">
+                <div class="skeleton skeleton-circle" style="width: 50px; height: 50px;"></div>
+                <div style="flex: 1;">
+                    <div class="skeleton skeleton-text lg" style="width: 60px; height: 28px; margin-bottom: 6px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90px; margin-bottom: 0;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Skeleton Grid -->
+        <div style="margin-bottom: 36px;">
+            <div class="skeleton skeleton-title" style="width: 180px; height: 24px; margin-bottom: 16px;"></div>
+            <div class="actions-grid">
+                <div class="skeleton-action-card">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 70%; height: 18px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90%;"></div>
+                </div>
+                <div class="skeleton-action-card">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 70%; height: 18px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90%;"></div>
+                </div>
+                <div class="skeleton-action-card">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 70%; height: 18px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90%;"></div>
+                </div>
+                <div class="skeleton-action-card">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 70%; height: 18px;"></div>
+                    <div class="skeleton skeleton-text sm" style="width: 90%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Table Skeleton -->
+        <div>
+            <div class="skeleton skeleton-title" style="width: 240px; height: 24px; margin-bottom: 16px;"></div>
+            <div class="skeleton-table-wrap">
+                <div class="skeleton-table-row">
+                    <div class="skeleton skeleton-text" style="width: 60px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 120px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 110px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 70px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80px;"></div>
+                </div>
+                <div class="skeleton-table-row">
+                    <div class="skeleton skeleton-text" style="width: 70px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 140px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 90px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 65px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80px;"></div>
+                </div>
+                <div class="skeleton-table-row">
+                    <div class="skeleton skeleton-text" style="width: 65px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 130px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 95px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 105px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 70px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 80px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Actual Dashboard Content ── -->
+    <div id="dashboard-content" class="dash-content-wrapper is-loading">
+
     <!-- Header Row -->
     <div class="dash-header">
         <div>
@@ -40,6 +179,111 @@
             Book a Service
         </a>
     </div>
+
+    <!-- ── Smart Service Maintenance Radar ── -->
+    {% if service_reminders %}
+    <section class="reminder-section {% if has_overdue %}alert-danger-zone{% elif urgent_reminders_count > 0 %}alert-warning-zone{% else %}alert-healthy-zone{% endif %}">
+        <div class="reminder-header">
+            <div class="reminder-title-group">
+                <div class="reminder-badge-icon {% if has_overdue %}pulse-red{% elif urgent_reminders_count > 0 %}pulse-amber{% else %}pulse-green{% endif %}">
+                    <i class="fas {% if has_overdue %}fa-triangle-exclamation{% elif urgent_reminders_count > 0 %}fa-bell{% else %}fa-shield-halved{% endif %}"></i>
+                </div>
+                <div>
+                    <div class="reminder-super-title">AI Maintenance Predictor &amp; Health Radar</div>
+                    <h2 class="reminder-main-title">
+                        {% if has_overdue %}
+                            Action Required: Vehicle Maintenance Overdue
+                        {% elif urgent_reminders_count > 0 %}
+                            Upcoming Scheduled Maintenance Needed
+                        {% else %}
+                            All Fleet Vehicles Road Ready &amp; In Certified Health
+                        {% endif %}
+                    </h2>
+                </div>
+            </div>
+
+            <div class="reminder-header-right">
+                {% if urgent_reminders_count > 0 %}
+                    <span class="reminder-count-pill {% if has_overdue %}pill-danger{% else %}pill-warning{% endif %}">
+                        <i class="fas {% if has_overdue %}fa-circle-exclamation{% else %}fa-clock{% endif %}"></i>
+                        {{ urgent_reminders_count }} Vehicle{{ urgent_reminders_count|pluralize }} Requiring Attention
+                    </span>
+                {% else %}
+                    <span class="reminder-count-pill pill-success">
+                        <i class="fas fa-check-circle"></i> 100% Up-to-Date
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="reminder-grid">
+            {% for r in service_reminders %}
+            <div class="reminder-card reminder-card-{{ r.status }}">
+                <div class="rc-top">
+                    <div class="rc-vehicle-header">
+                        <div class="rc-vehicle-icon">
+                            <i class="fas {{ r.vehicle.icon_class }}"></i>
+                        </div>
+                        <div class="rc-vehicle-meta">
+                            <h3>{{ r.vehicle.brand }} {{ r.vehicle.model }}</h3>
+                            <span class="plate-badge">{{ r.vehicle.vehicle_number }}</span>
+                        </div>
+                    </div>
+                    <span class="rc-status-pill {{ r.badge_class }}">
+                        {% if r.is_overdue %}
+                            <i class="fas fa-circle-exclamation"></i>
+                        {% elif r.is_due_soon %}
+                            <i class="fas fa-clock"></i>
+                        {% elif r.has_active_booking %}
+                            <i class="fas fa-screwdriver-wrench"></i>
+                        {% else %}
+                            <i class="fas fa-circle-check"></i>
+                        {% endif %}
+                        {{ r.status_label }}
+                    </span>
+                </div>
+
+                <div class="rc-body">
+                    <div class="rc-row">
+                        <span class="rc-label">Recommended:</span>
+                        <span class="rc-value highlight-service">{{ r.recommended_service }}</span>
+                    </div>
+                    <div class="rc-row">
+                        <span class="rc-label">Diagnostic Reason:</span>
+                        <span class="rc-value rc-reason">{{ r.recommended_service_reason }}</span>
+                    </div>
+                    {% if r.last_completed %}
+                    <div class="rc-row">
+                        <span class="rc-label">Last Serviced:</span>
+                        <span class="rc-value">{{ r.last_completed.service_date|date:"d M Y" }}</span>
+                    </div>
+                    {% endif %}
+                    {% if not r.has_active_booking %}
+                    <div class="rc-row">
+                        <span class="rc-label">Target Due Date:</span>
+                        <span class="rc-value {% if r.is_overdue %}text-danger-bold{% elif r.is_due_soon %}text-warning-bold{% endif %}">
+                            {{ r.next_due_date|date:"d M Y" }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="rc-footer">
+                    {% if r.has_active_booking %}
+                        <a href="{% url 'view_booking' r.active_booking.id %}" class="rc-btn rc-btn-track">
+                            <i class="fas fa-magnifying-glass"></i> Track Live Service (#BK-{{ r.active_booking.id }})
+                        </a>
+                    {% else %}
+                        <a href="{% url 'book_service' %}?vehicle={{ r.vehicle.id }}&service_type={{ r.recommended_service|urlencode }}" class="rc-btn {% if r.is_overdue %}rc-btn-danger{% elif r.is_due_soon %}rc-btn-warning{% else %}rc-btn-primary{% endif %}">
+                            <i class="fas fa-calendar-check"></i> Book {{ r.recommended_service }} &rarr;
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 
     <!-- Stats Row -->
     <section class="stats-row">
@@ -163,8 +407,12 @@
                                     <span class="badge badge-pending">Pending</span>
                                 {% elif b.status|lower == 'in progress' or b.status|lower == 'progress' %}
                                     <span class="badge badge-progress">In Progress</span>
-                                {% else %}
+                                {% elif b.status|lower == 'completed' %}
                                     <span class="badge badge-completed">Completed</span>
+                                {% elif b.status|lower == 'cancelled' %}
+                                    <span class="badge badge-cancelled">Cancelled</span>
+                                {% else %}
+                                    <span class="badge badge-pending">{{ b.status }}</span>
                                 {% endif %}
                             </td>
                             <td style="text-align: right;">
@@ -183,9 +431,55 @@
         {% endif %}
     </section>
 
+    </div><!-- End #dashboard-content -->
+
 </main>
 
 {% include 'includes/footer.html' %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Reveal real dashboard smoothly after slight shimmer duration
+    setTimeout(function() {
+        const skeleton = document.getElementById("dashboard-skeleton");
+        const content = document.getElementById("dashboard-content");
+
+        if (skeleton && content) {
+            content.style.display = "block";
+            // Allow display block to apply before transitioning opacity
+            requestAnimationFrame(function() {
+                skeleton.classList.add("fade-out");
+                content.classList.remove("is-loading");
+                setTimeout(function() {
+                    skeleton.style.display = "none";
+                }, 350);
+            });
+        }
+    }, 400);
+});
+
+// Developer/User test preview tool: can be triggered from browser console or button
+window.previewSkeleton = function(durationMs = 2500) {
+    const skeleton = document.getElementById("dashboard-skeleton");
+    const content = document.getElementById("dashboard-content");
+    if (!skeleton || !content) return;
+
+    skeleton.style.display = "block";
+    skeleton.classList.remove("fade-out");
+    content.classList.add("is-loading");
+
+    setTimeout(function() {
+        content.style.display = "block";
+        requestAnimationFrame(function() {
+            skeleton.classList.add("fade-out");
+            content.classList.remove("is-loading");
+            setTimeout(function() {
+                skeleton.style.display = "none";
+            }, 350);
+        });
+    }, durationMs);
+};
+</script>
 
 </body>
 </html>

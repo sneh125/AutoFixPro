@@ -10,11 +10,11 @@
     <nav class="navbar-nav" id="navMenu">
         {% if request.session.user_id %}
 
-            <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">
+            <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">
                 <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
                 </svg>
-                Dashboard
+                Home
             </a>
 
             <a href="{% url 'my_vehicle' %}" class="nav-item {% if request.resolver_match.url_name == 'my_vehicle' or request.resolver_match.url_name == 'add_vehicle' or request.resolver_match.url_name == 'edit_vehicle' %}is-active{% endif %}">
@@ -76,15 +76,21 @@
                     </a>
                     <div class="dropdown-divider"></div>
                     {% endif %}
-                    <a href="{% url 'profile' %}" class="dropdown-item">
+                    <a href="{% url 'dashboard' %}" class="dropdown-item {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zm-8 8a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <a href="{% url 'profile' %}" class="dropdown-item {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
                         My Profile
                     </a>
-                    <a href="{% url 'edit_profile' %}" class="dropdown-item">
+                    <a href="{% url 'edit_profile' %}" class="dropdown-item {% if request.resolver_match.url_name == 'edit_profile' %}is-active{% endif %}">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
                         Edit Profile
                     </a>
-                    <a href="{% url 'change_password' %}" class="dropdown-item">
+                    <a href="{% url 'change_password' %}" class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}is-active{% endif %}">
                         <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
                         Change Password
                     </a>
@@ -162,6 +168,72 @@
                 profileToggle.setAttribute('aria-expanded', 'false');
             }
         });
+    }
+
+    // Auto-dismiss Alerts / Flash Messages after 2.5 seconds
+    function initAutoDismissAlerts() {
+        const alerts = document.querySelectorAll('.alert-message, .messages-container > div, .alert:not(.alert-persistent)');
+        if (!alerts.length) return;
+
+        alerts.forEach(function(alert) {
+            if (alert.dataset.autoDismissInit) return;
+            alert.dataset.autoDismissInit = "true";
+
+            // Add close button if not present
+            if (!alert.querySelector('.alert-close-btn')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.className = 'alert-close-btn';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.setAttribute('aria-label', 'Close message');
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dismissAlert(alert);
+                });
+                alert.appendChild(closeBtn);
+            }
+
+            alert.style.cursor = 'pointer';
+            alert.title = 'Click to dismiss';
+            alert.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
+                    dismissAlert(alert);
+                }
+            });
+
+            // Automatically fade out after 2.5 seconds
+            let timer = setTimeout(function() {
+                dismissAlert(alert);
+            }, 2500);
+
+            // Pause on hover
+            alert.addEventListener('mouseenter', function() {
+                clearTimeout(timer);
+            });
+            alert.addEventListener('mouseleave', function() {
+                timer = setTimeout(function() {
+                    dismissAlert(alert);
+                }, 1200);
+            });
+        });
+    }
+
+    function dismissAlert(alert) {
+        if (!alert || alert.classList.contains('fade-out')) return;
+        alert.classList.add('fade-out');
+        setTimeout(function() {
+            const container = alert.closest('.messages-container');
+            alert.remove();
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
+        }, 420);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAutoDismissAlerts);
+    } else {
+        initAutoDismissAlerts();
     }
 })();
 </script>

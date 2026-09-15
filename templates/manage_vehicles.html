@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
 </head>
@@ -29,12 +30,12 @@
                 </button>
                 <div class="header-left">
                     <h1>Fleet Directory</h1>
-                    <p>Overview of all registered customer vehicles in the database</p>
+                    <p>Overview of all registered customer vehicles in the workshop database</p>
                 </div>
             </div>
             <div class="header-right">
                 <form method="get" class="admin-search-form">
-                    <input type="text" name="search" class="admin-search-input" placeholder="Search by number, brand, owner..." value="{{ search|default:'' }}">
+                    <input type="text" name="search" class="admin-search-input" placeholder="Search plate, brand, owner..." value="{{ search|default:'' }}">
                     <button type="submit" class="admin-search-submit">Search</button>
                     {% if search %}
                         <a href="{% url 'manage_vehicles' %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">Clear</a>
@@ -65,11 +66,12 @@
                     <thead>
                         <tr>
                             <th>Vehicle ID</th>
-                            <th>Owner Name</th>
                             <th>Vehicle Brand &amp; Model</th>
-                            <th>Registration Number</th>
+                            <th>License Plate</th>
+                            <th>Owner / Client</th>
                             <th>Fuel &amp; Year</th>
                             <th>Color</th>
+                            <th style="text-align: right;">History</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,20 +80,49 @@
                                 <tr>
                                     <td><strong>#VEH-{{ vehicle.id }}</strong></td>
                                     <td>
-                                        <strong>{{ vehicle.user.fullname }}</strong><br>
-                                        <span style="font-size: 12px; color: var(--text-muted);">{{ vehicle.user.phone }}</span>
-                                    </td>
-                                    <td>
-                                        <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div class="user-mini-avatar" style="background: rgba(255,77,48,0.12); color: var(--primary);">
+                                                <i class="fas {{ vehicle.icon_class|default:'fa-car' }}"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ vehicle.brand }} {{ vehicle.model }}</strong>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td><span class="plate-badge">{{ vehicle.vehicle_number }}</span></td>
-                                    <td>{{ vehicle.fuel_type }} ({{ vehicle.year }})</td>
-                                    <td>{{ vehicle.color }}</td>
+                                    <td>
+                                        <div class="table-user-cell" style="display: flex; align-items: center; gap: 8px;">
+                                            <div class="user-mini-avatar" style="width: 28px; height: 28px; font-size: 11px;">
+                                                {{ vehicle.user.fullname|first|upper }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ vehicle.user.fullname }}</strong><br>
+                                                <a href="tel:{{ vehicle.user.phone }}" style="font-size: 12px; color: var(--text-muted); text-decoration: none;">
+                                                    <i class="fas fa-phone-alt" style="font-size: 10px; margin-right: 3px;"></i>{{ vehicle.user.phone }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="category-tag">{{ vehicle.fuel_type }}</span>
+                                        <span style="font-size: 12px; color: var(--text-muted); margin-left: 4px;">{{ vehicle.year }}</span>
+                                    </td>
+                                    <td>
+                                        <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px;">
+                                            <span style="width: 10px; height: 10px; border-radius: 50%; background: {{ vehicle.color|lower|default:'#64748b' }}; border: 1px solid #cbd5e1; display: inline-block;"></span>
+                                            {{ vehicle.color|default:"N/A" }}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <a href="{% url 'manage_bookings' %}?search={{ vehicle.vehicle_number }}" class="action-edit-btn" style="padding: 5px 11px; font-size: 12px;" title="View all bookings for this vehicle">
+                                            <i class="fas fa-calendar-check" style="margin-right: 4px;"></i> Bookings
+                                        </a>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 30px; color: var(--text-muted);">No vehicles found in database.</td>
+                                <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No vehicles found matching your search.</td>
                             </tr>
                         {% endif %}
                     </tbody>

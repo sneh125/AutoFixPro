@@ -1,12 +1,12 @@
 from django.contrib import admin
 from .models import User, Vehicle, ServiceBooking, Payment, Inventory, EmailOTP, ContactMessage, ServiceReview
 
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ("id", "fullname", "email", "phone", "is_admin")
     list_filter = ("is_admin",)
     search_fields = ("fullname", "email", "phone")
-
 
 
 @admin.register(Vehicle)
@@ -44,6 +44,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "payment_date",
     )
 
+
 @admin.register(Inventory)
 class InventoryAdmin(admin.ModelAdmin):
     list_display = (
@@ -74,4 +75,3 @@ class ServiceReviewAdmin(admin.ModelAdmin):
     list_display = ("id", "booking", "user", "rating", "created_at")
     list_filter = ("rating", "created_at")
     search_fields = ("user__fullname", "user__email", "comment")
-

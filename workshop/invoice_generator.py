@@ -1,17 +1,12 @@
 import io
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-)
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
+
 def generate_pdf_invoice(booking, payment=None):
-    """
-    Generates a professional, branded automotive Tax Invoice PDF for AutoFixPro bookings.
-    Returns: bytes (PDF binary data)
-    """
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -23,15 +18,12 @@ def generate_pdf_invoice(booking, payment=None):
     )
 
     styles = getSampleStyleSheet()
-    
-    # Custom Brand Colors
     PRIMARY_COLOR = colors.HexColor("#FF4D30")
     DARK_COLOR = colors.HexColor("#0F172A")
     TEXT_MUTED = colors.HexColor("#64748B")
     BG_LIGHT = colors.HexColor("#F8FAFC")
     BORDER_COLOR = colors.HexColor("#E2E8F0")
 
-    # Custom Typography Styles
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
@@ -77,19 +69,7 @@ def generate_pdf_invoice(booking, payment=None):
         textColor=DARK_COLOR
     )
 
-    paid_badge_style = ParagraphStyle(
-        'PaidBadge',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=12,
-        leading=14,
-        textColor=colors.HexColor("#16A34A"),
-        alignment=2 # Right
-    )
-
     elements = []
-
-    # 1. Header: Brand Logo & Invoice Meta
     invoice_no = f"INV-AFP-{booking.id:05d}"
     invoice_date = booking.service_date.strftime("%d %b %Y") if booking.service_date else "N/A"
     
@@ -116,7 +96,6 @@ def generate_pdf_invoice(booking, payment=None):
     elements.append(Spacer(1, 14))
     elements.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY_COLOR, spaceBefore=0, spaceAfter=14))
 
-    # 2. Customer Info & Vehicle Info 2-Column Block
     cust_info = f"""
     <b>{booking.user.fullname}</b><br/>
     Email: {booking.user.email}<br/>
@@ -149,13 +128,11 @@ def generate_pdf_invoice(booking, payment=None):
     elements.append(client_table)
     elements.append(Spacer(1, 16))
 
-    # 3. Itemized Services Table
     from workshop.views import get_service_amount
     amount = get_service_amount(booking.service_type)
     if payment and payment.amount:
         amount = float(payment.amount)
 
-    # Tax breakdown (18% GST included or added)
     subtotal = round(amount / 1.18, 2)
     cgst = round(subtotal * 0.09, 2)
     sgst = round(subtotal * 0.09, 2)
@@ -192,7 +169,6 @@ def generate_pdf_invoice(booking, payment=None):
     elements.append(items_table)
     elements.append(Spacer(1, 10))
 
-    # 4. Calculation Summary Table
     is_paid = (booking.status == 'Completed') or (payment and payment.payment_status == 'Paid')
     status_text = "PAID (RAZORPAY DIGITAL)" if is_paid else "PAYMENT PENDING"
     status_color = "#16A34A" if is_paid else "#DC2626"
@@ -231,7 +207,6 @@ def generate_pdf_invoice(booking, payment=None):
     elements.append(summary_table)
     elements.append(Spacer(1, 20))
 
-    # 5. Terms & Signature Block
     terms_text = """
     <b>Terms & Conditions:</b><br/>
     1. 6-Month / 10,000 km warranty applicable on all genuine OEM parts fitted by AutoFixPro.<br/>
@@ -256,7 +231,6 @@ def generate_pdf_invoice(booking, payment=None):
     ]))
     elements.append(sig_table)
 
-    # Build document
     doc.build(elements)
     pdf = buffer.getvalue()
     buffer.close()

@@ -40,6 +40,76 @@
         </a>
     </div>
 
+    <!-- ── Vehicles Skeleton Screen ── -->
+    <div id="vehicles-skeleton" class="vehicles-skeleton-wrapper" aria-hidden="true">
+        <div class="search-bar-container" style="display: flex; gap: 12px;">
+            <div class="skeleton" style="flex: 1; height: 44px;"></div>
+            <div class="skeleton" style="width: 100px; height: 44px;"></div>
+        </div>
+        <div class="vehicle-cards">
+            <div class="skeleton-vehicle-card">
+                <div style="display: flex; gap: 14px; align-items: center;">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 20px;"></div>
+                        <div class="skeleton skeleton-text sm" style="width: 35%; margin-bottom: 0;"></div>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <div class="skeleton" style="height: 48px;"></div>
+                    <div class="skeleton" style="height: 48px;"></div>
+                    <div class="skeleton" style="height: 48px;"></div>
+                </div>
+                <div class="skeleton" style="height: 38px; border-radius: var(--r-md);"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton" style="flex: 1; height: 38px;"></div>
+                    <div class="skeleton" style="width: 70px; height: 38px;"></div>
+                </div>
+            </div>
+            <div class="skeleton-vehicle-card">
+                <div style="display: flex; gap: 14px; align-items: center;">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 20px;"></div>
+                        <div class="skeleton skeleton-text sm" style="width: 35%; margin-bottom: 0;"></div>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <div class="skeleton" style="height: 48px;"></div>
+                    <div class="skeleton" style="height: 48px;"></div>
+                    <div class="skeleton" style="height: 48px;"></div>
+                </div>
+                <div class="skeleton" style="height: 38px; border-radius: var(--r-md);"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton" style="flex: 1; height: 38px;"></div>
+                    <div class="skeleton" style="width: 70px; height: 38px;"></div>
+                </div>
+            </div>
+            <div class="skeleton-vehicle-card">
+                <div style="display: flex; gap: 14px; align-items: center;">
+                    <div class="skeleton skeleton-circle" style="width: 48px; height: 48px;"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton skeleton-text" style="width: 60%; height: 20px;"></div>
+                        <div class="skeleton skeleton-text sm" style="width: 35%; margin-bottom: 0;"></div>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <div class="skeleton" style="height: 48px;"></div>
+                    <div class="skeleton" style="height: 48px;"></div>
+                    <div class="skeleton" style="height: 48px;"></div>
+                </div>
+                <div class="skeleton" style="height: 38px; border-radius: var(--r-md);"></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="skeleton" style="flex: 1; height: 38px;"></div>
+                    <div class="skeleton" style="width: 70px; height: 38px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Vehicles Content ── -->
+    <div id="vehicles-content" class="vehicles-content-wrapper is-loading">
+
     <!-- Search Bar -->
     <div class="search-bar-container">
         <form method="get" class="search-form">
@@ -64,11 +134,11 @@
                     <i class="fas {{ vehicle.icon_class }}" style="font-size: 22px;"></i>
                 </div>
                 <div class="card-title">
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <h3 style="margin: 0;">{{ vehicle.brand }} {{ vehicle.model }}</h3>
+                    <h3 title="{{ vehicle.brand }} {{ vehicle.model }}">{{ vehicle.brand }} {{ vehicle.model }}</h3>
+                    <div class="card-meta-row">
+                        <span class="plate-number">{{ vehicle.vehicle_number }}</span>
                         <span class="category-badge-pill"><i class="fas {{ vehicle.icon_class }}" style="font-size: 9px; color: var(--primary);"></i> {{ vehicle.category }}</span>
                     </div>
-                    <span class="plate-number" style="margin-top: 6px;">{{ vehicle.vehicle_number }}</span>
                 </div>
             </div>
 
@@ -88,13 +158,35 @@
                 </div>
                 <div class="spec-box">
                     <span class="spec-label">Color</span>
-                    <span class="spec-val">{{ vehicle.color }}</span>
+                    <span class="spec-val" style="text-transform: capitalize;">{{ vehicle.color }}</span>
                 </div>
             </div>
 
+            {% if vehicle.reminder %}
+            <!-- Smart Service Reminder Strip -->
+            <div class="vehicle-reminder-banner {{ vehicle.reminder.badge_class }}">
+                <div class="vrb-left">
+                    <i class="fas {% if vehicle.reminder.is_overdue %}fa-triangle-exclamation{% elif vehicle.reminder.is_due_soon %}fa-clock{% elif vehicle.reminder.has_active_booking %}fa-screwdriver-wrench{% else %}fa-circle-check{% endif %}"></i>
+                    <div class="vrb-content">
+                        <span class="vrb-status" title="{{ vehicle.reminder.status_label }}">{{ vehicle.reminder.status_label }}</span>
+                        <span class="vrb-sub" title="Next: {{ vehicle.reminder.recommended_service }}">Next: <strong>{{ vehicle.reminder.recommended_service }}</strong></span>
+                    </div>
+                </div>
+                {% if not vehicle.reminder.has_active_booking %}
+                <a href="{% url 'book_service' %}?vehicle={{ vehicle.id }}&service_type={{ vehicle.reminder.recommended_service|urlencode }}" class="vrb-action-btn" title="Book Recommended Maintenance">
+                    Book &rarr;
+                </a>
+                {% else %}
+                <a href="{% url 'view_booking' vehicle.reminder.active_booking.id %}" class="vrb-action-btn" title="Track Live Status">
+                    Track &rarr;
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <!-- Actions -->
             <div class="card-actions">
-                <a href="{% url 'book_service' %}?vehicle={{ vehicle.id }}" class="book-service-btn">
+                <a href="{% url 'book_service' %}?vehicle={{ vehicle.id }}{% if vehicle.reminder %}&service_type={{ vehicle.reminder.recommended_service|urlencode }}{% endif %}" class="book-service-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
                     Book Service
                 </a>
@@ -102,9 +194,12 @@
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                     Edit
                 </a>
-                <a href="{% url 'delete_vehicle' vehicle.id %}" class="delete-btn" onclick="return confirm('Delete {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.vehicle_number }})? This cannot be undone.')">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                </a>
+                <form method="POST" action="{% url 'delete_vehicle' vehicle.id %}" style="display: inline;" onsubmit="return confirm('Delete {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.vehicle_number }})? This cannot be undone.')">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-btn" title="Delete Vehicle" style="background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center;">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -120,9 +215,49 @@
         {% endfor %}
     </div>
 
+    </div><!-- End #vehicles-content -->
+
 </main>
 
 {% include 'includes/footer.html' %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        const skeleton = document.getElementById("vehicles-skeleton");
+        const content = document.getElementById("vehicles-content");
+        if (skeleton && content) {
+            content.style.display = "block";
+            requestAnimationFrame(function() {
+                skeleton.classList.add("fade-out");
+                content.classList.remove("is-loading");
+                setTimeout(function() {
+                    skeleton.style.display = "none";
+                }, 350);
+            });
+        }
+    }, 400);
+});
+
+window.previewVehiclesSkeleton = function(durationMs = 2500) {
+    const skeleton = document.getElementById("vehicles-skeleton");
+    const content = document.getElementById("vehicles-content");
+    if (!skeleton || !content) return;
+    skeleton.style.display = "block";
+    skeleton.classList.remove("fade-out");
+    content.classList.add("is-loading");
+    setTimeout(function() {
+        content.style.display = "block";
+        requestAnimationFrame(function() {
+            skeleton.classList.add("fade-out");
+            content.classList.remove("is-loading");
+            setTimeout(function() {
+                skeleton.style.display = "none";
+            }, 350);
+        });
+    }, durationMs);
+};
+</script>
 
 </body>
 </html>

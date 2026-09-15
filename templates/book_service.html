@@ -4,14 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Service - AutoFixPro</title>
+    <title>Book Service — AutoFixPro</title>
+    <meta name="description" content="Schedule professional car maintenance, oil change, brake check, or full vehicle service with certified technicians.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
-    <link rel="stylesheet" href="{% static 'css/book_service.css' %}">
     <link rel="stylesheet" href="{% static 'css/site-footer.css' %}">
+    <link rel="stylesheet" href="{% static 'css/book_service.css' %}">
 </head>
 <body>
 
@@ -27,82 +29,797 @@
 
 <main class="page-main">
 
-    <div class="form-wrapper">
-        <div class="form-header">
-            <div class="header-badge">WORKSHOP APPOINTMENT</div>
-            <h1>Book a Vehicle Service</h1>
-            <p>Select your vehicle and choose your preferred service type, date, and time slot.</p>
+    <!-- Page Breadcrumb & Header -->
+    <div class="page-top-header">
+        <div class="header-badge"><i class="fas fa-calendar-check"></i> WORKSHOP APPOINTMENT</div>
+        <h1>Book a Vehicle Service</h1>
+        <p>Select your vehicle, choose a certified maintenance package, and schedule your preferred slot.</p>
+        
+        <!-- Interactive Step Progress Indicator -->
+        <div class="booking-steps-bar">
+            <div class="step-item is-active" data-step="1">
+                <span class="step-num"><i class="fas fa-car"></i></span>
+                <span class="step-label">1. Vehicle</span>
+            </div>
+            <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="step-item is-active" data-step="2">
+                <span class="step-num"><i class="fas fa-wrench"></i></span>
+                <span class="step-label">2. Package</span>
+            </div>
+            <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="step-item is-active" data-step="3">
+                <span class="step-num"><i class="fas fa-clock"></i></span>
+                <span class="step-label">3. Schedule</span>
+            </div>
+            <div class="step-arrow"><i class="fas fa-chevron-right"></i></div>
+            <div class="step-item" data-step="4">
+                <span class="step-num"><i class="fas fa-shield-check"></i></span>
+                <span class="step-label">4. Confirm</span>
+            </div>
         </div>
+    </div>
+
+    <!-- Booking Form Skeleton Loader -->
+    <div id="booking-skeleton" class="booking-form-skeleton-wrapper" aria-hidden="true">
+        <div class="booking-layout-grid">
+            <div class="skeleton-main-card">
+                <div class="skeleton skeleton-text" style="width: 160px; height: 16px; margin-bottom: 12px;"></div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px;">
+                    <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+                    <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+                    <div class="skeleton" style="height: 80px; border-radius: 12px;"></div>
+                </div>
+                <div class="skeleton skeleton-text" style="width: 180px; height: 16px; margin-bottom: 12px;"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+                    <div class="skeleton" style="height: 120px; border-radius: 12px;"></div>
+                    <div class="skeleton" style="height: 120px; border-radius: 12px;"></div>
+                </div>
+                <div class="skeleton" style="height: 48px; border-radius: 10px; margin-bottom: 16px;"></div>
+                <div class="skeleton" style="height: 90px; border-radius: 10px;"></div>
+            </div>
+            <div class="skeleton-side-card">
+                <div class="skeleton skeleton-text" style="width: 140px; height: 18px; margin-bottom: 16px;"></div>
+                <div class="skeleton" style="height: 180px; border-radius: 12px; margin-bottom: 16px;"></div>
+                <div class="skeleton" style="height: 120px; border-radius: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actual Booking Content Wrapper -->
+    <div id="booking-content" class="booking-form-content-wrapper is-loading">
 
         {% if not vehicles %}
             <div class="no-vehicle-warning">
-                <p>You haven't added any vehicles to your account yet.</p>
-                <a href="{% url 'add_vehicle' %}" class="nav-btn">+ Add Vehicle First</a>
+                <div class="warning-icon"><i class="fas fa-car-side"></i></div>
+                <h3>No Registered Vehicles Found</h3>
+                <p>To schedule maintenance or repair, please add at least one vehicle to your AutoFixPro garage first.</p>
+                <a href="{% url 'add_vehicle' %}" class="nav-btn"><i class="fas fa-plus"></i> Add Vehicle First</a>
             </div>
         {% else %}
-            <form method="post" class="form-box">
+            <form method="post" id="bookingForm" class="booking-form">
                 {% csrf_token %}
 
-                <div class="form-grid">
-                    <div class="input-group full-width">
-                        <label for="vehicle">Select Your Vehicle</label>
-                        <select name="vehicle" id="vehicle" required>
-                            <option value="">Choose a registered vehicle</option>
-                            {% for v in vehicles %}
-                            <option value="{{ v.id }}" {% if request.GET.vehicle == v.id|stringformat:"s" %}selected{% endif %}>
-                                {{ v.brand }} {{ v.model }} — ({{ v.vehicle_number }})
-                            </option>
-                            {% endfor %}
-                        </select>
+                <div class="booking-layout-grid">
+                    
+                    <!-- Left Column: Interactive Form Sections -->
+                    <div class="booking-main-col">
+                        
+                        <!-- Step 1: Vehicle Selection -->
+                        <div class="booking-card-section">
+                            <div class="section-title-row">
+                                <div class="section-num-badge">1</div>
+                                <div>
+                                    <h2>Select Your Vehicle</h2>
+                                    <p>Choose from your garage or select another car</p>
+                                </div>
+                                <a href="{% url 'add_vehicle' %}" class="add-new-veh-link" title="Register a new car">+ Add New Car</a>
+                            </div>
+
+                            <!-- Interactive Vehicle Selection Cards -->
+                            <div class="vehicle-selection-grid" id="vehicleCardGrid">
+                                {% for v in vehicles %}
+                                <div class="vehicle-select-card {% if forloop.first and not request.GET.vehicle %}is-selected{% elif request.GET.vehicle == v.id|stringformat:'s' %}is-selected{% endif %}"
+                                     data-vehicle-id="{{ v.id }}"
+                                     data-brand="{{ v.brand }}"
+                                     data-model="{{ v.model }}"
+                                     data-plate="{{ v.vehicle_number }}"
+                                     data-year="{{ v.year }}"
+                                     data-fuel="{{ v.fuel_type }}"
+                                     data-color="{{ v.color }}"
+                                     data-icon="{{ v.icon_class }}"
+                                     data-category="{{ v.category }}">
+                                    <div class="vsc-top">
+                                        <div class="vsc-icon"><i class="fas {{ v.icon_class }}"></i></div>
+                                        <div class="vsc-check"><i class="fas fa-check"></i></div>
+                                    </div>
+                                    <div class="vsc-info">
+                                        <h4>{{ v.brand }} {{ v.model }}</h4>
+                                        <div class="vsc-meta">
+                                            <span class="vsc-plate">{{ v.vehicle_number }}</span>
+                                            <span class="vsc-fuel {{ v.fuel_badge_color }}">{{ v.fuel_type }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Underlying Form Select (Synchronized) -->
+                            <div class="fallback-select-wrap">
+                                <label for="vehicle" class="visually-hidden">Registered Vehicle</label>
+                                <select name="vehicle" id="vehicle" class="standard-select" required>
+                                    <option value="">Choose a registered vehicle</option>
+                                    {% for v in vehicles %}
+                                    <option value="{{ v.id }}" {% if request.GET.vehicle == v.id|stringformat:"s" %}selected{% endif %}
+                                            data-brand="{{ v.brand }}"
+                                            data-model="{{ v.model }}"
+                                            data-plate="{{ v.vehicle_number }}"
+                                            data-year="{{ v.year }}"
+                                            data-fuel="{{ v.fuel_type }}"
+                                            data-color="{{ v.color }}"
+                                            data-icon="{{ v.icon_class }}"
+                                            data-category="{{ v.category }}">
+                                        {{ v.brand }} {{ v.model }} — ({{ v.vehicle_number }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Service Package Selection -->
+                        <div class="booking-card-section">
+                            <div class="section-title-row">
+                                <div class="section-num-badge">2</div>
+                                <div>
+                                    <h2>Choose Service Package</h2>
+                                    <p>Select tailored maintenance package with transparent upfront pricing</p>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Package Cards Grid -->
+                            <div class="packages-selection-grid" id="packagesGrid">
+                                
+                                <!-- Package 1: General Service -->
+                                <div class="package-select-card {% if request.GET.service_type == 'General Service' or not request.GET.service_type %}is-selected{% endif %}"
+                                     data-type="General Service"
+                                     data-price="1499"
+                                     data-duration="2 - 3 Hours"
+                                     data-tag="Most Popular">
+                                    <div class="psc-badge popular"><i class="fas fa-star"></i> Popular Choice</div>
+                                    <div class="psc-header">
+                                        <div class="psc-icon"><i class="fas fa-screwdriver-wrench"></i></div>
+                                        <div>
+                                            <h3>General Service</h3>
+                                            <span class="psc-duration"><i class="fas fa-clock"></i> Est: 2 - 3 Hours</span>
+                                        </div>
+                                    </div>
+                                    <div class="psc-price">
+                                        <span class="psc-currency">₹</span><span class="psc-amount">1,499</span>
+                                        <span class="psc-allin">all inclusive</span>
+                                    </div>
+                                    <ul class="psc-features">
+                                        <li><i class="fas fa-check-circle"></i> 40-Point Full Vehicle Safety Inspection</li>
+                                        <li><i class="fas fa-check-circle"></i> Complete Fluid Top-Up (Coolant &amp; Brake)</li>
+                                        <li><i class="fas fa-check-circle"></i> Spark Plugs &amp; Air Filter Compressed Clean</li>
+                                        <li><i class="fas fa-check-circle"></i> Free Exterior Foam Wash &amp; Vacuum</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Package 2: Oil Change -->
+                                <div class="package-select-card {% if request.GET.service_type == 'Oil Change' %}is-selected{% endif %}"
+                                     data-type="Oil Change"
+                                     data-price="899"
+                                     data-duration="45 - 60 Mins"
+                                     data-tag="Essential Care">
+                                    <div class="psc-header">
+                                        <div class="psc-icon"><i class="fas fa-oil-can"></i></div>
+                                        <div>
+                                            <h3>Oil Change</h3>
+                                            <span class="psc-duration"><i class="fas fa-clock"></i> Est: 45 - 60 Mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="psc-price">
+                                        <span class="psc-currency">₹</span><span class="psc-amount">899</span>
+                                        <span class="psc-allin">all inclusive</span>
+                                    </div>
+                                    <ul class="psc-features">
+                                        <li><i class="fas fa-check-circle"></i> Premium Full Synthetic Engine Oil</li>
+                                        <li><i class="fas fa-check-circle"></i> Genuine OEM Oil Filter Replacement</li>
+                                        <li><i class="fas fa-check-circle"></i> 15-Point Quick Health Diagnostic Scan</li>
+                                        <li><i class="fas fa-check-circle"></i> Windshield Washer Fluid Refill</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Package 3: Tire Change & Alignment -->
+                                <div class="package-select-card {% if request.GET.service_type == 'Tire Change' %}is-selected{% endif %}"
+                                     data-type="Tire Change"
+                                     data-price="1200"
+                                     data-duration="1 - 2 Hours"
+                                     data-tag="Smooth Drive">
+                                    <div class="psc-header">
+                                        <div class="psc-icon"><i class="fas fa-dharmachakra"></i></div>
+                                        <div>
+                                            <h3>Tire Change &amp; Alignment</h3>
+                                            <span class="psc-duration"><i class="fas fa-clock"></i> Est: 1 - 2 Hours</span>
+                                        </div>
+                                    </div>
+                                    <div class="psc-price">
+                                        <span class="psc-currency">₹</span><span class="psc-amount">1,200</span>
+                                        <span class="psc-allin">all inclusive</span>
+                                    </div>
+                                    <ul class="psc-features">
+                                        <li><i class="fas fa-check-circle"></i> 4-Wheel High-Precision Computerized Alignment</li>
+                                        <li><i class="fas fa-check-circle"></i> Dynamic Wheel Balancing with Weights</li>
+                                        <li><i class="fas fa-check-circle"></i> Tire Tread Depth &amp; Wear Pattern Analysis</li>
+                                        <li><i class="fas fa-check-circle"></i> Nitrogen Pressure Calibration for all 4 Wheels</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Package 4: Brake Service -->
+                                <div class="package-select-card {% if request.GET.service_type == 'Brake Service' %}is-selected{% endif %}"
+                                     data-type="Brake Service"
+                                     data-price="1850"
+                                     data-duration="1.5 - 2 Hours"
+                                     data-tag="Max Safety">
+                                    <div class="psc-header">
+                                        <div class="psc-icon"><i class="fas fa-compact-disc"></i></div>
+                                        <div>
+                                            <h3>Brake Service</h3>
+                                            <span class="psc-duration"><i class="fas fa-clock"></i> Est: 1.5 - 2 Hours</span>
+                                        </div>
+                                    </div>
+                                    <div class="psc-price">
+                                        <span class="psc-currency">₹</span><span class="psc-amount">1,850</span>
+                                        <span class="psc-allin">all inclusive</span>
+                                    </div>
+                                    <ul class="psc-features">
+                                        <li><i class="fas fa-check-circle"></i> Front &amp; Rear Brake Pad Precision Tuning</li>
+                                        <li><i class="fas fa-check-circle"></i> Brake Disc / Rotor Thickness &amp; Runout Check</li>
+                                        <li><i class="fas fa-check-circle"></i> High-Pressure Hydraulic Fluid Flush &amp; Bleed</li>
+                                        <li><i class="fas fa-check-circle"></i> Caliper Cleaning, Slider Pin Greasing &amp; Road Test</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Package 5: Full Vehicle Service -->
+                                <div class="package-select-card full-span {% if request.GET.service_type == 'Full Vehicle Service' %}is-selected{% endif %}"
+                                     data-type="Full Vehicle Service"
+                                     data-price="3499"
+                                     data-duration="4 - 5 Hours"
+                                     data-tag="Complete Overhaul">
+                                    <div class="psc-badge premium"><i class="fas fa-crown"></i> Complete VIP Overhaul</div>
+                                    <div class="psc-header">
+                                        <div class="psc-icon"><i class="fas fa-shield-halved"></i></div>
+                                        <div>
+                                            <h3>Full Vehicle Service &amp; Complete Diagnostic Overhaul</h3>
+                                            <span class="psc-duration"><i class="fas fa-clock"></i> Est: 4 - 5 Hours</span>
+                                        </div>
+                                    </div>
+                                    <div class="psc-price">
+                                        <span class="psc-currency">₹</span><span class="psc-amount">3,499</span>
+                                        <span class="psc-allin">all inclusive</span>
+                                    </div>
+                                    <ul class="psc-features grid-2-col">
+                                        <li><i class="fas fa-check-circle"></i> OBD-II Full Engine &amp; Transmission Computer Diagnostics</li>
+                                        <li><i class="fas fa-check-circle"></i> AC Coil Chemical Cleaning &amp; Refrigerant Pressure Check</li>
+                                        <li><i class="fas fa-check-circle"></i> Complete Brake Tuning, Rotor Check &amp; Fluid Bleed</li>
+                                        <li><i class="fas fa-check-circle"></i> Steering, Tie-Rod &amp; Suspension Bushing Analysis</li>
+                                        <li><i class="fas fa-check-circle"></i> Battery Health, Alternator Load &amp; Wiring Check</li>
+                                        <li><i class="fas fa-check-circle"></i> Full Interior Upholstery Deep Shampoo &amp; Foam Polish</li>
+                                    </ul>
+                                </div>
+
+                            </div>
+
+                            <!-- Synchronized Form Select -->
+                            <div class="fallback-select-wrap">
+                                <label for="service_type" class="visually-hidden">Service Package</label>
+                                <select name="service_type" id="service_type" class="standard-select" required>
+                                    <option value="">Choose a service package</option>
+                                    <option value="General Service" {% if request.GET.service_type == 'General Service' or not request.GET.service_type %}selected{% endif %}>General Service — ₹1,499</option>
+                                    <option value="Oil Change" {% if request.GET.service_type == 'Oil Change' %}selected{% endif %}>Oil Change — ₹899</option>
+                                    <option value="Tire Change" {% if request.GET.service_type == 'Tire Change' %}selected{% endif %}>Tire Change — ₹1,200</option>
+                                    <option value="Brake Service" {% if request.GET.service_type == 'Brake Service' %}selected{% endif %}>Brake Service — ₹1,850</option>
+                                    <option value="Full Vehicle Service" {% if request.GET.service_type == 'Full Vehicle Service' %}selected{% endif %}>Full Vehicle Service — ₹3,499</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Schedule Appointment -->
+                        <div class="booking-card-section">
+                            <div class="section-title-row">
+                                <div class="section-num-badge">3</div>
+                                <div>
+                                    <h2>Pick Date &amp; Time Slot</h2>
+                                    <p>Select your convenient date and arrival time at the workshop</p>
+                                </div>
+                            </div>
+
+                            <div class="schedule-grid">
+                                <div class="input-group">
+                                    <label for="service_date"><i class="far fa-calendar-alt"></i> Preferred Service Date</label>
+                                    <input type="date" id="service_date" name="service_date" required>
+                                    
+                                    <!-- Quick Date Chips -->
+                                    <div class="quick-chips-row">
+                                        <button type="button" class="quick-chip" id="chipToday">Today</button>
+                                        <button type="button" class="quick-chip is-active" id="chipTomorrow">Tomorrow</button>
+                                        <button type="button" class="quick-chip" id="chipWeekend">This Weekend</button>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="service_time"><i class="far fa-clock"></i> Preferred Time Slot</label>
+                                    <input type="time" id="service_time" name="service_time" value="10:00" required>
+                                    
+                                    <!-- Quick Slot Chips -->
+                                    <div class="quick-chips-row" id="timeSlotChips">
+                                        <button type="button" class="quick-slot is-selected" data-time="09:00">09:00 AM</button>
+                                        <button type="button" class="quick-slot" data-time="11:30">11:30 AM</button>
+                                        <button type="button" class="quick-slot" data-time="14:00">02:00 PM</button>
+                                        <button type="button" class="quick-slot" data-time="16:30">04:30 PM</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Mechanic Instructions -->
+                        <div class="booking-card-section">
+                            <div class="section-title-row">
+                                <div class="section-num-badge">4</div>
+                                <div>
+                                    <h2>Mechanic Instructions &amp; Symptoms</h2>
+                                    <p>Tell our technicians about any specific problems, odd sounds, or custom requests</p>
+                                </div>
+                            </div>
+
+                            <!-- Common Symptom Chips (click to append) -->
+                            <div class="symptom-tag-container">
+                                <span class="tag-label">Common quick tags:</span>
+                                <button type="button" class="symptom-pill" data-append="Squeaking or grinding noise from brakes.">+ Squeaking Brakes</button>
+                                <button type="button" class="symptom-pill" data-append="AC air flow is weak and not cooling properly.">+ AC Not Cooling</button>
+                                <button type="button" class="symptom-pill" data-append="Noticeable vibration or steering pulling to one side.">+ Steering Pulling</button>
+                                <button type="button" class="symptom-pill" data-append="Low fuel mileage and sluggish engine acceleration.">+ Low Pickup</button>
+                                <button type="button" class="symptom-pill" data-append="Periodic routine scheduled service check.">+ Routine Check</button>
+                            </div>
+
+                            <div class="input-group full-width" style="margin-top: 10px;">
+                                <label for="description" class="visually-hidden">Problem Instructions</label>
+                                <textarea id="description" name="description" rows="4" placeholder="Describe any issues, odd vibrations, warning dashboard lights, or special instructions for our mechanic..." required>Routine periodic maintenance and complete safety check.</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Final Action Buttons -->
+                        <div class="booking-submit-bar">
+                            <button type="submit" class="submit-btn">
+                                <span>Confirm &amp; Book Service</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <a href="{% url 'my_vehicle' %}" class="cancel-link">Back to Garage</a>
+                        </div>
+
                     </div>
 
-                    <div class="input-group full-width">
-                        <label for="service_type">Select Service Package</label>
-                        <select name="service_type" id="service_type" required>
-                            <option value="">Choose a service package</option>
-                            <option value="General Service">General Maintenance &amp; 40-Point Inspection — ₹1,499</option>
-                            <option value="Oil Change">Full Synthetic Engine Oil &amp; Filter Replacement — ₹899</option>
-                            <option value="Tire Change">Tire Rotation, Alignment &amp; Dynamic Balancing — ₹1,200</option>
-                            <option value="Brake Service">Brake Pad Tuning &amp; Fluid Flush — ₹1,850</option>
-                            <option value="Full Vehicle Service">Full Vehicle Overhaul &amp; Engine Diagnostics — ₹3,499</option>
-                        </select>
+                    <!-- Right Column: Sticky Live Booking Summary & Guarantees -->
+                    <div class="booking-side-col">
+                        <div class="summary-sticky-card">
+                            
+                            <!-- Summary Header -->
+                            <div class="summary-header">
+                                <div class="summary-header-badge"><i class="fas fa-receipt"></i> ESTIMATE</div>
+                                <h3>Booking Summary</h3>
+                                <p>Live estimate &amp; appointment details</p>
+                            </div>
+
+                            <!-- Vehicle Live Review Box -->
+                            <div class="summary-box" id="summaryVehicleBox">
+                                <div class="sb-label">Selected Vehicle</div>
+                                <div class="sb-content">
+                                    <div class="sb-icon" id="sumVehIcon"><i class="fas fa-car-side"></i></div>
+                                    <div class="sb-details">
+                                        <strong id="sumVehName">—</strong>
+                                        <span id="sumVehPlate" class="plate-pill">—</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Package Live Review Box -->
+                            <div class="summary-box" id="summaryPackageBox">
+                                <div class="sb-label">Selected Package</div>
+                                <div class="sb-content">
+                                    <div class="sb-icon primary" id="sumPkgIcon"><i class="fas fa-screwdriver-wrench"></i></div>
+                                    <div class="sb-details">
+                                        <strong id="sumPkgName">General Service</strong>
+                                        <span id="sumPkgDuration" class="duration-tag"><i class="far fa-clock"></i> 2 - 3 Hours</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Live Review Box -->
+                            <div class="summary-box" id="summaryScheduleBox">
+                                <div class="sb-label">Appointment Time</div>
+                                <div class="sb-content">
+                                    <div class="sb-icon success"><i class="far fa-calendar-check"></i></div>
+                                    <div class="sb-details">
+                                        <strong id="sumDateDisplay">—</strong>
+                                        <span id="sumTimeDisplay" class="time-tag">—</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Transparent Price Breakdown -->
+                            <div class="summary-pricing">
+                                <div class="price-row">
+                                    <span>Package Base Fee</span>
+                                    <span id="sumBasePrice">₹1,499</span>
+                                </div>
+                                <div class="price-row free-row">
+                                    <span>Workshop Diagnostic Scan</span>
+                                    <span class="free-text"><s class="strike">₹350</s> FREE</span>
+                                </div>
+                                <div class="price-row">
+                                    <span>Consumables &amp; Disposal</span>
+                                    <span class="text-green">Included</span>
+                                </div>
+                                <div class="price-row">
+                                    <span>Taxes &amp; GST</span>
+                                    <span class="text-muted">Included</span>
+                                </div>
+                                <div class="price-divider"></div>
+                                <div class="price-total-row">
+                                    <div>
+                                        <span class="total-label">Estimated Total</span>
+                                        <small class="total-note">Pay after workshop inspection</small>
+                                    </div>
+                                    <span class="total-price" id="sumTotalPrice">₹1,499</span>
+                                </div>
+                            </div>
+
+                            <!-- Side Submit Shortcut -->
+                            <button type="button" class="side-submit-btn" onclick="document.getElementById('bookingForm').requestSubmit();">
+                                <span>Book Now</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+
+                            <!-- Workshop Trust Guarantees -->
+                            <div class="workshop-guarantees-list">
+                                <div class="guarantee-item">
+                                    <i class="fas fa-shield-halved"></i>
+                                    <div>
+                                        <strong>6 Months / 5,000 KM Warranty</strong>
+                                        <span>Full warranty on all replaced spares and service labor.</span>
+                                    </div>
+                                </div>
+                                <div class="guarantee-item">
+                                    <i class="fas fa-certificate"></i>
+                                    <div>
+                                        <strong>ASE Certified Technicians</strong>
+                                        <span>Trained specialists dedicated to your car brand &amp; model.</span>
+                                    </div>
+                                </div>
+                                <div class="guarantee-item">
+                                    <i class="fas fa-box-check"></i>
+                                    <div>
+                                        <strong>100% Genuine OEM Spares</strong>
+                                        <span>Factory-original filters, brake pads, and fluids used.</span>
+                                    </div>
+                                </div>
+                                <div class="guarantee-item">
+                                    <i class="fas fa-satellite-dish"></i>
+                                    <div>
+                                        <strong>Real-Time Live Progress Tracking</strong>
+                                        <span>Watch step-by-step progress via your online dashboard.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Workshop Helpdesk Box -->
+                            <div class="helpdesk-strip">
+                                <i class="fas fa-headset"></i>
+                                <div>
+                                    <span>Need custom assistance?</span>
+                                    <strong>Call (0261) 250-9000</strong>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
 
-                    <div class="input-group">
-                        <label for="service_date">Preferred Service Date</label>
-                        <input type="date" id="service_date" name="service_date" required>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="service_time">Preferred Time Slot</label>
-                        <input type="time" id="service_time" name="service_time" required>
-                    </div>
-
-                    <div class="input-group full-width">
-                        <label for="description">Problem / Mechanic Instructions</label>
-                        <textarea id="description" name="description" rows="4" placeholder="Describe any issues, odd noises, vibrations, or custom requests for our technician..." required></textarea>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="submit-btn">Confirm &amp; Book Service</button>
-                    <a href="{% url 'dashboard' %}" class="cancel-link">Cancel</a>
                 </div>
             </form>
         {% endif %}
-    </div>
+
+    </div><!-- End #booking-content -->
 
 </main>
 
 <script>
-// Ensure minimum selectable date is today
 document.addEventListener('DOMContentLoaded', function() {
+    // 1. Date initialization & shortcuts
     const dateInput = document.getElementById('service_date');
+    const timeInput = document.getElementById('service_time');
+    const today = new Date();
+    
+    function formatDate(d) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.min = today;
+        dateInput.min = formatDate(today);
+        
+        // Default to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(today.getDate() + 1);
+        dateInput.value = formatDate(tomorrow);
+    }
+
+    // Quick Date chips
+    const chipToday = document.getElementById('chipToday');
+    const chipTomorrow = document.getElementById('chipTomorrow');
+    const chipWeekend = document.getElementById('chipWeekend');
+
+    function setActiveDateChip(btn) {
+        [chipToday, chipTomorrow, chipWeekend].forEach(c => c && c.classList.remove('is-active'));
+        if (btn) btn.classList.add('is-active');
+    }
+
+    if (chipToday) {
+        chipToday.addEventListener('click', function() {
+            dateInput.value = formatDate(today);
+            setActiveDateChip(chipToday);
+            updateSummary();
+        });
+    }
+
+    if (chipTomorrow) {
+        chipTomorrow.addEventListener('click', function() {
+            const tm = new Date();
+            tm.setDate(today.getDate() + 1);
+            dateInput.value = formatDate(tm);
+            setActiveDateChip(chipTomorrow);
+            updateSummary();
+        });
+    }
+
+    if (chipWeekend) {
+        chipWeekend.addEventListener('click', function() {
+            const d = new Date();
+            const day = d.getDay(); // 0 is Sunday, 6 is Saturday
+            const diff = (6 - day + 7) % 7 || 7;
+            d.setDate(d.getDate() + diff);
+            dateInput.value = formatDate(d);
+            setActiveDateChip(chipWeekend);
+            updateSummary();
+        });
+    }
+
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            [chipToday, chipTomorrow, chipWeekend].forEach(c => c && c.classList.remove('is-active'));
+            updateSummary();
+        });
+    }
+
+    // Quick Time Slot chips
+    const timeSlotChips = document.querySelectorAll('#timeSlotChips .quick-slot');
+    timeSlotChips.forEach(slot => {
+        slot.addEventListener('click', function() {
+            timeSlotChips.forEach(s => s.classList.remove('is-selected'));
+            this.classList.add('is-selected');
+            if (timeInput) {
+                timeInput.value = this.getAttribute('data-time');
+                updateSummary();
+            }
+        });
+    });
+
+    if (timeInput) {
+        timeInput.addEventListener('change', function() {
+            timeSlotChips.forEach(s => s.classList.remove('is-selected'));
+            updateSummary();
+        });
+    }
+
+    // 2. Interactive Vehicle Cards Selection
+    const vehicleCards = document.querySelectorAll('.vehicle-select-card');
+    const vehicleSelect = document.getElementById('vehicle');
+
+    vehicleCards.forEach(card => {
+        card.addEventListener('click', function() {
+            vehicleCards.forEach(c => c.classList.remove('is-selected'));
+            this.classList.add('is-selected');
+            const vehId = this.getAttribute('data-vehicle-id');
+            if (vehicleSelect) {
+                vehicleSelect.value = vehId;
+            }
+            updateSummary();
+        });
+    });
+
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', function() {
+            const val = this.value;
+            vehicleCards.forEach(c => {
+                if (c.getAttribute('data-vehicle-id') === val) {
+                    c.classList.add('is-selected');
+                } else {
+                    c.classList.remove('is-selected');
+                }
+            });
+            updateSummary();
+        });
+    }
+
+    // 3. Interactive Package Cards Selection
+    const packageCards = document.querySelectorAll('.package-select-card');
+    const packageSelect = document.getElementById('service_type');
+
+    packageCards.forEach(card => {
+        card.addEventListener('click', function() {
+            packageCards.forEach(c => c.classList.remove('is-selected'));
+            this.classList.add('is-selected');
+            const pkgType = this.getAttribute('data-type');
+            if (packageSelect) {
+                packageSelect.value = pkgType;
+            }
+            updateSummary();
+        });
+    });
+
+    if (packageSelect) {
+        packageSelect.addEventListener('change', function() {
+            const val = this.value;
+            packageCards.forEach(c => {
+                if (c.getAttribute('data-type') === val) {
+                    c.classList.add('is-selected');
+                } else {
+                    c.classList.remove('is-selected');
+                }
+            });
+            updateSummary();
+        });
+    }
+
+    // 4. Symptom tag clicks append to description
+    const symptomPills = document.querySelectorAll('.symptom-pill');
+    const descTextarea = document.getElementById('description');
+
+    symptomPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+            const appendText = this.getAttribute('data-append');
+            if (descTextarea) {
+                let curr = descTextarea.value.trim();
+                if (curr === "Routine periodic maintenance and complete safety check.") {
+                    descTextarea.value = appendText;
+                } else if (!curr.includes(appendText)) {
+                    descTextarea.value = curr + (curr ? "\n• " : "• ") + appendText;
+                }
+                descTextarea.focus();
+            }
+        });
+    });
+
+    // 5. Live Summary Updater
+    function updateSummary() {
+        // Selected Vehicle
+        const activeVehCard = document.querySelector('.vehicle-select-card.is-selected');
+        const sumVehName = document.getElementById('sumVehName');
+        const sumVehPlate = document.getElementById('sumVehPlate');
+        const sumVehIcon = document.getElementById('sumVehIcon');
+
+        if (activeVehCard) {
+            const brand = activeVehCard.getAttribute('data-brand');
+            const model = activeVehCard.getAttribute('data-model');
+            const plate = activeVehCard.getAttribute('data-plate');
+            const icon = activeVehCard.getAttribute('data-icon') || 'fa-car-side';
+
+            if (sumVehName) sumVehName.textContent = `${brand} ${model}`;
+            if (sumVehPlate) sumVehPlate.textContent = plate;
+            if (sumVehIcon) sumVehIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+        } else if (vehicleSelect && vehicleSelect.selectedOptions.length > 0) {
+            const opt = vehicleSelect.selectedOptions[0];
+            if (opt.value) {
+                const brand = opt.getAttribute('data-brand') || '';
+                const model = opt.getAttribute('data-model') || '';
+                const plate = opt.getAttribute('data-plate') || '';
+                const icon = opt.getAttribute('data-icon') || 'fa-car-side';
+                if (sumVehName) sumVehName.textContent = `${brand} ${model}`;
+                if (sumVehPlate) sumVehPlate.textContent = plate;
+                if (sumVehIcon) sumVehIcon.innerHTML = `<i class="fas ${icon}"></i>`;
+            }
+        }
+
+        // Selected Package
+        const activePkgCard = document.querySelector('.package-select-card.is-selected');
+        const sumPkgName = document.getElementById('sumPkgName');
+        const sumPkgDuration = document.getElementById('sumPkgDuration');
+        const sumBasePrice = document.getElementById('sumBasePrice');
+        const sumTotalPrice = document.getElementById('sumTotalPrice');
+
+        const packagePrices = {
+            "General Service": 1499,
+            "Oil Change": 899,
+            "Tire Change": 1200,
+            "Brake Service": 1850,
+            "Full Vehicle Service": 3499
+        };
+
+        let selectedType = activePkgCard ? activePkgCard.getAttribute('data-type') : (packageSelect ? packageSelect.value : "General Service");
+        let price = packagePrices[selectedType] || 1499;
+        let duration = activePkgCard ? activePkgCard.getAttribute('data-duration') : "2 - 3 Hours";
+
+        if (sumPkgName) sumPkgName.textContent = selectedType;
+        if (sumPkgDuration) sumPkgDuration.innerHTML = `<i class="far fa-clock"></i> ${duration}`;
+        if (sumBasePrice) sumBasePrice.textContent = `₹${price.toLocaleString('en-IN')}`;
+        if (sumTotalPrice) sumTotalPrice.textContent = `₹${price.toLocaleString('en-IN')}`;
+
+        // Scheduled Date & Time
+        const sumDateDisplay = document.getElementById('sumDateDisplay');
+        const sumTimeDisplay = document.getElementById('sumTimeDisplay');
+
+        if (dateInput && sumDateDisplay) {
+            if (dateInput.value) {
+                const dParts = dateInput.value.split('-');
+                if (dParts.length === 3) {
+                    const dateObj = new Date(dParts[0], dParts[1] - 1, dParts[2]);
+                    const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+                    sumDateDisplay.textContent = dateObj.toLocaleDateString('en-US', options);
+                }
+            } else {
+                sumDateDisplay.textContent = 'Select Date';
+            }
+        }
+
+        if (timeInput && sumTimeDisplay) {
+            if (timeInput.value) {
+                let [hours, minutes] = timeInput.value.split(':');
+                hours = parseInt(hours, 10);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                sumTimeDisplay.textContent = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+            } else {
+                sumTimeDisplay.textContent = '10:00 AM';
+            }
+        }
+    }
+
+    // Initial update
+    updateSummary();
+
+    // Smooth transition from Skeleton to Content
+    const skeleton = document.getElementById('booking-skeleton');
+    const content = document.getElementById('booking-content');
+    
+    if (skeleton && content) {
+        setTimeout(function() {
+            content.style.display = 'block';
+            skeleton.classList.add('fade-out');
+            content.classList.remove('is-loading');
+            
+            setTimeout(function() {
+                skeleton.style.display = 'none';
+            }, 350);
+        }, 380);
     }
 });
+
+// Helper for previewing skeleton
+window.previewBookingSkeleton = function(durationMs = 2500) {
+    const skeleton = document.getElementById('booking-skeleton');
+    const content = document.getElementById('booking-content');
+    if (!skeleton || !content) return;
+    skeleton.style.display = 'block';
+    skeleton.classList.remove('fade-out');
+    content.classList.add('is-loading');
+    content.style.display = 'none';
+    setTimeout(() => {
+        content.style.display = 'block';
+        skeleton.classList.add('fade-out');
+        content.classList.remove('is-loading');
+        setTimeout(() => { skeleton.style.display = 'none'; }, 350);
+    }, durationMs);
+};
 </script>
 
 {% include 'includes/footer.html' %}

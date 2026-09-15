@@ -1,0 +1,379 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Reviews &amp; Ratings - AutoFixPro Admin</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+    <style>
+        .star-rating-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            color: #f59e0b;
+            font-size: 13px;
+        }
+        .star-rating-display .star-empty {
+            color: #cbd5e1;
+        }
+        .rating-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .rating-badge-5 {
+            background: rgba(16, 185, 129, 0.15);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .rating-badge-4 {
+            background: rgba(59, 130, 246, 0.15);
+            color: #2563eb;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .rating-badge-3 {
+            background: rgba(245, 158, 11, 0.15);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .rating-badge-low {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .feedback-bubble {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 3px solid #f59e0b;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.45;
+            max-width: 380px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        {% include 'includes/admin_sidebar.html' %}
+
+        <!-- Main Content Area -->
+        <div class="admin-container">
+
+            <!-- Header -->
+            <header class="admin-header">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <button class="sidebar-toggle" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <div class="header-left">
+                        <h1>Customer Reviews &amp; Ratings</h1>
+                        <p>Monitor verified customer feedback, service satisfaction ratings, and workshop reviews</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <form method="get" class="admin-search-form">
+                        {% if rating_filter %}
+                            <input type="hidden" name="rating" value="{{ rating_filter }}">
+                        {% endif %}
+                        <input type="text" name="search" class="admin-search-input" placeholder="Search customer, vehicle, review..." value="{{ search|default:'' }}">
+                        <button type="submit" class="admin-search-submit">Search</button>
+                        {% if search %}
+                            <a href="{% url 'manage_reviews' %}{% if rating_filter %}?rating={{ rating_filter }}{% endif %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none; margin-left: 8px;">Clear</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </header>
+
+            <!-- Main Body -->
+            <main class="admin-content">
+
+                {% if messages %}
+                    <div class="messages-container" style="padding:0; margin: 0 0 20px 0;">
+                        {% for message in messages %}
+                            <div style="padding: 12px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; background: rgba(16,185,129,0.12); color: #16a34a; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-check-circle"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Metric Cards -->
+                <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 24px;">
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(245,158,11,0.12); color: #f59e0b;">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ total_count }}</span>
+                            <span class="metric-label">Total Reviews</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(16,185,129,0.12); color: #10b981;">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ avg_rating }} <small style="font-size: 14px; font-weight: 500; color: #64748b;">/ 5.0</small></span>
+                            <span class="metric-label">Average Workshop Score</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(59,130,246,0.12); color: #2563eb;">
+                            <i class="fas fa-thumbs-up"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ five_star_count }}</span>
+                            <span class="metric-label">5-Star Top Ratings</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon" style="background: rgba(239,68,68,0.12); color: #ef4444;">
+                            <i class="fas fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-value">{{ low_rating_count }}</span>
+                            <span class="metric-label">Low / Critical (&le;2★)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container -->
+                <div class="admin-table-container">
+                    <div class="table-header-row" style="flex-wrap: wrap; gap: 12px;">
+                        <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">
+                            Service Reviews
+                            <span style="font-size: 13px; font-weight: 600; color: #64748b; margin-left: 6px;">({{ reviews.count }} shown)</span>
+                        </h2>
+
+                        <!-- Filter Pills -->
+                        <div class="action-btns" style="flex-wrap: wrap;">
+                            <a href="{% url 'manage_reviews' %}{% if search %}?search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if not rating_filter %}#0f172a{% else %}#f1f5f9{% endif %}; color: {% if not rating_filter %}#fff{% else %}#475569{% endif %}; border: none;">
+                                All ({{ total_count }})
+                            </a>
+                            <a href="{% url 'manage_reviews' %}?rating=5{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if rating_filter == '5' %}#16a34a{% else %}#dcfce7{% endif %}; color: {% if rating_filter == '5' %}#fff{% else %}#15803d{% endif %}; border: none;">
+                                <i class="fas fa-star" style="margin-right: 4px; font-size: 11px;"></i> 5★ ({{ five_star_count }})
+                            </a>
+                            <a href="{% url 'manage_reviews' %}?rating=4{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if rating_filter == '4' %}#2563eb{% else %}#dbeafe{% endif %}; color: {% if rating_filter == '4' %}#fff{% else %}#1d4ed8{% endif %}; border: none;">
+                                4★
+                            </a>
+                            <a href="{% url 'manage_reviews' %}?rating=3{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if rating_filter == '3' %}#d97706{% else %}#fef3c7{% endif %}; color: {% if rating_filter == '3' %}#fff{% else %}#92400e{% endif %}; border: none;">
+                                3★
+                            </a>
+                            <a href="{% url 'manage_reviews' %}?rating=low{% if search %}&search={{ search }}{% endif %}" class="action-edit-btn" style="background: {% if rating_filter == 'low' %}#dc2626{% else %}#fee2e2{% endif %}; color: {% if rating_filter == 'low' %}#fff{% else %}#991b1b{% endif %}; border: none;">
+                                <i class="fas fa-triangle-exclamation" style="margin-right: 4px; font-size: 11px;"></i> &le;2★ ({{ low_rating_count }})
+                            </a>
+                        </div>
+                    </div>
+
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Review ID</th>
+                                <th>Customer</th>
+                                <th>Vehicle &amp; Booking</th>
+                                <th>Rating</th>
+                                <th>Customer Comments</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if reviews %}
+                                {% for r in reviews %}
+                                    <tr style="{% if r.rating <= 2 %}background: rgba(254,226,226,0.2);{% endif %}">
+                                        <td>
+                                            <span style="font-family: monospace; font-weight: 800; color: #0f172a; font-size: 12.5px; background: #f8fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                                #REV-{{ r.id }}
+                                            </span>
+                                            <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">
+                                                {{ r.created_at|date:"d M Y, h:i A" }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <div class="user-mini-avatar" style="background: rgba(245,158,11,0.15); color: #d97706;">
+                                                    {{ r.user.fullname|slice:":2"|upper }}
+                                                </div>
+                                                <div>
+                                                    <strong style="color: #0f172a; font-size: 14px; display: block;">{{ r.user.fullname }}</strong>
+                                                    <a href="mailto:{{ r.user.email }}" style="color: #64748b; font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                        <i class="fas fa-envelope" style="font-size: 10px;"></i> {{ r.user.email }}
+                                                    </a>
+                                                    {% if r.user.phone %}
+                                                        <div style="color: #94a3b8; font-size: 11.5px; margin-top: 1px;">
+                                                            <i class="fas fa-phone" style="font-size: 10px;"></i> {{ r.user.phone }}
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                                <span style="font-weight: 700; color: #1e293b; font-size: 13.5px;">
+                                                    {{ r.booking.vehicle.brand }} {{ r.booking.vehicle.model }}
+                                                </span>
+                                                <span style="font-size: 12px; color: #64748b; font-family: monospace;">
+                                                    {{ r.booking.vehicle.vehicle_number }}
+                                                </span>
+                                                <div style="margin-top: 4px;">
+                                                    <a href="{% url 'view_booking' r.booking.id %}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #2563eb; background: #eff6ff; padding: 2px 7px; border-radius: 4px; text-decoration: none; border: 1px solid #bfdbfe;">
+                                                        <i class="fas fa-receipt" style="font-size: 10px;"></i> Booking #{{ r.booking.id }} ({{ r.booking.service_type }})
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                                <div>
+                                                    {% if r.rating == 5 %}
+                                                        <span class="rating-badge rating-badge-5"><i class="fas fa-star"></i> 5.0 Excellent</span>
+                                                    {% elif r.rating == 4 %}
+                                                        <span class="rating-badge rating-badge-4"><i class="fas fa-star"></i> 4.0 Very Good</span>
+                                                    {% elif r.rating == 3 %}
+                                                        <span class="rating-badge rating-badge-3"><i class="fas fa-star"></i> 3.0 Average</span>
+                                                    {% else %}
+                                                        <span class="rating-badge rating-badge-low"><i class="fas fa-star-half-alt"></i> {{ r.rating }}.0 Needs Attention</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="star-rating-display">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= r.rating %}
+                                                            <i class="fas fa-star"></i>
+                                                        {% else %}
+                                                            <i class="fas fa-star star-empty"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if r.comment %}
+                                                <div class="feedback-bubble">
+                                                    &ldquo;{{ r.comment }}&rdquo;
+                                                </div>
+                                            {% else %}
+                                                <span style="color: #94a3b8; font-size: 12.5px; font-style: italic;">No written commentary provided.</span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <button type="button" class="action-btn-danger" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;" onclick="openDeleteReviewModal('{{ r.id }}', '{{ r.user.fullname|escapejs }}', '{{ r.booking.id }}')">
+                                                <i class="fas fa-trash-can"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 48px 16px;">
+                                        <div style="max-width: 320px; margin: 0 auto; color: #94a3b8;">
+                                            <i class="fas fa-star-half-alt" style="font-size: 40px; margin-bottom: 12px; color: #cbd5e1;"></i>
+                                            <h4 style="color: #475569; margin: 0 0 6px 0; font-size: 16px;">No Reviews Found</h4>
+                                            <p style="font-size: 13px; margin: 0 0 16px 0;">
+                                                {% if search or rating_filter %}
+                                                    No reviews matched your filter criteria. Try clearing search or rating filters.
+                                                {% else %}
+                                                    When customers complete their service and leave feedback, it will appear here.
+                                                {% endif %}
+                                            </p>
+                                            {% if search or rating_filter %}
+                                                <a href="{% url 'manage_reviews' %}" style="display: inline-block; padding: 7px 16px; background: #0f172a; color: #fff; border-radius: 6px; font-size: 12.5px; text-decoration: none; font-weight: 600;">Clear Filters</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteReviewModal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #ffffff; width: 100%; max-width: 440px; border-radius: 14px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden; animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div style="padding: 24px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #0f172a;">Delete Customer Review?</h3>
+                        <p style="margin: 3px 0 0 0; font-size: 13px; color: #64748b;">This action cannot be undone.</p>
+                    </div>
+                </div>
+
+                <p style="font-size: 13.5px; color: #334155; line-height: 1.5; margin: 0 0 20px 0;">
+                    Are you sure you want to permanently delete the review from <strong id="deleteCustomerName"></strong> for Service Booking <strong id="deleteBookingId"></strong>?
+                </p>
+
+                <form id="deleteReviewForm" method="post" action="">
+                    {% csrf_token %}
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <button type="button" onclick="closeDeleteReviewModal()" style="padding: 9px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font-weight: 600; font-size: 13px; cursor: pointer;">
+                            Cancel
+                        </button>
+                        <button type="submit" style="padding: 9px 18px; border-radius: 8px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-trash-can"></i> Yes, Delete Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeleteReviewModal(reviewId, customerName, bookingId) {
+            const modal = document.getElementById('deleteReviewModal');
+            const form = document.getElementById('deleteReviewForm');
+            const nameEl = document.getElementById('deleteCustomerName');
+            const bookingEl = document.getElementById('deleteBookingId');
+
+            form.action = `/admin-dashboard/reviews/delete/${reviewId}/`;
+            nameEl.textContent = customerName;
+            bookingEl.textContent = '#' + bookingId;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeDeleteReviewModal() {
+            document.getElementById('deleteReviewModal').style.display = 'none';
+        }
+
+        // Close modal on click outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('deleteReviewModal');
+            if (e.target === modal) {
+                closeDeleteReviewModal();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

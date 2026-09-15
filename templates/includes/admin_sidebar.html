@@ -34,6 +34,14 @@
             <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
             Inventory
         </a>
+        <a href="{% url 'manage_messages' %}" class="menu-item {% if active_page == 'messages' or request.resolver_match.url_name == 'manage_messages' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            Contact Inquiries
+        </a>
+        <a href="{% url 'manage_reviews' %}" class="menu-item {% if active_page == 'reviews' or request.resolver_match.url_name == 'manage_reviews' %}active{% endif %}">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            Customer Reviews
+        </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -71,5 +79,69 @@
     if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
+
+    // Auto-dismiss Alerts / Flash Messages after 2.5 seconds
+    function initAutoDismissAlerts() {
+        const alerts = document.querySelectorAll('.alert-message, .messages-container > div, .alert:not(.alert-persistent)');
+        if (!alerts.length) return;
+
+        alerts.forEach(function(alert) {
+            if (alert.dataset.autoDismissInit) return;
+            alert.dataset.autoDismissInit = "true";
+
+            // Add close button if not present
+            if (!alert.querySelector('.alert-close-btn')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.className = 'alert-close-btn';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.setAttribute('aria-label', 'Close message');
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dismissAlert(alert);
+                });
+                alert.appendChild(closeBtn);
+            }
+
+            alert.style.cursor = 'pointer';
+            alert.title = 'Click to dismiss';
+            alert.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON') {
+                    dismissAlert(alert);
+                }
+            });
+
+            let timer = setTimeout(function() {
+                dismissAlert(alert);
+            }, 2500);
+
+            alert.addEventListener('mouseenter', function() {
+                clearTimeout(timer);
+            });
+            alert.addEventListener('mouseleave', function() {
+                timer = setTimeout(function() {
+                    dismissAlert(alert);
+                }, 1200);
+            });
+        });
+    }
+
+    function dismissAlert(alert) {
+        if (!alert || alert.classList.contains('fade-out')) return;
+        alert.classList.add('fade-out');
+        setTimeout(function() {
+            const container = alert.closest('.messages-container');
+            alert.remove();
+            if (container && container.children.length === 0) {
+                container.remove();
+            }
+        }, 420);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAutoDismissAlerts);
+    } else {
+        initAutoDismissAlerts();
+    }
 })();
 </script>
