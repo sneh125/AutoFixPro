@@ -105,6 +105,7 @@
         {% else %}
 
             <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">Home</a>
+            <a href="{% url 'about' %}" class="nav-item {% if request.resolver_match.url_name == 'about' %}is-active{% endif %}">About Us</a>
             <a href="{% url 'home' %}#services" class="nav-item">Services</a>
             <a href="{% url 'home' %}#why-us" class="nav-item">Why Us</a>
             <a href="{% url 'contact' %}" class="nav-item {% if request.resolver_match.url_name == 'contact' %}is-active{% endif %}">Contact</a>
