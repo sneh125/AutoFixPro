@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - AutoFixPro | Premium Vehicle Workshop & Auto Care{% endblock %}
+
+{% block meta_description %}Learn about AutoFixPro - our journey, certified automotive technicians, state-of-the-art diagnostic workshop, and commitment to transparent car servicing.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}?v=2.0">
+{% endblock %}
+
+{% block content %}
+
+<!-- ── 1. Hero Section ── -->
+<section class="about-hero">
+    <div class="about-hero-content">
+        <span class="about-badge"><i class="fas fa-award"></i> ABOUT AUTOFIXPRO</span>
+        <h1>DRIVEN BY PASSION, <span class="text-gradient">ENGINEERED</span> FOR TRUST</h1>
+        <p>
+            We are redefining modern vehicle care by combining master mechanical craftsmanship with seamless digital transparency. From routine checkups to comprehensive overhauls, your vehicle receives precision care.
+        </p>
+    </div>
+</section>
+
+<!-- ── 2. Live Stats Strip ── -->
+<section class="about-stats">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-car"></i></div>
+            <div class="stat-num">15,000+</div>
+            <div class="stat-label">Vehicles Serviced</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-smile"></i></div>
+            <div class="stat-num">99.4%</div>
+            <div class="stat-label">Customer Satisfaction</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
+            <div class="stat-num">25+</div>
+            <div class="stat-label">Certified Master Mechanics</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon"><i class="fas fa-history"></i></div>
+            <div class="stat-num">12+</div>
+            <div class="stat-label">Years of Industry Trust</div>
+        </div>
+    </div>
+</section>
+
+<!-- ── 3. Our Story Section ── -->
+<section class="about-story">
+    <div class="story-grid">
+        <div class="story-content">
+            <span class="sub-title">WHO WE ARE</span>
+            <h2>Setting the Gold Standard in Modern Automotive Care</h2>
+            <p>
+                Founded with a mission to eliminate uncertainty from vehicle servicing, <strong>AutoFixPro</strong> was built on a simple promise: complete transparency, genuine parts, and expert mechanical care.
+            </p>
+            <p>
+                Traditional garages often leave car owners wondering about real repair statuses, unexpected bill inflations, or sub-standard spares. At AutoFixPro, our digital platform tracks every milestone of your car’s service in real-time, providing itemized invoices and clear photographic updates.
+            </p>
+
+            <div class="story-highlights">
+                <div class="story-highlight-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>100% OEM Parts</h4>
+                        <p>Direct manufacturer sourced spares with warranty.</p>
+                    </div>
+                </div>
+                <div class="story-highlight-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Upfront Pricing</h4>
+                        <p>Accurate estimates with zero surprise billing.</p>
+                    </div>
+                </div>
+                <div class="story-highlight-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Digital Tracking</h4>
+                        <p>Real-time booking and repair status alerts.</p>
+                    </div>
+                </div>
+                <div class="story-highlight-card">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <h4>Certified bays</h4>
+                        <p>Computerized engine diagnostics and bay lifts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="story-visual">
+            <div class="story-image-card">
+                <img src="{% static 'images/car.jpg' %}" alt="AutoFixPro Master Workshop">
+                <div class="story-floating-badge">
+                    <div class="badge-circle"><i class="fas fa-shield-alt"></i></div>
+                    <div class="badge-text">
+                        <strong>ISO 9001:2015</strong>
+                        <span>Certified Automotive Facility</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── 4. Core Pillars ── -->
+<section class="about-values">
+    <div class="section-head">
+        <span class="sub-title">WHY CHOOSE US</span>
+        <h2>Built on Uncompromising Values</h2>
+        <p>Every vehicle entering our workshop is treated with the highest precision, using advanced technology and safety protocols.</p>
+    </div>
+
+    <div class="values-grid">
+        <div class="value-card">
+            <div class="value-icon"><i class="fas fa-microchip"></i></div>
+            <h3>Modern Diagnostic Tech</h3>
+            <p>We utilize OBD-II computerized scanner systems to accurately pinpoint electrical and engine faults without trial-and-error guesswork.</p>
+        </div>
+
+        <div class="value-card">
+            <div class="value-icon"><i class="fas fa-tools"></i></div>
+            <h3>Master Craftsmanship</h3>
+            <p>Our technicians undergo rigorous certifications across multi-brand petrol, diesel, and hybrid powertrains for flawless execution.</p>
+        </div>
+
+        <div class="value-card">
+            <div class="value-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <h3>Honest & Transparent</h3>
+            <p>Every estimate is shared and approved before work begins. Digital GST invoices with clear part numbers ensure full peace of mind.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── 5. Master Technicians Team ── -->
+<section class="about-team">
+    <div class="section-head">
+        <span class="sub-title">MEET THE EXPERTS</span>
+        <h2>Our Lead Workshop Specialists</h2>
+        <p>The dedicated engineers and master mechanics behind every smooth and reliable drive.</p>
+    </div>
+
+    <div class="team-grid">
+        <div class="team-card">
+            <div class="team-avatar-wrap">
+                <div class="team-avatar">RK</div>
+                <span class="team-exp-badge">14+ Yrs Exp</span>
+            </div>
+            <div class="team-info">
+                <h4>Rajesh Kumar</h4>
+                <span class="role">Chief Workshop Supervisor</span>
+                <p>Specializes in multi-point mechanical overhauls, engine rebuilding, and transmission calibrations.</p>
+            </div>
+        </div>
+
+        <div class="team-card">
+            <div class="team-avatar-wrap">
+                <div class="team-avatar">AP</div>
+                <span class="team-exp-badge">10+ Yrs Exp</span>
+            </div>
+            <div class="team-info">
+                <h4>Amit Patel</h4>
+                <span class="role">Lead Diagnostician & Auto-Electrician</span>
+                <p>Expert in ECM remapping, computerized sensor calibration, and electronic safety systems.</p>
+            </div>
+        </div>
+
+        <div class="team-card">
+            <div class="team-avatar-wrap">
+                <div class="team-avatar">VS</div>
+                <span class="team-exp-badge">8+ Yrs Exp</span>
+            </div>
+            <div class="team-info">
+                <h4>Vikram Singh</h4>
+                <span class="role">Brake & Suspension Specialist</span>
+                <p>Dedicated to hydraulic braking systems, dynamic wheel alignments, and suspension tuning.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── 6. Warranty & Guarantee CTA ── -->
+<div class="about-guarantee">
+    <div class="guarantee-box">
+        <div class="guarantee-left">
+            <div class="guarantee-icon">
+                <i class="fas fa-medal"></i>
+            </div>
+            <div>
+                <h3>100% Service Satisfaction Guarantee</h3>
+                <p>We stand behind our workmanship. Enjoy a 6-month or 10,000 km warranty on all major service and repair packages.</p>
+            </div>
+        </div>
+        <div class="guarantee-actions">
+            {% if request.session.user_id %}
+                <a href="{% url 'book_service' %}" class="btn-cta-primary"><i class="fas fa-calendar-check"></i> Book Service Now</a>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn-cta-primary"><i class="fas fa-user-plus"></i> Get Started</a>
+            {% endif %}
+            <a href="{% url 'contact' %}" class="btn-cta-secondary"><i class="fas fa-envelope"></i> Contact Workshop</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
