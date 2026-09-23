@@ -7,7 +7,7 @@ from functools import wraps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.core.validators import EmailValidator, ValidationError
 from django.db.models import Avg, Count, Q, Sum
 from django.db.models.functions import TruncMonth
@@ -45,6 +45,10 @@ def get_service_amount(service_type):
 def home(request):
     reviews = ServiceReview.objects.filter(rating__gte=4).select_related("user", "booking__vehicle")[:6]
     return render(request, "home.html", {"reviews": reviews})
+
+
+def about(request):
+    return render(request, "about.html")
 
 
 def contact(request):
@@ -1073,6 +1077,9 @@ def payment_success(request, booking_id):
     payment_record.payment_method = "RAZORPAY"
     payment_record.save()
 
+    # Dispatch branded payment confirmation email with Tax Invoice PDF
+    send_payment_invoice_email(booking, payment_record)
+
     messages.success(
         request,
         f"Payment of ₹{expected_amount} successful! Booking #{booking.id} confirmed. 🎉"
@@ -1764,6 +1771,131 @@ def send_booking_status_email(booking, old_status, new_status):
         return False
 
 
+def send_payment_invoice_email(booking, payment):
+    """
+    Sends an automated, branded AutoFixPro payment receipt and attaches
+    the official GST Tax Invoice PDF to the customer's registered email.
+    """
+    if not booking or not booking.user or not booking.user.email:
+        return False
+
+    recipient_email = booking.user.email.strip()
+    recipient_name = booking.user.fullname or "Valued Customer"
+    vehicle_name = f"{booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.vehicle_number})"
+    invoice_num = f"INV-{booking.id:05d}"
+    amount = f"{float(payment.amount):.2f}"
+    pay_method = (payment.payment_method or "ONLINE").upper()
+    txn_id = payment.razorpay_payment_id or f"TXN-CSH{payment.id:05d}"
+    pay_date = payment.payment_date.strftime("%d %b %Y, %I:%M %p") if payment.payment_date else datetime.now().strftime("%d %b %Y, %I:%M %p")
+
+    subject = f"🧾 Payment Confirmed & Tax Invoice #{invoice_num} — AutoFixPro Booking #{booking.id}"
+
+    plain_message = (
+        f"Hello {recipient_name},\n\n"
+        f"Thank you for your payment! We have received ₹{amount} for Booking #{booking.id}.\n"
+        f"Vehicle: {vehicle_name}\n"
+        f"Service: {booking.service_type}\n"
+        f"Payment Method: {pay_method}\n"
+        f"Transaction ID: {txn_id}\n\n"
+        f"Your official GST Tax Invoice PDF is attached to this email.\n\n"
+        f"Best regards,\nAutoFixPro Workshop Technologies"
+    )
+
+    html_message = f"""
+    <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 28px; text-align: center; border-bottom: 3px solid #10b981;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">AutoFix<span style="color: #ff4d30;">Pro</span></h1>
+            <p style="color: #94a3b8; margin: 6px 0 0; font-size: 13px;">Official Payment Receipt &amp; Tax Invoice</p>
+        </div>
+        <div style="padding: 32px 28px; color: #1e293b;">
+            <p style="font-size: 16px; margin: 0 0 16px;">Hello <strong>{recipient_name}</strong>,</p>
+            <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 24px;">
+                We have successfully received your payment. Your official GST-compliant Tax Invoice has been generated and is attached to this email as a PDF.
+            </p>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 22px; margin-bottom: 24px; text-align: center;">
+                <span style="display: inline-block; background: #10b981; color: #ffffff; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 10px;">PAYMENT SUCCESSFUL</span>
+                <div style="font-size: 32px; font-weight: 800; color: #047857; margin-bottom: 6px;">₹{amount}</div>
+                <div style="font-size: 12.5px; color: #065f46;">Settled via {pay_method} &bull; TXN: {txn_id}</div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <div style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Transaction Breakdown</div>
+                <table style="width: 100%; font-size: 13.5px; line-height: 1.9; color: #334155; border-collapse: collapse;">
+                    <tr>
+                        <td style="color: #64748b;">Invoice Number:</td>
+                        <td style="text-align: right; font-weight: 700; color: #0f172a;">{invoice_num}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #64748b;">Booking Reference:</td>
+                        <td style="text-align: right; font-weight: 600;">#{booking.id}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #64748b;">Vehicle:</td>
+                        <td style="text-align: right; font-weight: 600;">{vehicle_name}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #64748b;">Service Package:</td>
+                        <td style="text-align: right; font-weight: 600;">{booking.service_type}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #64748b;">Payment Date:</td>
+                        <td style="text-align: right; font-weight: 600;">{pay_date}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 26px;">
+                <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #065f46;">
+                    📎 <strong>PDF Invoice Attached:</strong> Your tax invoice <code>AutoFixPro_Invoice_{invoice_num}.pdf</code> is attached to this email. You can also preview or download it anytime from your customer dashboard.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 28px 0 10px;">
+                <a href="http://127.0.0.1:8080/view_booking/{booking.id}/" style="background: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 700; display: inline-block;">
+                    View Booking &amp; Service History &rarr;
+                </a>
+            </div>
+        </div>
+        <div style="background: #f1f5f9; padding: 18px 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
+            Thank you for choosing AutoFixPro Workshop! | Phone: <strong>+91 98765 43210</strong><br>
+            &copy; 2026 AutoFixPro Workshop Technologies Inc. All rights reserved.
+        </div>
+    </div>
+    """
+
+    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or f"AutoFixPro <{getattr(settings, 'EMAIL_HOST_USER', '')}>"
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_message,
+            from_email=from_email,
+            to=[recipient_email]
+        )
+        msg.attach_alternative(html_message, "text/html")
+
+        # Generate and attach the official PDF Invoice
+        try:
+            pdf_bytes = generate_pdf_invoice(booking, payment)
+            if pdf_bytes:
+                msg.attach(
+                    filename=f"AutoFixPro_Invoice_{invoice_num}.pdf",
+                    content=pdf_bytes,
+                    mimetype="application/pdf"
+                )
+        except Exception as pdf_err:
+            print(f"[AutoFixPro Invoice Attachment Warning]: {pdf_err}")
+
+        msg.send(fail_silently=False)
+        print(f"[AutoFixPro Invoice Email] -> Successfully sent invoice to {recipient_email} for Booking #{booking.id}")
+        return True
+    except Exception as e:
+        print(f"[AutoFixPro Invoice Email Error to {recipient_email}]: {e}")
+        return False
+
+
+
 @admin_required
 @require_POST
 def update_booking_status(request, booking_id):
@@ -1854,6 +1986,24 @@ def manage_payments(request):
         "status_filter": status_filter,
     }
     return render(request, "manage_payments.html", context)
+
+
+@admin_required
+@require_POST
+def mark_payment_paid(request, payment_id):
+    payment = get_object_or_404(Payment, id=payment_id)
+    if payment.payment_status != "Paid":
+        payment.payment_status = "Paid"
+        if not payment.razorpay_payment_id:
+            payment.razorpay_payment_id = f"CASH-{payment.id:05d}"
+        payment.save(update_fields=["payment_status", "razorpay_payment_id"])
+
+        # Send confirmation & tax invoice PDF to customer email
+        send_payment_invoice_email(payment.booking, payment)
+        messages.success(request, f"Payment #{payment.id} marked as Paid. Tax invoice emailed to {payment.booking.user.email}!")
+    else:
+        messages.info(request, f"Payment #{payment.id} is already marked as Paid.")
+    return redirect("manage_payments")
 
 
 @admin_required

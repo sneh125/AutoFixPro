@@ -10,6 +10,7 @@ def favicon(request):
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
     path('register/', views.register, name='register'),
     path('login/', views.login, name='login'),
@@ -52,6 +53,7 @@ urlpatterns = [
     path('admin-dashboard/bookings/update-status/<int:booking_id>/', views.update_booking_status, name='update_booking_status'),
     path('admin-dashboard/payments/', views.manage_payments, name='manage_payments'),
     path('admin-dashboard/payments/export-csv/', views.export_payments_csv, name='export_payments_csv'),
+    path('admin-dashboard/payments/mark-paid/<int:payment_id>/', views.mark_payment_paid, name='mark_payment_paid'),
     path('admin-dashboard/inventory/', views.inventory, name='inventory'),
     path('admin-dashboard/inventory/add/', views.add_inventory, name='add_inventory'),
     path('admin-dashboard/inventory/edit/<int:item_id>/', views.edit_inventory, name='edit_inventory'),
