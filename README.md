@@ -105,7 +105,6 @@ python manage.py runserver
 
 # Or custom port 8080 (to run alongside other projects):
 python manage.py runserver 8080
-# Or double-click run_8080.bat
 ```
 Visit `http://127.0.0.1:8080` in your web browser.
 

@@ -138,27 +138,40 @@ def generate_pdf_invoice(booking, payment=None):
     sgst = round(subtotal * 0.09, 2)
     total = round(subtotal + cgst + sgst, 2)
 
+    th_style = ParagraphStyle(
+        'TableHeader',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=12,
+        textColor=colors.white
+    )
+    th_right = ParagraphStyle(
+        'TableHeaderRight',
+        parent=th_style,
+        alignment=2
+    )
+
     items_data = [
         [
-            Paragraph("<b>#</b>", normal_bold),
-            Paragraph("<b>Service Description</b>", normal_bold),
-            Paragraph("<b>Diagnostic Scan</b>", normal_bold),
-            Paragraph("<b>Rate (₹)</b>", ParagraphStyle('RHead', parent=normal_bold, alignment=2)),
-            Paragraph("<b>Amount (₹)</b>", ParagraphStyle('AHead', parent=normal_bold, alignment=2))
+            Paragraph("<b>#</b>", th_style),
+            Paragraph("<b>Service Description</b>", th_style),
+            Paragraph("<b>Diagnostic Scan</b>", th_style),
+            Paragraph("<b>Rate (Rs.)</b>", th_right),
+            Paragraph("<b>Amount (Rs.)</b>", th_right)
         ],
         [
             Paragraph("1", normal_text),
             Paragraph(f"<b>{booking.service_type}</b><br/><font color='#64748B' size='8'>Complete Workshop Labor, OEM Filter &amp; Fluid Service</font>", normal_text),
             Paragraph("Included (40-Point)", normal_text),
-            Paragraph(f"₹{subtotal:,.2f}", ParagraphStyle('RVal', parent=normal_text, alignment=2)),
-            Paragraph(f"₹{subtotal:,.2f}", ParagraphStyle('AVal', parent=normal_text, alignment=2))
+            Paragraph(f"Rs. {subtotal:,.2f}", ParagraphStyle('RVal', parent=normal_text, alignment=2)),
+            Paragraph(f"Rs. {subtotal:,.2f}", ParagraphStyle('AVal', parent=normal_text, alignment=2))
         ]
     ]
 
     items_table = Table(items_data, colWidths=[0.4 * inch, 3.4 * inch, 1.4 * inch, 1.1 * inch, 1.3 * inch])
     items_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#0F172A")),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('LEFTPADDING', (0, 0), (-1, -1), 8),
@@ -177,22 +190,22 @@ def generate_pdf_invoice(booking, payment=None):
         [
             Paragraph(f"<font color='{status_color}'><b>STATUS: {status_text}</b></font><br/><font color='#64748B' size='8'>Payment Gateway: Razorpay Secured | 256-Bit Encrypted</font>", normal_text),
             Paragraph("Subtotal:", ParagraphStyle('SubLbl', parent=normal_text, alignment=2)),
-            Paragraph(f"₹{subtotal:,.2f}", ParagraphStyle('SubVal', parent=normal_text, alignment=2))
+            Paragraph(f"Rs. {subtotal:,.2f}", ParagraphStyle('SubVal', parent=normal_text, alignment=2))
         ],
         [
             "",
             Paragraph("CGST (9%):", ParagraphStyle('CgstLbl', parent=normal_text, alignment=2)),
-            Paragraph(f"₹{cgst:,.2f}", ParagraphStyle('CgstVal', parent=normal_text, alignment=2))
+            Paragraph(f"Rs. {cgst:,.2f}", ParagraphStyle('CgstVal', parent=normal_text, alignment=2))
         ],
         [
             "",
             Paragraph("SGST (9%):", ParagraphStyle('SgstLbl', parent=normal_text, alignment=2)),
-            Paragraph(f"₹{sgst:,.2f}", ParagraphStyle('SgstVal', parent=normal_text, alignment=2))
+            Paragraph(f"Rs. {sgst:,.2f}", ParagraphStyle('SgstVal', parent=normal_text, alignment=2))
         ],
         [
             "",
             Paragraph("<b>Grand Total:</b>", ParagraphStyle('TotLbl', parent=normal_bold, alignment=2, fontSize=11)),
-            Paragraph(f"<b>₹{total:,.2f}</b>", ParagraphStyle('TotVal', parent=normal_bold, alignment=2, fontSize=12, textColor=PRIMARY_COLOR))
+            Paragraph(f"<b>Rs. {total:,.2f}</b>", ParagraphStyle('TotVal', parent=normal_bold, alignment=2, fontSize=12, textColor=PRIMARY_COLOR))
         ],
     ]
 
