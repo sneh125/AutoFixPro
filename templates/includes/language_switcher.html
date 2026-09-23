@@ -1,0 +1,640 @@
+{% load static %}
+<!-- ── Google Translate & Custom Language Switcher (English, Hindi, Gujarati) ── -->
+<div id="google_translate_element" class="notranslate" style="display:none !important; position:absolute; left:-9999px; top:-9999px; width:0; height:0; opacity:0; pointer-events:none;" aria-hidden="true"></div>
+
+<div class="custom-lang-switcher notranslate" id="customLangSwitcher" data-bs-theme="dark">
+    <button type="button" class="lang-pill-btn" id="langToggleBtn" aria-label="Select Language / भाषा પસંદ કરો" aria-expanded="false">
+        <span class="lang-globe-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+        </span>
+        <span class="lang-selected-text" id="langSelectedText">English</span>
+        <svg class="lang-arrow" viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+    </button>
+
+    <div class="lang-menu-dropdown" id="langMenuDropdown" role="menu" aria-label="Language options">
+        <div class="lang-menu-header">
+            <span class="lang-menu-title">Select Language / भाषा / ભાષા</span>
+        </div>
+        <div class="lang-options-list">
+            <button type="button" class="lang-opt-item is-active" data-lang="en" role="menuitem">
+                <span class="lang-opt-flag">🇬🇧</span>
+                <div class="lang-opt-labels">
+                    <span class="lang-opt-primary">English</span>
+                    <span class="lang-opt-secondary">Default</span>
+                </div>
+                <svg class="lang-opt-check" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+
+            <button type="button" class="lang-opt-item" data-lang="hi" role="menuitem">
+                <span class="lang-opt-flag">🇮🇳</span>
+                <div class="lang-opt-labels">
+                    <span class="lang-opt-primary">हिन्दी</span>
+                    <span class="lang-opt-secondary">Hindi</span>
+                </div>
+                <svg class="lang-opt-check" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+
+            <button type="button" class="lang-opt-item" data-lang="gu" role="menuitem">
+                <span class="lang-opt-flag">🇮🇳</span>
+                <div class="lang-opt-labels">
+                    <span class="lang-opt-primary">ગુજરાતી</span>
+                    <span class="lang-opt-secondary">Gujarati</span>
+                </div>
+                <svg class="lang-opt-check" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Custom Language Switcher Styling ── */
+.custom-lang-switcher {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    z-index: 1050;
+    margin: 0 4px;
+}
+
+.lang-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 13px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 9999px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    user-select: none;
+}
+
+.lang-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border-color: rgba(255, 77, 48, 0.45);
+    box-shadow: 0 4px 14px rgba(255, 77, 48, 0.25);
+    transform: translateY(-1px);
+}
+
+.lang-globe-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff4d30;
+    transition: transform 0.3s ease;
+}
+
+.lang-pill-btn:hover .lang-globe-icon {
+    transform: rotate(20deg);
+}
+
+.lang-selected-text {
+    letter-spacing: 0.2px;
+}
+
+.lang-arrow {
+    color: #94a3b8;
+    transition: transform 0.22s ease;
+}
+
+.custom-lang-switcher.is-open .lang-arrow {
+    transform: rotate(180deg);
+    color: #ff4d30;
+}
+
+/* ── High-Contrast Visible Style for Auth Pages (Light Background) ── */
+.split-wrapper .lang-pill-btn {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #cbd5e1 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.split-wrapper .lang-pill-btn:hover {
+    background: #ffffff !important;
+    border-color: #ff4d30 !important;
+    box-shadow: 0 4px 14px rgba(255, 77, 48, 0.25) !important;
+    transform: translateY(-1px);
+}
+
+.split-wrapper .lang-selected-text {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+.split-wrapper .lang-arrow {
+    color: #334155 !important;
+}
+
+.split-wrapper .custom-lang-switcher.is-open .lang-pill-btn {
+    border-color: #ff4d30 !important;
+    box-shadow: 0 0 0 3px rgba(255, 77, 48, 0.18) !important;
+}
+
+.split-wrapper .custom-lang-switcher.is-open .lang-arrow {
+    color: #ff4d30 !important;
+}
+
+/* ── Dropdown Menu ── */
+.lang-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 210px;
+    background: #0f172a;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 14px 36px -6px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 77, 48, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px) scale(0.96);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+    pointer-events: none;
+}
+
+.custom-lang-switcher.is-open .lang-menu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.lang-menu-header {
+    padding: 6px 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 6px;
+}
+
+.lang-menu-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+}
+
+.lang-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lang-opt-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #cbd5e1;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.lang-opt-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.lang-opt-item.is-active {
+    background: rgba(255, 77, 48, 0.16);
+    color: #ffffff;
+    border-color: rgba(255, 77, 48, 0.35);
+}
+
+.lang-opt-flag {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.lang-opt-labels {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.lang-opt-primary {
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.lang-opt-secondary {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.lang-opt-item.is-active .lang-opt-secondary {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.lang-opt-check {
+    color: #ff4d30;
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.18s ease;
+}
+
+.lang-opt-item.is-active .lang-opt-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ── Absolute Google Translate Top Banner & Overlay Suppression ── */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+iframe.goog-te-banner-frame,
+iframe.skiptranslate,
+iframe[id*=":1.container"],
+iframe[id*=":2.container"],
+.goog-te-banner {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    border: none !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+}
+
+html {
+    top: 0 !important;
+}
+
+body {
+    top: 0px !important;
+    position: static !important;
+    margin-top: 0 !important;
+}
+
+body > .skiptranslate:not(.custom-lang-switcher),
+body > div[class*="skiptranslate"]:not(#customLangSwitcher) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+.goog-tooltip,
+.goog-tooltip:hover,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-te-balloon {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
+}
+
+.goog-text-highlight {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.goog-te-gadget {
+    display: none !important;
+}
+
+font[style], font {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Mobile responsive tweak */
+@media (max-width: 900px) {
+    .custom-lang-switcher {
+        margin: 6px 0;
+    }
+    .lang-menu-dropdown {
+        right: auto;
+        left: 0;
+    }
+}
+</style>
+
+<script>
+(function() {
+    // Avoid double initialization
+    if (window.__AutoFixProLangInit) return;
+    window.__AutoFixProLangInit = true;
+
+    var LANG_NAMES = {
+        'en': 'English',
+        'hi': 'हिन्दी',
+        'gu': 'ગુજરાતી'
+    };
+
+    // Aggressive Google Translate Banner Killer
+    function eliminateGoogleBanner() {
+        try {
+            if (document.body) {
+                if (document.body.style.top && document.body.style.top !== '0px') {
+                    document.body.style.setProperty('top', '0px', 'important');
+                }
+                if (document.body.style.position === 'relative') {
+                    document.body.style.position = 'static';
+                }
+            }
+            if (document.documentElement) {
+                if (document.documentElement.style.top && document.documentElement.style.top !== '0px') {
+                    document.documentElement.style.setProperty('top', '0px', 'important');
+                }
+            }
+
+            var frames = document.querySelectorAll('.goog-te-banner-frame, iframe.skiptranslate, iframe[id*=":1.container"], iframe[id*=":2.container"]');
+            frames.forEach(function(el) {
+                el.style.setProperty('display', 'none', 'important');
+                el.style.setProperty('visibility', 'hidden', 'important');
+                el.style.setProperty('height', '0px', 'important');
+                el.style.setProperty('width', '0px', 'important');
+                el.style.setProperty('opacity', '0', 'important');
+                el.style.setProperty('pointer-events', 'none', 'important');
+            });
+
+            var skipDivs = document.querySelectorAll('body > .skiptranslate, body > div[class*="skiptranslate"]');
+            skipDivs.forEach(function(el) {
+                if (!el.classList.contains('custom-lang-switcher') && !el.closest('#customLangSwitcher')) {
+                    el.style.setProperty('display', 'none', 'important');
+                    el.style.setProperty('visibility', 'hidden', 'important');
+                    el.style.setProperty('height', '0px', 'important');
+                    el.style.setProperty('max-height', '0px', 'important');
+                    el.style.setProperty('overflow', 'hidden', 'important');
+                    el.style.setProperty('pointer-events', 'none', 'important');
+                }
+            });
+        } catch(e) {}
+    }
+
+    // Run continuous suppression observer
+    try {
+        var bannerObserver = new MutationObserver(function() {
+            eliminateGoogleBanner();
+        });
+        bannerObserver.observe(document.documentElement, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+            attributeFilter: ['style', 'class']
+        });
+    } catch(e) {}
+
+    // Run suppression interval for 4 seconds on page startup
+    var startupTicks = 0;
+    var startupInterval = setInterval(function() {
+        eliminateGoogleBanner();
+        startupTicks++;
+        if (startupTicks > 40) clearInterval(startupInterval);
+    }, 100);
+
+    // Helper: Get cookie
+    function getCookie(name) {
+        var value = "; " + document.cookie;
+        var parts = value.split("; " + name + "=");
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return null;
+    }
+
+    // Helper: Detect current language
+    function getCurrentLang() {
+        var saved = localStorage.getItem('afp_lang');
+        if (saved && LANG_NAMES[saved]) {
+            return saved;
+        }
+        var cookie = getCookie('googtrans');
+        if (cookie) {
+            var match = cookie.match(/\/en\/([a-z]{2})/i);
+            if (match && match[1] && LANG_NAMES[match[1].toLowerCase()]) {
+                return match[1].toLowerCase();
+            }
+        }
+        return 'en';
+    }
+
+    // Helper: Set cookie on all appropriate domain variants
+    function setGoogleTranslateCookie(lang) {
+        var domain = window.location.hostname;
+        var value = '/en/' + lang;
+        
+        document.cookie = 'googtrans=' + value + '; path=/;';
+        document.cookie = 'googtrans=' + value + '; path=/; domain=' + domain;
+
+        if (!/^[0-9.]+$/.test(domain) && domain.includes('.')) {
+            var parts = domain.split('.');
+            if (parts.length > 2) {
+                var rootDomain = parts.slice(-2).join('.');
+                document.cookie = 'googtrans=' + value + '; path=/; domain=.' + rootDomain;
+            }
+        }
+    }
+
+    // Helper: Clear cookie
+    function clearGoogleTranslateCookie() {
+        var domain = window.location.hostname;
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + domain;
+        if (!/^[0-9.]+$/.test(domain) && domain.includes('.')) {
+            var parts = domain.split('.');
+            if (parts.length > 2) {
+                var rootDomain = parts.slice(-2).join('.');
+                document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + rootDomain;
+            }
+        }
+    }
+
+    // Update the visual switcher UI
+    function updateSwitcherUI(lang) {
+        var label = document.getElementById('langSelectedText');
+        if (label && LANG_NAMES[lang]) {
+            label.textContent = LANG_NAMES[lang];
+        }
+
+        var items = document.querySelectorAll('.lang-opt-item');
+        items.forEach(function(item) {
+            if (item.getAttribute('data-lang') === lang) {
+                item.classList.add('is-active');
+            } else {
+                item.classList.remove('is-active');
+            }
+        });
+    }
+
+    // Apply translation using Google Translate
+    window.changeLanguage = function(langCode) {
+        if (!LANG_NAMES[langCode]) return;
+        
+        localStorage.setItem('afp_lang', langCode);
+        updateSwitcherUI(langCode);
+
+        // Close dropdown
+        var switcher = document.getElementById('customLangSwitcher');
+        if (switcher) switcher.classList.remove('is-open');
+
+        if (langCode === 'en') {
+            clearGoogleTranslateCookie();
+            var selectEn = document.querySelector('.goog-te-combo');
+            if (selectEn) {
+                selectEn.value = 'en';
+                selectEn.dispatchEvent(new Event('change'));
+            }
+            setTimeout(function() {
+                window.location.reload();
+            }, 150);
+            return;
+        }
+
+        // Set the translation cookie
+        setGoogleTranslateCookie(langCode);
+
+        // Trigger Google combo if ready
+        var select = document.querySelector('.goog-te-combo');
+        if (select) {
+            select.value = langCode;
+            select.dispatchEvent(new Event('change'));
+        }
+
+        // Immediate banner cleanup
+        eliminateGoogleBanner();
+
+        // Refresh to guarantee clean full-page translation without artifacts
+        setTimeout(function() {
+            var selectLater = document.querySelector('.goog-te-combo');
+            if (selectLater && selectLater.value === langCode) {
+                eliminateGoogleBanner();
+                return;
+            }
+            window.location.reload();
+        }, 300);
+    };
+
+    // Ensure persistent language on load
+    function enforcePersistedLanguage() {
+        var preferred = localStorage.getItem('afp_lang');
+        if (preferred && preferred !== 'en') {
+            setGoogleTranslateCookie(preferred);
+            updateSwitcherUI(preferred);
+            
+            // Wait for combo to be ready and align
+            var checkCombo = setInterval(function() {
+                var combo = document.querySelector('.goog-te-combo');
+                if (combo) {
+                    if (combo.value !== preferred) {
+                        combo.value = preferred;
+                        combo.dispatchEvent(new Event('change'));
+                    }
+                    eliminateGoogleBanner();
+                    clearInterval(checkCombo);
+                }
+            }, 100);
+            setTimeout(function() { clearInterval(checkCombo); }, 3000);
+        }
+    }
+
+    // Initialize UI and events
+    function initSwitcher() {
+        var switcher = document.getElementById('customLangSwitcher');
+        var toggleBtn = document.getElementById('langToggleBtn');
+        var items = document.querySelectorAll('.lang-opt-item');
+
+        if (!switcher || !toggleBtn) return;
+
+        var currentLang = getCurrentLang();
+        updateSwitcherUI(currentLang);
+        enforcePersistedLanguage();
+
+        // Toggle dropdown
+        toggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = switcher.classList.toggle('is-open');
+            toggleBtn.setAttribute('aria-expanded', isOpen);
+        });
+
+        // Click outside closes dropdown
+        document.addEventListener('click', function(e) {
+            if (!switcher.contains(e.target)) {
+                switcher.classList.remove('is-open');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Item clicks
+        items.forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var lang = item.getAttribute('data-lang');
+                window.changeLanguage(lang);
+            });
+        });
+    }
+
+    // Google Translate element initialization callback
+    window.googleTranslateElementInit = function() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,hi,gu',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+        }, 'google_translate_element');
+        eliminateGoogleBanner();
+    };
+
+    // Load Google Translate script dynamically if not present
+    function loadGoogleTranslateScript() {
+        if (document.getElementById('google-translate-script')) return;
+        var script = document.createElement('script');
+        script.id = 'google-translate-script';
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+        document.head.appendChild(script);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            initSwitcher();
+            loadGoogleTranslateScript();
+            eliminateGoogleBanner();
+        });
+    } else {
+        initSwitcher();
+        loadGoogleTranslateScript();
+        eliminateGoogleBanner();
+    }
+})();
+</script>
