@@ -272,11 +272,17 @@ def register(request):
         otp, email_sent = send_otp_email(email, "register", request)
         if email_sent:
             messages.info(request, f"A 6-digit verification code was sent to {email}. Please check your inbox and enter it below.")
-        else:
+        elif settings.DEBUG:
             messages.warning(
                 request,
-                f"Cloud Server Notice: PythonAnywhere free tier limits outbound email ports. For testing/demo, your verification OTP is: {otp}"
+                f"[Demo / Debug Mode]: PythonAnywhere free tier blocks external SMTP. Testing OTP: {otp}"
             )
+        else:
+            messages.error(
+                request,
+                "Email delivery service is temporarily unreachable. Please try again later or contact support."
+            )
+            return render(request, "register.html", context)
         return redirect("verify_otp", purpose="register")
 
     return render(request, "register.html")
@@ -441,10 +447,15 @@ def resend_otp(request, purpose):
             request,
             f"A new OTP has been sent to your email ({email}). You have {MAX_RESENDS - (resend_count + 1)} resend(s) remaining."
         )
-    else:
+    elif settings.DEBUG and purpose == "register":
         messages.warning(
             request,
-            f"Cloud Server Notice: PythonAnywhere free tier limits outbound email. For demo/testing, your new OTP is: {otp}"
+            f"[Demo / Debug Mode]: Your new registration OTP is: {otp}"
+        )
+    else:
+        messages.error(
+            request,
+            "Unable to deliver OTP via email at this moment. Please check server logs or contact support."
         )
     return redirect("verify_otp", purpose=purpose)
 
@@ -470,12 +481,14 @@ def forgot_password(request):
         otp, email_sent = send_otp_email(email, "forgot_password", request)
         if email_sent:
             messages.info(request, f"Password reset OTP sent to {email}. Please check your inbox.")
+            return redirect("verify_otp", purpose="forgot_password")
         else:
-            messages.warning(
+            # SECURITY: Never show password reset OTP on public screen
+            messages.error(
                 request,
-                f"Cloud Server Notice: PythonAnywhere free tier limits outbound email. For demo/testing, your password reset OTP is: {otp}"
+                "Password reset email could not be dispatched. For security, please contact the workshop administrator."
             )
-        return redirect("verify_otp", purpose="forgot_password")
+            return render(request, "forgot_password.html")
 
     return render(request, "forgot_password.html")
 
@@ -537,12 +550,14 @@ def login_otp(request):
         otp, email_sent = send_otp_email(email, "login_otp", request)
         if email_sent:
             messages.info(request, f"One-time login code sent to {email}. Please check your inbox.")
+            return redirect("verify_otp", purpose="login_otp")
         else:
-            messages.warning(
+            # SECURITY: Never show login OTP on public screen
+            messages.error(
                 request,
-                f"Cloud Server Notice: PythonAnywhere free tier limits outbound email. For demo/testing, your login OTP is: {otp}"
+                "OTP login is temporarily unavailable due to server mail policy. Please login with your password."
             )
-        return redirect("verify_otp", purpose="login_otp")
+            return redirect("login")
 
     return render(request, "login_otp.html")
 
