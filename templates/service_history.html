@@ -48,7 +48,7 @@
             <p>Official verified archive of completed repairs, warranty coverage certificates, and GST tax invoices</p>
         </div>
         <div class="header-action-cluster">
-            <a href="{% url 'export_service_history_csv' %}" class="btn-logbook-export" title="Export complete maintenance records as CSV spreadsheet">
+            <a href="{% url 'export_service_history_csv' %}{% if search_query %}?q={{ search_query }}{% endif %}{% if selected_vehicle_id %}{% if search_query %}&{% else %}?{% endif %}vehicle_id={{ selected_vehicle_id }}{% endif %}" class="btn-logbook-export" title="Export complete maintenance records as CSV spreadsheet">
                 <i class="fas fa-file-csv"></i> Export CSV
             </a>
             <button onclick="window.print()" class="btn-logbook-print" title="Print physical maintenance passport">

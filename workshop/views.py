@@ -1185,34 +1185,103 @@ def service_history(request):
 
 
 def export_service_history_csv(request):
-    import csv
-    from django.http import HttpResponse
-
     user_id = request.session.get("user_id")
     if not user_id:
         return redirect("login")
 
-    completed_services = ServiceBooking.objects.filter(
-        user_id=user_id, status__iexact="Completed"
-    ).select_related("vehicle").order_by("-service_date", "-id")
+    q = request.GET.get("q", "").strip()
+    selected_vehicle_id = request.GET.get("vehicle_id", "").strip()
 
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="autofixpro_maintenance_history.csv"'
+    completed_services = ServiceBooking.objects.filter(
+        Q(user_id=user_id) | Q(vehicle__user_id=user_id),
+        status__iexact="Completed"
+    ).select_related("vehicle", "user").order_by("-service_date", "-id")
+
+    if selected_vehicle_id:
+        completed_services = completed_services.filter(vehicle_id=selected_vehicle_id)
+
+    if q:
+        completed_services = completed_services.filter(
+            Q(vehicle__brand__icontains=q)
+            | Q(vehicle__model__icontains=q)
+            | Q(vehicle__vehicle_number__icontains=q)
+            | Q(service_type__icontains=q)
+            | Q(description__icontains=q)
+        )
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="autofixpro_maintenance_history_{timestamp}.csv"'
+
+    # Write UTF-8 BOM for Microsoft Excel compatibility
+    response.write("\ufeff")
 
     writer = csv.writer(response)
-    writer.writerow(["Booking ID", "Vehicle", "License Plate", "Service Package", "Completion Date", "Amount Paid (INR)", "Payment Method", "Technician Work Notes"])
+    writer.writerow([
+        "Booking ID",
+        "Invoice Number",
+        "Vehicle Brand",
+        "Vehicle Model",
+        "License Plate",
+        "Fuel Type",
+        "Service Package",
+        "Service Completion Date",
+        "Appointment Time Slot",
+        "Total Amount Paid (INR)",
+        "Payment Method",
+        "Payment Status",
+        "Transaction ID",
+        "Customer Rating",
+        "Customer Review / Feedback",
+        "Technician Work Notes & Description"
+    ])
 
     for b in completed_services:
-        payment = Payment.objects.filter(booking=b, payment_status="Paid").first()
+        payment = Payment.objects.filter(booking=b).first()
+        review = ServiceReview.objects.filter(booking=b).first()
+
+        v_brand = b.vehicle.brand if b.vehicle else "N/A"
+        v_model = b.vehicle.model if b.vehicle else "N/A"
+        v_plate = b.vehicle.vehicle_number if b.vehicle else "N/A"
+        v_fuel = b.vehicle.fuel_type if b.vehicle else "N/A"
+
+        if payment and payment.payment_status == "Paid":
+            amt_str = f"{float(payment.amount):.2f}"
+            pay_method = payment.payment_method
+            pay_status = "Paid"
+            txn_id = payment.razorpay_payment_id or f"#TXN-{payment.id}"
+        elif payment:
+            amt_str = f"{float(payment.amount):.2f}"
+            pay_method = payment.payment_method
+            pay_status = payment.payment_status
+            txn_id = payment.razorpay_payment_id or f"#TXN-{payment.id}"
+        else:
+            base_amt = get_service_amount(b.service_type)
+            amt_str = f"{base_amt:.2f}"
+            pay_method = "Pay at Workshop"
+            pay_status = "Completed (Cash/Direct)"
+            txn_id = "N/A"
+
+        rating_str = f"{review.rating} / 5 Stars" if review else "Not Rated"
+        review_str = review.comment if (review and review.comment) else "No feedback submitted"
+
         writer.writerow([
-            f"#BK-{b.id}",
-            f"{b.vehicle.brand} {b.vehicle.model}",
-            b.vehicle.vehicle_number,
+            f"#BKG-{b.id}",
+            f"#INV-{b.id:05d}",
+            v_brand,
+            v_model,
+            v_plate,
+            v_fuel,
             b.service_type,
-            b.service_date,
-            payment.amount if payment else "N/A",
-            payment.payment_method if payment else "N/A",
-            b.description or "Routine workshop maintenance",
+            b.service_date.strftime("%d-%m-%Y") if b.service_date else "N/A",
+            b.service_time.strftime("%I:%M %p") if b.service_time else "N/A",
+            amt_str,
+            pay_method,
+            pay_status,
+            txn_id,
+            rating_str,
+            review_str,
+            b.description or "Routine periodic maintenance and safety inspection."
         ])
 
     return response
@@ -1610,6 +1679,7 @@ def export_bookings_csv(request):
     writer = csv.writer(response)
     writer.writerow([
         "Booking ID",
+        "Invoice Number",
         "Customer Name",
         "Customer Email",
         "Customer Phone",
@@ -1621,8 +1691,15 @@ def export_bookings_csv(request):
         "Appointment Date",
         "Appointment Time",
         "Current Status",
+        "Progress Stage",
         "Estimated Amount (INR)",
-        "Payment Status"
+        "Amount Paid (INR)",
+        "Payment Method",
+        "Payment Status",
+        "Transaction ID",
+        "Customer Rating",
+        "Customer Review",
+        "Customer Problem / Work Description"
     ])
 
     for b in bookings:
@@ -1638,10 +1715,19 @@ def export_bookings_csv(request):
 
         amt = get_service_amount(b.service_type)
         pay = Payment.objects.filter(booking=b).first()
+        review = ServiceReview.objects.filter(booking=b).first()
+
         pay_status = pay.payment_status if pay else "Unpaid"
+        pay_amount = f"{pay.amount:.2f}" if pay else "0.00"
+        pay_method = pay.payment_method if pay else "N/A"
+        txn_id = pay.razorpay_payment_id if (pay and pay.razorpay_payment_id) else (f"#TXN-{pay.id}" if pay else "N/A")
+
+        rating_str = f"{review.rating} / 5 Stars" if review else "Not Rated"
+        review_str = review.comment if (review and review.comment) else "No feedback submitted"
 
         writer.writerow([
-            f"#{b.id}",
+            f"#BKG-{b.id}",
+            f"#INV-{b.id:05d}",
             c_name,
             c_email,
             c_phone,
@@ -1653,8 +1739,15 @@ def export_bookings_csv(request):
             b.service_date.strftime("%d-%m-%Y") if b.service_date else "",
             b.service_time.strftime("%I:%M %p") if b.service_time else "",
             b.status,
+            b.stage_title,
             f"{amt:.2f}",
-            pay_status
+            pay_amount,
+            pay_method,
+            pay_status,
+            txn_id,
+            rating_str,
+            review_str,
+            b.description or "Routine workshop maintenance"
         ])
 
     return response
@@ -2051,16 +2144,21 @@ def export_payments_csv(request):
     writer.writerow([
         "Transaction ID",
         "Booking ID",
+        "Invoice Number",
         "Customer Name",
         "Customer Email",
         "Customer Phone",
-        "Vehicle",
+        "Vehicle Brand & Model",
         "Registration No",
         "Service Package",
-        "Amount (INR)",
+        "Base Amount (INR)",
+        "GST 18% (INR)",
+        "Total Amount (INR)",
         "Payment Method",
-        "Razorpay Payment ID",
         "Payment Status",
+        "Razorpay Payment ID",
+        "Razorpay Order ID",
+        "Service Status",
         "Payment Date & Time"
     ])
 
@@ -2074,20 +2172,31 @@ def export_payments_csv(request):
         v_name = f"{b.vehicle.brand} {b.vehicle.model}" if (b and b.vehicle) else "N/A"
         v_plate = b.vehicle.vehicle_number if (b and b.vehicle) else "N/A"
         svc_type = b.service_type if b else "N/A"
+        svc_status = b.status if b else "N/A"
+        inv_no = f"#INV-{b.id:05d}" if b else "N/A"
+
+        tot_amount = float(p.amount)
+        base_amount = round(tot_amount / 1.18, 2)
+        gst_amount = round(tot_amount - base_amount, 2)
 
         writer.writerow([
             f"#TXN-{p.id}",
             f"#BKG-{b.id}" if b else "N/A",
+            inv_no,
             c_name,
             c_email,
             c_phone,
             v_name,
             v_plate,
             svc_type,
-            f"{p.amount:.2f}",
+            f"{base_amount:.2f}",
+            f"{gst_amount:.2f}",
+            f"{tot_amount:.2f}",
             p.payment_method,
-            p.razorpay_payment_id or "N/A",
             p.payment_status,
+            p.razorpay_payment_id or "N/A",
+            p.razorpay_order_id or "N/A",
+            svc_status,
             p.payment_date.strftime("%d-%m-%Y %I:%M %p") if p.payment_date else "N/A"
         ])
 
