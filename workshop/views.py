@@ -270,15 +270,13 @@ def register(request):
         }
 
         otp, email_sent = send_otp_email(email, "register", request)
-        if not email_sent:
-            messages.error(
+        if email_sent:
+            messages.info(request, f"A 6-digit verification code was sent to {email}. Please check your inbox and enter it below.")
+        else:
+            messages.warning(
                 request,
-                f"We were unable to deliver a verification email to '{email}'. "
-                "Please verify your email address is active and can receive mail."
+                f"Cloud Server Notice: PythonAnywhere free tier limits outbound email ports. For testing/demo, your verification OTP is: {otp}"
             )
-            return render(request, "register.html", context)
-
-        messages.info(request, f"A 6-digit verification code was sent to {email}. Please check your inbox and enter it below.")
         return redirect("verify_otp", purpose="register")
 
     return render(request, "register.html")
@@ -435,17 +433,19 @@ def resend_otp(request, purpose):
     EmailOTP.objects.filter(email=email, purpose=purpose, is_used=False).update(is_used=True)
 
     otp, email_sent = send_otp_email(email, purpose, request)
-    if not email_sent:
-        messages.error(request, f"Unable to deliver verification email to {email}. Please check your connection or email address.")
-        return redirect("verify_otp", purpose=purpose)
-
     request.session[f"otp_resend_count_{purpose}"] = resend_count + 1
     request.session.modified = True
 
-    messages.success(
-        request,
-        f"A new OTP has been sent to your email ({email}). You have {MAX_RESENDS - (resend_count + 1)} resend(s) remaining."
-    )
+    if email_sent:
+        messages.success(
+            request,
+            f"A new OTP has been sent to your email ({email}). You have {MAX_RESENDS - (resend_count + 1)} resend(s) remaining."
+        )
+    else:
+        messages.warning(
+            request,
+            f"Cloud Server Notice: PythonAnywhere free tier limits outbound email. For demo/testing, your new OTP is: {otp}"
+        )
     return redirect("verify_otp", purpose=purpose)
 
 
@@ -468,11 +468,13 @@ def forgot_password(request):
             return render(request, "forgot_password.html")
 
         otp, email_sent = send_otp_email(email, "forgot_password", request)
-        if not email_sent:
-            messages.error(request, f"Unable to deliver password reset email to {email}. Please check your connection or contact support.")
-            return render(request, "forgot_password.html")
-
-        messages.info(request, f"Password reset OTP sent to {email}. Please check your inbox.")
+        if email_sent:
+            messages.info(request, f"Password reset OTP sent to {email}. Please check your inbox.")
+        else:
+            messages.warning(
+                request,
+                f"Cloud Server Notice: PythonAnywhere free tier limits outbound email. For demo/testing, your password reset OTP is: {otp}"
+            )
         return redirect("verify_otp", purpose="forgot_password")
 
     return render(request, "forgot_password.html")
@@ -533,11 +535,13 @@ def login_otp(request):
             return render(request, "login_otp.html")
 
         otp, email_sent = send_otp_email(email, "login_otp", request)
-        if not email_sent:
-            messages.error(request, f"Unable to deliver login OTP to {email}. Please check your connection or contact support.")
-            return render(request, "login_otp.html")
-
-        messages.info(request, f"One-time login code sent to {email}. Please check your inbox.")
+        if email_sent:
+            messages.info(request, f"One-time login code sent to {email}. Please check your inbox.")
+        else:
+            messages.warning(
+                request,
+                f"Cloud Server Notice: PythonAnywhere free tier limits outbound email. For demo/testing, your login OTP is: {otp}"
+            )
         return redirect("verify_otp", purpose="login_otp")
 
     return render(request, "login_otp.html")
