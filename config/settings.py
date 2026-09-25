@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -123,14 +124,16 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Enable WhiteNoise compression and caching for fast, reliable static serving in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files (User uploaded images and documents)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Razorpay API Credentials
-RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
-RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
+# Razorpay API Credentials (Fallback to active keys if .env is missing on PythonAnywhere)
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID') or 'rzp_test_TR90t4viwpsGlr'
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET') or 'Qz2PIiKIybkPh1wDHGCVVIvl'
 
 # ============================================================
 # EMAIL / OTP PRODUCTION CONFIGURATION (Step 7)
@@ -140,10 +143,10 @@ EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').replace(' ', '').strip()
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"AutoFixPro <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "webmaster@localhost")
-SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER or 'root@localhost')
+EMAIL_HOST_USER = (os.getenv('EMAIL_HOST_USER') or 'snehprajapati36@gmail.com').strip()
+EMAIL_HOST_PASSWORD = (os.getenv('EMAIL_HOST_PASSWORD') or 'sgyi nbdj kpbt czfu').replace(' ', '').strip()
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"AutoFixPro <{EMAIL_HOST_USER}>")
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
 
 # OTP Security Parameters
@@ -157,12 +160,13 @@ EMAIL_OTP_MAX_ATTEMPTS = int(os.getenv('EMAIL_OTP_MAX_ATTEMPTS', 5))
 # PRODUCTION DEPLOYMENT & SECURITY SETTINGS (Step 9)
 # ============================================================
 
+# Trust PythonAnywhere and cloud reverse proxies for HTTPS detection
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Session security
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
-
-# Automatically enable secure cookies in Production (HTTPS)
 SESSION_COOKIE_SECURE = not DEBUG
 
 # CSRF security
@@ -170,10 +174,17 @@ CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = not DEBUG
 
-# CSRF Trusted Origins for live domain/hosting
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
-]
+# CSRF Trusted Origins for live domain/hosting (Includes PythonAnywhere and localhost)
+_env_origins = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = list(set([
+    'https://*.pythonanywhere.com',
+    'http://*.pythonanywhere.com',
+    'https://*.ngrok-free.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+] + _env_origins))
 
 # SSL Redirect (Enable in production once SSL/HTTPS domain is live)
 SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False').lower() in ('true', '1', 't') if not DEBUG else False

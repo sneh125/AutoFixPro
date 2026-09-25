@@ -63,13 +63,15 @@ urlpatterns = [
     path('admin-dashboard/messages/delete/<int:message_id>/', views.delete_message, name='delete_message'),
     path('admin-dashboard/reviews/', views.manage_reviews, name='manage_reviews'),
     path('admin-dashboard/reviews/delete/<int:review_id>/', views.delete_review, name='delete_review'),
-
     path('favicon.ico', favicon, name='favicon'),
     path('admin/', admin.site.urls),
 ]
 
 from django.conf import settings
-from django.conf.urls.static import static
+from django.urls import re_path
+from django.views.static import serve
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Guarantee media files are always accessible in production & development
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]

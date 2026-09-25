@@ -4,4 +4,5 @@ python-dotenv
 razorpay
 reportlab
 requests
+whitenoise>=6.6.0
 
