@@ -149,6 +149,12 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"AutoFixPro <{EMAIL_HOST_U
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
 
+# HTTP REST Email APIs (Works 100% on PythonAnywhere Free Tier over HTTPS port 443)
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip()
+RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', '').strip()
+DEFAULT_FROM_NAME = os.getenv('DEFAULT_FROM_NAME', 'AutoFixPro').strip()
+
 # OTP Security Parameters
 EMAIL_OTP_EXPIRY_MINUTES = int(os.getenv('EMAIL_OTP_EXPIRY_MINUTES', 5))
 EMAIL_OTP_RESEND_SECONDS = int(os.getenv('EMAIL_OTP_RESEND_SECONDS', 30))
