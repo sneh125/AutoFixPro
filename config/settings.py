@@ -109,11 +109,22 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
 USE_TZ = True
+
+# Workshop Business Information & Invoice Configurations
+from decimal import Decimal
+WORKSHOP_NAME = os.getenv('WORKSHOP_NAME', 'AutoFixPro Workshop')
+WORKSHOP_LEGAL_ENTITY = os.getenv('WORKSHOP_LEGAL_ENTITY', 'AutoFixPro Technologies Inc.')
+WORKSHOP_ADDRESS = os.getenv('WORKSHOP_ADDRESS', '101, AutoFixPro Plaza, SG Highway, Ahmedabad, Gujarat 380054')
+WORKSHOP_PHONE = os.getenv('WORKSHOP_PHONE', '+91 98765 43210')
+WORKSHOP_EMAIL = os.getenv('WORKSHOP_EMAIL', 'support@autofixpro.com')
+WORKSHOP_GSTIN = os.getenv('WORKSHOP_GSTIN', '24AAACA1234F1Z9')
+GST_RATE = Decimal(os.getenv('GST_RATE', '18.00'))
+
 
 
 # Static files (CSS, JavaScript, Images)
@@ -131,21 +142,21 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Razorpay API Credentials (Fallback to active keys if .env is missing on PythonAnywhere)
-RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID') or 'rzp_test_TR90t4viwpsGlr'
-RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET') or 'Qz2PIiKIybkPh1wDHGCVVIvl'
+# Razorpay API Credentials
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '').strip()
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '').strip()
 
 # ============================================================
-# EMAIL / OTP PRODUCTION CONFIGURATION (Step 7)
+# EMAIL / OTP PRODUCTION CONFIGURATION
 # ============================================================
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 't')
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
-EMAIL_HOST_USER = (os.getenv('EMAIL_HOST_USER') or 'snehprajapati36@gmail.com').strip()
-EMAIL_HOST_PASSWORD = (os.getenv('EMAIL_HOST_PASSWORD') or 'sgyi nbdj kpbt czfu').replace(' ', '').strip()
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"AutoFixPro <{EMAIL_HOST_USER}>")
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').replace(' ', '').strip()
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', f"AutoFixPro <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "AutoFixPro <noreply@autofixpro.com>")
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
 
