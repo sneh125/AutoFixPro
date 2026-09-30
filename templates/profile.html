@@ -182,7 +182,10 @@
                     <i class="fas fa-calendar-check"></i> Service Bookings <span class="badge-count">{{ booking_count }}</span>
                 </a>
                 <div class="nav-divider"></div>
-                <a href="{% url 'logout' %}" class="nav-menu-item logout-link">
+                <form id="logoutFormProfile" action="{% url 'logout' %}" method="POST" style="display:none;">
+                    {% csrf_token %}
+                </form>
+                <a href="{% url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logoutFormProfile').submit();" class="nav-menu-item logout-link">
                     <i class="fas fa-sign-out-alt"></i> Sign Out
                 </a>
             </nav>
