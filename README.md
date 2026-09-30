@@ -1,120 +1,156 @@
-# 🚗 AutoFixPro — Next-Gen Vehicle Care & Certified Garage Platform
+# 🚗 AutoFixPro
 
-![AutoFixPro Banner](static/images/car.jpg)
+## Project Description
+**AutoFixPro** is a modern, professional automotive service booking and workshop management web application built with **Django**. It allows vehicle owners to manage their digital garage, book certified repair services in seconds, track stage-by-stage repairs live, make secure online payments via Razorpay or Cash on Delivery, receive automated GST-compliant PDF Tax Invoices via multi-channel email dispatch, and submit verified 5-star customer ratings.
 
-**AutoFixPro** is a full-featured, modern automotive service booking and workshop management web application built with **Django 6.0**, **Python**, **Vanilla CSS**, and **ReportLab**. It enables vehicle owners to manage their digital garage, book certified repair services in seconds, track stage-by-stage repairs live, pay online via Razorpay, generate GST-configurable PDF Tax Invoices, and submit 5-star customer ratings.
+The platform includes full role-based access control (RBAC) with dedicated portals for **Customers** and a centralized **Workshop Admin Control Center** — providing complete control over service packages, appointments, customer vehicles, inventory spare parts stock, billing reconciliation, and analytical reporting.
 
 ---
 
-## ✨ Key Features
+## Live Demo
+🔗 [https://sneh125.pythonanywhere.com/](https://sneh125.pythonanywhere.com/)
 
-### 👤 1. Customer Experience
-- **Smart Authentication & OTP:** Register with 6-digit Email OTP verification, standard password login, and passwordless One-Click Email OTP login.
-- **Password Recovery:** Forgot Password flow with instant 6-digit security OTP.
-- **Digital Garage (My Vehicles):** Automated vehicle category classification (SUV, Sedan, EV, Motorcycle, Hatchback, Luxury) with 3D badges and color-coded fuel pills.
-- **Service Booking in 60s:** Quick booking with date picker, time slot selector, and 5 distinct service packages.
-- **Live Mechanical Stage Tracking:** Real-time stage progress tracker (`Booking Received` ➔ `Inspection` ➔ `In Progress` ➔ `Quality Check` ➔ `Completed`).
-- **Payments:** Razorpay UPI/Card/NetBanking online payments + Cash on Delivery (COD) mode.
-- **Branded Tax Invoice Generator:** Automated, GST-configurable PDF Tax Invoices generated via ReportLab (protected strictly for paid bookings).
-- **5-Star Rating & Reviews:** Customer feedback submission for completed services with dynamic testimonials displayed on the home page.
-- **Contact & Support:** Public inquiry message system with customer notifications.
+---
 
-### 🛡️ 2. Admin Control Center
-- **Role-Based Security:** Custom `@admin_required` security decorator ensuring strict RBAC access control.
-- **Analytics Dashboard:** Live revenue tracking, booking statuses, user stats, and inventory health metrics.
-- **Management Portals:** Manage Users, Manage Vehicles, Manage Bookings (with live status transitions), Payment Transaction Logs, and Spare Parts Inventory.
+## Features
+- **User Registration & Login** — Session-based authentication, user profile management, password recovery flow, and passwordless instant Email OTP login with PBKDF2 cryptographic hashing.
+- **Digital Garage (My Vehicles)** — Vehicle fleet management with automated body-type classification (SUV, Sedan, EV, Motorcycle, Hatchback, Luxury), 3D plate badges, and color-coded fuel pills.
+- **Service Search & Availability** — Search and browse certified workshop service packages with real-time conflict-free slot booking, duplicate slot prevention, and past-date rejection.
+- **Live Mechanical Stage Tracking** — Visual progress tracker reflecting workshop workflow: `Pending` ➔ `Confirmed` ➔ `In Progress` ➔ `Quality Check` ➔ `Completed`.
+- **Enforced State Machine Transitions** — Strict administrative status transition rules preventing invalid status progressions and arbitrary reopening of finalized/cancelled bookings.
+- **Interactive Job Card & Inventory Spares** — Administrative job card drawer allowing mechanics to allocate spare parts to active bookings with real-time stock deduction, concurrency-safe row-locking (`select_for_update`), and auto-restocking on cancellation.
+- **Razorpay Payments & COD Checkout** — Integrated sandbox and production Razorpay payment checkout with HMAC SHA-256 signature verification, cancelled booking payment protection, and Cash payment marking.
+- **Payment & Refund Status Synchronization** — Automatic reconciliation when bookings are cancelled (`Paid` ➔ `Refund Pending`, `Pending` ➔ `Cancelled`) and billing lock to protect invoice accuracy.
+- **Automated PDF Tax Invoice & Email** — In-memory dynamic vector PDF Tax Invoices generated via ReportLab with itemized spare parts breakdown, GST calculation, and multi-channel email dispatch (Brevo API, Resend API, Gmail SMTP).
+- **Customer Reviews & Ratings** — Verified 1-to-5 star customer ratings and reviews with featured display on homepage and admin moderation.
+- **Customer "My Bookings" Dashboard** — Grouped booking cards, categorized into Active Bookings, Completed Services, and Cancelled Bookings, with pagination and CSV export.
+- **Admin Management & Analytics** — Comprehensive administrative control panel for customers, service packages, bookings, spare parts inventory, reviews, contact inquiries, and visual financial analytics with monthly revenue charts.
+
+---
+
+## Credentials
+
+### Admin / Superuser Account:
+- **Email:** `admin@autofixpro.com`
+- **Password:** *(Set via `ADMIN_PASSWORD` in your `.env` file, or auto-generated on first bootstrap via `python manage.py setup_server`)*
+- **Admin Dashboard URL:** `http://127.0.0.1:8000/admin-dashboard/`
+
+### Customer Demo Account:
+- **Email:** `customer@example.com`
+- **Password:** `AutoFixPass#2026`
+- **Customer Login URL:** `http://127.0.0.1:8000/login/`
+
+---
+
+## Installation & Setup
+
+### Windows
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/sneh125/AutoFixPro.git
+cd AutoFixPro
+
+# 2. Create and activate virtual environment
+python -m venv myenv
+myenv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Set up environment variables
+copy .env.example .env
+# Configure your SECRET_KEY, RAZORPAY, and EMAIL settings in .env
+
+# 5. Run database migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# 6. Seed initial inventory spare parts (Optional)
+python manage.py seed_inventory
+
+# 7. Bootstrap server and create admin account
+python manage.py setup_server
+
+# 8. Start the development server
+python manage.py runserver
+```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000/) in your browser.
+
+---
+
+### macOS / Linux
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/sneh125/AutoFixPro.git
+cd AutoFixPro
+
+# 2. Create and activate virtual environment
+python3 -m venv myenv
+source myenv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Set up environment variables
+cp .env.example .env
+# Configure your SECRET_KEY, RAZORPAY, and EMAIL settings in .env
+
+# 5. Run database migrations
+python3 manage.py makemigrations
+python3 manage.py migrate
+
+# 6. Seed initial inventory spare parts (Optional)
+python3 manage.py seed_inventory
+
+# 7. Bootstrap server and create admin account
+python3 manage.py setup_server
+
+# 8. Start the development server
+python3 manage.py runserver
+```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000/) in your browser.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Backend:** Python 3.12, Django 6.0
-- **Database:** SQLite (development / default)
-- **Styling:** Vanilla Modern CSS with Glassmorphism, CSS Grid, Flexbox, and Micro-animations
-- **PDF Engine:** ReportLab (Vector Graphics & Typography)
-- **Payment Gateway:** Razorpay API (HMAC SHA-256 signature verification)
-- **Email Dispatch:** Multi-channel delivery (Brevo / Sendinblue HTTPS API, Resend HTTPS API, and fallback Gmail SMTP over TLS/SSL) with cryptographically secure OTP handling
-- **Configuration:** Python-Dotenv (`.env` file management)
+| Component | Technology / Library | Description |
+| :--- | :--- | :--- |
+| **Core Framework** | Python 3.10+ / Django 5.x / 6.x | Robust MVT Web Architecture with custom RBAC security |
+| **Database** | SQLite3 (PostgreSQL Ready) | Local relational SQL database with transactional integrity |
+| **Payment Gateway** | Razorpay Python SDK | Sandbox & Production payment processing with HMAC SHA-256 signature verification |
+| **PDF Generation** | ReportLab 4.x / 5.x | Dynamic in-memory GST-compliant PDF Tax Invoices |
+| **Email Service** | Multi-Channel Dispatch (Brevo / Resend / Gmail SMTP) | Automated invoice receipt dispatch and secure OTP delivery |
+| **Security & Auth** | Python `secrets` / PBKDF2 SHA-256 | Cryptographic OTP hashing, rate limiting, and password strength enforcement |
+| **Images & Assets** | Pillow (PIL) | Image upload processing for spare parts and vehicle assets |
+| **Frontend Styling** | Custom CSS3, Glassmorphism & Font Awesome 6 | Responsive UI with micro-animations optimized for mobile and desktop |
 
 ---
 
-## 🚀 Quick Setup & Installation
+## 🧪 Running Automated Unit Tests
+Automated tests are set up inside `workshop/tests.py`. Validate view responses, booking state machine transitions, cancelled payment guards, spare parts locking, OTP security, invoice generation, and test database isolation by running:
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/YOUR_USERNAME/AutoFixPro.git
-cd AutoFixPro
-```
-
-### 2. Create and activate a Virtual Environment
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# macOS / Linux
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables (`.env`)
-Create a `.env` file in the root directory (you can copy `.env.example`):
-```bash
-cp .env.example .env
-```
-
-Fill in your configuration details in `.env`:
-```env
-SECRET_KEY=your-secure-django-secret-key
-DEBUG=True
-ALLOWED_HOSTS=*
-
-# Razorpay Credentials
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-
-# Email SMTP Settings (Gmail)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your_email@gmail.com
-EMAIL_HOST_PASSWORD=your_16_digit_app_password
-DEFAULT_FROM_EMAIL=AutoFixPro <your_email@gmail.com>
-EMAIL_OTP_EXPIRY_MINUTES=5
-```
-
-### 5. Apply Database Migrations
-```bash
-python manage.py migrate
-```
-
-### 6. Seed Initial Data (Optional)
-```bash
-python manage.py seed_inventory
-```
-
-### 7. Run Automated Test Suite
 ```bash
 python manage.py test
 ```
 
-### 8. Launch Development Server
-```bash
-python manage.py runserver
-```
-Visit `http://127.0.0.1:8000` in your web browser (or specify custom port: `python manage.py runserver 8080` to access at `http://127.0.0.1:8080`).
+*All **73 automated unit tests** run with 100% success.*
 
 ---
 
-## 🔒 Security & Privacy Notice
-- Never commit your `.env` file or SQLite database to GitHub.
-- Keep `DEBUG=False` in production deployments.
-- AutoFixPro uses role-based access control to protect administrative endpoints.
+## Screenshots
+1. **Home-page** — Hero banner, certified service packages, workshop highlights, and verified customer testimonials.
+2. **Login-page** — Dual authentication modal with password login, password recovery, and instant email OTP login.
+3. **Profile-page** — Customer vehicle fleet management with 3D number plates, body-type badges, and specs.
+4. **Booking-page** — Interactive 60-second appointment booking with calendar date picker and conflict-free slot selection.
+5. **Tracker-page** — Live stage-by-stage mechanical workflow progress indicator (Pending ➔ In Progress ➔ Completed).
+6. **Invoice-page** — Complete job card breakdown with fitted spare parts and in-memory GST Tax Invoice preview.
+7. **History-page** — Grouped booking cards categorized into Active, Completed, and Cancelled services with CSV export.
+8. **Admin-Dashboard** — Visual financial analytics, monthly revenue charts grounded in cleared payment dates, and KPIs.
+9. **Manage-Bookings-page** — Real-time booking status management with enforced state machine transitions and spare parts allocation drawer.
+10. **Inventory-page** — Live stock level monitoring, re-stocking controls, parts catalog, and pricing management.
 
 ---
 
