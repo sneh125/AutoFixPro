@@ -83,6 +83,10 @@
         <!-- ── RIGHT FORM PANEL ── -->
         <div class="right-form-panel">
 
+            <div style="display: flex; justify-content: flex-end; width: 100%; max-width: 600px; margin: 0 auto 12px auto;">
+                {% include 'includes/language_switcher.html' %}
+            </div>
+
             <!-- Mobile Brand Logo -->
             <a href="{% url 'home' %}" class="mobile-brand">
                 <img src="{% static 'images/logo.png' %}" alt="AutoFixPro">
