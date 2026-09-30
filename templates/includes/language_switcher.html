@@ -1,6 +1,6 @@
 {% load static %}
 <!-- ── Google Translate & Custom Language Switcher (English, Hindi, Gujarati) ── -->
-<div id="google_translate_element" class="notranslate" style="display:none !important; position:absolute; left:-9999px; top:-9999px; width:0; height:0; opacity:0; pointer-events:none;" aria-hidden="true"></div>
+<div id="google_translate_element" class="notranslate" style="position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; z-index:-9999;" aria-hidden="true"></div>
 
 <div class="custom-lang-switcher notranslate" id="customLangSwitcher" data-bs-theme="dark">
     <button type="button" class="lang-pill-btn" id="langToggleBtn" aria-label="Select Language / भाषा પસંદ કરો" aria-expanded="false">
@@ -451,15 +451,15 @@ font[style], font {
     function setGoogleTranslateCookie(lang) {
         var domain = window.location.hostname;
         var value = '/en/' + lang;
+        var maxAge = '; max-age=31536000; path=/';
         
-        document.cookie = 'googtrans=' + value + '; path=/;';
-        document.cookie = 'googtrans=' + value + '; path=/; domain=' + domain;
-
-        if (!/^[0-9.]+$/.test(domain) && domain.includes('.')) {
+        document.cookie = 'googtrans=' + value + maxAge;
+        if (domain && domain !== 'localhost' && !/^[0-9.]+$/.test(domain)) {
+            document.cookie = 'googtrans=' + value + maxAge + '; domain=' + domain;
             var parts = domain.split('.');
             if (parts.length > 2) {
                 var rootDomain = parts.slice(-2).join('.');
-                document.cookie = 'googtrans=' + value + '; path=/; domain=.' + rootDomain;
+                document.cookie = 'googtrans=' + value + maxAge + '; domain=.' + rootDomain;
             }
         }
     }
@@ -467,13 +467,16 @@ font[style], font {
     // Helper: Clear cookie
     function clearGoogleTranslateCookie() {
         var domain = window.location.hostname;
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + domain;
-        if (!/^[0-9.]+$/.test(domain) && domain.includes('.')) {
+        var ex = 'expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+        document.cookie = 'googtrans=; ' + ex;
+        document.cookie = 'googtrans=/en/en; path=/';
+        if (domain && domain !== 'localhost' && !/^[0-9.]+$/.test(domain)) {
+            document.cookie = 'googtrans=; ' + ex + '; domain=' + domain;
+            document.cookie = 'googtrans=; ' + ex + '; domain=.' + domain;
             var parts = domain.split('.');
             if (parts.length > 2) {
                 var rootDomain = parts.slice(-2).join('.');
-                document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + rootDomain;
+                document.cookie = 'googtrans=; ' + ex + '; domain=.' + rootDomain;
             }
         }
     }
