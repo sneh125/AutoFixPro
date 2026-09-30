@@ -493,6 +493,10 @@
 
                     <form method="POST" action="{% url 'contact' %}">
                         {% csrf_token %}
+                        <div style="display:none !important; visibility:hidden !important; opacity:0 !important; position:absolute !important; left:-9999px !important;" aria-hidden="true">
+                            <label for="c-website">Leave this field blank</label>
+                            <input type="text" id="c-website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
 
                         <div class="form-row">
                             <div class="form-group">
