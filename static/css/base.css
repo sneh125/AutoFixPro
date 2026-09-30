@@ -169,6 +169,7 @@ h1,h2,h3,h4,h5 {
   align-items: center;
   gap: 4px;
   font-family: var(--font-body);
+  margin-left: auto;
 }
 .nav-item {
   display: flex;
@@ -341,6 +342,15 @@ h1,h2,h3,h4,h5 {
   color: #ef4444;
 }
 
+/* Navbar actions container */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: 14px;
+}
+
 /* Hamburger button */
 .nav-hamburger {
   display: none;
@@ -357,6 +367,7 @@ h1,h2,h3,h4,h5 {
 /* Mobile nav */
 @media (max-width: 900px) {
   .navbar { padding: 0 20px; }
+  .navbar-actions { margin-left: 0; gap: 8px; }
   .nav-hamburger { display: flex; align-items: center; justify-content: center; }
   .navbar-nav {
     position: fixed;
