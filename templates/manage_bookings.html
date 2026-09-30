@@ -84,7 +84,7 @@
                             <th>ID</th>
                             <th>Customer</th>
                             <th>Vehicle</th>
-                            <th>Service Package</th>
+                            <th>Service Package &amp; Spares</th>
                             <th>Appointment Schedule</th>
                             <th>Current Status</th>
                             <th>Update Status</th>
@@ -93,7 +93,7 @@
                     <tbody>
                         {% if bookings %}
                             {% for booking in bookings %}
-                                <tr>
+                                <tr id="booking-row-{{ booking.id }}">
                                     <td><strong>#{{ booking.id }}</strong></td>
                                     <td>
                                         <strong>{{ booking.vehicle.user.fullname }}</strong><br>
@@ -103,7 +103,26 @@
                                         <span>{{ booking.vehicle.brand }} {{ booking.vehicle.model }}</span><br>
                                         <span class="plate-badge">{{ booking.vehicle.vehicle_number }}</span>
                                     </td>
-                                    <td>{{ booking.service_type }}</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #0f172a; margin-bottom: 2px;">{{ booking.service_type }}</div>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">
+                                            Pkg: ₹{{ booking.base_package_price }}
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">
+                                            {% if booking.parts_used.all %}
+                                                <button type="button" onclick="togglePartsRow('{{ booking.id }}')" style="background: rgba(16,185,129,0.12); color: #059669; border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                                    <i class="fas fa-boxes-stacked"></i> {{ booking.parts_used.all|length }} Spares (₹{{ booking.parts_total }})
+                                                </button>
+                                            {% else %}
+                                                <button type="button" onclick="togglePartsRow('{{ booking.id }}')" style="background: rgba(59,130,246,0.08); color: #2563eb; border: 1px dashed rgba(59,130,246,0.3); border-radius: 6px; padding: 3px 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                                    <i class="fas fa-plus-circle"></i> Add Spares
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                        <div style="font-size: 13px; font-weight: 800; color: #059669;">
+                                            Total: ₹{{ booking.total_amount }}
+                                        </div>
+                                    </td>
                                     <td>
                                         {{ booking.service_date }}<br>
                                         <span style="font-size: 12px; color: var(--text-muted);">{{ booking.service_time }}</span>
@@ -126,19 +145,168 @@
                                          {% endif %}
                                      </td>
                                      <td>
-                                         <form action="{% url 'update_booking_status' booking.id %}" method="POST" style="display: flex; gap: 8px; align-items: center;">
-                                             {% csrf_token %}
-                                             <select name="status" class="select-status" style="border-radius: 8px; padding: 6px 10px; font-size: 13px;">
-                                                 <option value="Pending" {% if booking.status == "Pending" %}selected{% endif %}>Pending</option>
-                                                 <option value="Confirmed" {% if booking.status == "Confirmed" %}selected{% endif %}>Vehicle Received (Confirmed)</option>
-                                                 <option value="In Progress" {% if booking.status == "In Progress" %}selected{% endif %}>In Progress (Servicing)</option>
-                                                 <option value="Quality Check" {% if booking.status == "Quality Check" %}selected{% endif %}>Quality Check</option>
-                                                 <option value="Completed" {% if booking.status == "Completed" %}selected{% endif %}>Completed (Ready)</option>
-                                                 <option value="Cancelled" {% if booking.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
-                                             </select>
-                                             <button type="submit" class="btn-update">Save</button>
-                                         </form>
+                                         {% if booking.status == "Completed" or booking.status == "Cancelled" %}
+                                             <div style="display: flex; align-items: center; gap: 6px;">
+                                                 <span style="font-size: 12px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: inline-flex; align-items: center; gap: 5px;">
+                                                     <i class="fas fa-lock" style="font-size: 11px;"></i> Finalized
+                                                 </span>
+                                             </div>
+                                         {% else %}
+                                             <form action="{% url 'update_booking_status' booking.id %}" method="POST" style="display: flex; gap: 8px; align-items: center;">
+                                                 {% csrf_token %}
+                                                 <select name="status" class="select-status" style="border-radius: 8px; padding: 6px 10px; font-size: 13px;">
+                                                     <option value="{{ booking.status }}" selected>{{ booking.status }} (Current)</option>
+                                                     {% if booking.status == "Pending" %}
+                                                         <option value="Confirmed">Confirmed</option>
+                                                         <option value="In Progress">In Progress</option>
+                                                         <option value="Cancelled">Cancelled</option>
+                                                     {% elif booking.status == "Confirmed" %}
+                                                         <option value="In Progress">In Progress</option>
+                                                         <option value="Quality Check">Quality Check</option>
+                                                         <option value="Cancelled">Cancelled</option>
+                                                     {% elif booking.status == "In Progress" %}
+                                                         <option value="Quality Check">Quality Check</option>
+                                                         <option value="Completed">Completed</option>
+                                                         <option value="Cancelled">Cancelled</option>
+                                                     {% elif booking.status == "Quality Check" %}
+                                                         <option value="Completed">Completed</option>
+                                                         <option value="In Progress">In Progress</option>
+                                                         <option value="Cancelled">Cancelled</option>
+                                                     {% endif %}
+                                                 </select>
+                                                 <button type="submit" class="btn-update">Save</button>
+                                             </form>
+                                         {% endif %}
                                      </td>
+                                </tr>
+
+                                <!-- Expandable Job Card / Spare Parts Drawer -->
+                                <tr id="parts-row-{{ booking.id }}" class="parts-expand-row" style="display: none; background: #f8fafc;">
+                                    <td colspan="7" style="padding: 16px 22px; border-bottom: 2px solid #e2e8f0;">
+                                        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255, 77, 48, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                                                        <i class="fas fa-wrench"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #0f172a;">Job Card Spares Allocation (#BK-{{ booking.id }} - {{ booking.vehicle.brand }} {{ booking.vehicle.model }})</h4>
+                                                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Deducts stock automatically from workshop inventory and updates billing.</p>
+                                                    </div>
+                                                </div>
+                                                <div style="text-align: right;">
+                                                    <span style="font-size: 12px; color: #64748b;">Current Bill Total:</span>
+                                                    <strong style="font-size: 15px; color: #16a34a; margin-left: 6px;">₹{{ booking.total_amount }}</strong>
+                                                    <span style="font-size: 11px; color: #94a3b8; display: block;">(Pkg: ₹{{ booking.base_package_price }} + Spares: ₹{{ booking.parts_total }})</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- List of Fitted Parts -->
+                                            <div style="margin-bottom: 14px;">
+                                                {% if booking.parts_used.all %}
+                                                    <div style="overflow-x: auto;">
+                                                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                                                            <thead>
+                                                                <tr style="background: #f1f5f9; text-align: left;">
+                                                                    <th style="padding: 8px 12px; border-radius: 6px 0 0 6px;">Item Name</th>
+                                                                    <th style="padding: 8px 12px;">Category</th>
+                                                                    <th style="padding: 8px 12px; text-align: center;">Qty Fitted</th>
+                                                                    <th style="padding: 8px 12px; text-align: right;">Unit Price</th>
+                                                                    <th style="padding: 8px 12px; text-align: right;">Total Price</th>
+                                                                    <th style="padding: 8px 12px; text-align: center; border-radius: 0 6px 6px 0;">Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for part in booking.parts_used.all %}
+                                                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                                                        <td style="padding: 9px 12px; font-weight: 600; color: #0f172a;">
+                                                                            {{ part.inventory_item.name }}
+                                                                        </td>
+                                                                        <td style="padding: 9px 12px;">
+                                                                            <span style="background: rgba(139,92,246,0.1); color: #7c3aed; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600;">
+                                                                                {{ part.inventory_item.category }}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td style="padding: 9px 12px; text-align: center; font-weight: 600;">
+                                                                            {{ part.quantity }}
+                                                                        </td>
+                                                                        <td style="padding: 9px 12px; text-align: right; color: #64748b;">
+                                                                            ₹{{ part.unit_price }}
+                                                                        </td>
+                                                                        <td style="padding: 9px 12px; text-align: right; font-weight: 700; color: #0f172a;">
+                                                                            ₹{{ part.total_price }}
+                                                                        </td>
+                                                                        <td style="padding: 9px 12px; text-align: center;">
+                                                                            {% if booking.payment and booking.payment.payment_status == 'Paid' %}
+                                                                                <span style="color: #10b981; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                                                                    <i class="fas fa-lock"></i> Invoiced
+                                                                                </span>
+                                                                            {% elif booking.status == 'Completed' %}
+                                                                                <span style="color: #64748b; font-size: 11.5px; font-weight: 600;">Finalized</span>
+                                                                            {% else %}
+                                                                                <form action="{% url 'remove_booking_part' part.id %}" method="POST" style="display: inline;" onsubmit="return confirm('Remove {{ part.inventory_item.name }} and return stock to inventory?');">
+                                                                                    {% csrf_token %}
+                                                                                    <button type="submit" style="background: rgba(239,68,68,0.1); color: #dc2626; border: 1px solid rgba(239,68,68,0.25); border-radius: 6px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                                                                        <i class="fas fa-trash-alt"></i> Return Stock
+                                                                                    </button>
+                                                                                </form>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                {% else %}
+                                                    <div style="padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; text-align: center; color: #64748b; font-size: 12.5px;">
+                                                        <i class="fas fa-info-circle" style="color: #94a3b8; margin-right: 6px;"></i> No spare parts or fluids fitted yet. Base package items only.
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Add Spare Part Form -->
+                                            {% if booking.payment and booking.payment.payment_status == 'Paid' %}
+                                                <div style="padding: 10px 14px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 8px; font-size: 12.5px; color: #065f46; display: flex; align-items: center; gap: 8px;">
+                                                    <i class="fas fa-lock" style="font-size: 14px;"></i>
+                                                    <span><strong>Payment Completed (Paid):</strong> Spare parts and billing are locked to protect invoice accuracy.</span>
+                                                </div>
+                                            {% elif booking.status == 'Completed' %}
+                                                <div style="padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12.5px; color: #64748b; display: flex; align-items: center; gap: 8px;">
+                                                    <i class="fas fa-check-double" style="color: #10b981;"></i>
+                                                    <span>Service appointment is Completed. Job card is finalized.</span>
+                                                </div>
+                                            {% elif booking.status == 'Cancelled' %}
+                                                <div style="padding: 10px 14px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; font-size: 12.5px; color: #dc2626; display: flex; align-items: center; gap: 8px;">
+                                                    <i class="fas fa-ban"></i>
+                                                    <span>Booking is cancelled. Spares cannot be allocated.</span>
+                                                </div>
+                                            {% else %}
+                                                <form action="{% url 'add_booking_part' booking.id %}" method="POST" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                                                    {% csrf_token %}
+                                                    <div style="flex: 2; min-width: 220px;">
+                                                        <label style="display: block; font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">Select Spare Part / Fluid from Stock:</label>
+                                                        <select name="inventory_id" required style="width: 100%; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #fff; outline: none;">
+                                                            <option value="">-- Choose Part from Inventory --</option>
+                                                            {% for item in inventory_items %}
+                                                                <option value="{{ item.id }}">
+                                                                    {{ item.name }} (Stock: {{ item.quantity }} | ₹{{ item.price }})
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div style="width: 90px;">
+                                                        <label style="display: block; font-size: 11.5px; font-weight: 700; color: #334155; margin-bottom: 5px;">Quantity:</label>
+                                                        <input type="number" name="quantity" min="1" value="1" required style="width: 100%; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #fff; outline: none; box-sizing: border-box;">
+                                                    </div>
+                                                    <div>
+                                                        <button type="submit" style="padding: 8px 16px; background: #0f172a; color: #fff; border: none; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;">
+                                                            <i class="fas fa-plus"></i> Fit &amp; Deduct Stock
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
@@ -149,6 +317,30 @@
                     </tbody>
                 </table>
             </div>
+
+            <script>
+                function togglePartsRow(id) {
+                    const row = document.getElementById('parts-row-' + id);
+                    if (!row) return;
+                    if (row.style.display === 'none' || row.style.display === '') {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    if (window.location.hash && window.location.hash.startsWith("#booking-")) {
+                        const bookingId = window.location.hash.replace("#booking-", "");
+                        const row = document.getElementById("parts-row-" + bookingId);
+                        if (row) {
+                            row.style.display = "table-row";
+                            row.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                    }
+                });
+            </script>
+
 
         </main>
 
