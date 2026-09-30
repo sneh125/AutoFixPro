@@ -8,6 +8,11 @@
         </a>
         <button class="mobile-sidebar-close" id="sidebarCloseBtn" style="display:none; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;" aria-label="Close Sidebar">&times;</button>
     </div>
+
+    <!-- Admin Language Switcher -->
+    <div class="sidebar-lang-box">
+        {% include 'includes/language_switcher.html' %}
+    </div>
     
     <nav class="sidebar-menu">
         <a href="{% url 'admin_dashboard' %}" class="menu-item {% if active_page == 'dashboard' or request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
@@ -46,13 +51,22 @@
 
     <div class="sidebar-footer">
         <div class="user-profile">
-            <div class="avatar">AD</div>
+            <div class="avatar">
+                {% if request.session.name %}
+                    {{ request.session.name|slice:":2"|upper }}
+                {% else %}
+                    AD
+                {% endif %}
+            </div>
             <div class="info">
-                <h4>Admin Panel</h4>
-                <span>admin@autofixpro.com</span>
+                <h4>{{ request.session.name|default:"Admin Panel" }}</h4>
+                <span>{{ request.session.email|default:"admin@autofixpro.com" }}</span>
             </div>
         </div>
-        <a href="{% url 'logout' %}" class="logout-btn">
+        <form id="logoutFormAdminSidebar" action="{% url 'logout' %}" method="POST" style="display:none;">
+            {% csrf_token %}
+        </form>
+        <a href="{% url 'logout' %}" onclick="event.preventDefault(); document.getElementById('logoutFormAdminSidebar').submit();" class="logout-btn" title="Logout">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
             <span>Logout</span>
         </a>
