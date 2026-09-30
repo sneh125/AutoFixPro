@@ -1,9 +1,11 @@
 import base64
 import csv
-from datetime import datetime
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 import json
 import os
 import random
+import secrets
 import socket
 import time
 from functools import wraps
@@ -11,17 +13,22 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.password_validation import validate_password
 from django.core.mail import EmailMultiAlternatives, get_connection, send_mail
-from django.core.validators import EmailValidator, ValidationError
+from django.core.validators import EmailValidator, ValidationError, URLValidator
+from django.db import transaction
 from django.db.models import Avg, Count, Q, Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import Coalesce, TruncMonth
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.utils.html import escape as html_escape
 from django.views.decorators.http import require_POST
 import razorpay
 
 from .invoice_generator import generate_pdf_invoice
 from .models import (
+    BookingPart,
     ContactMessage,
     EmailOTP,
     Inventory,
@@ -34,16 +41,16 @@ from .models import (
 from .services import get_user_service_reminders, get_vehicle_service_reminder
 
 SERVICE_PRICES = {
-    "General Service": 1499.00,
-    "Oil Change": 899.00,
-    "Tire Change": 1200.00,
-    "Brake Service": 1850.00,
-    "Full Vehicle Service": 3499.00,
+    "General Service": Decimal("1499.00"),
+    "Oil Change": Decimal("899.00"),
+    "Tire Change": Decimal("1200.00"),
+    "Brake Service": Decimal("1850.00"),
+    "Full Vehicle Service": Decimal("3499.00"),
 }
 
 
 def get_service_amount(service_type):
-    return SERVICE_PRICES.get(service_type, 1299.00)
+    return SERVICE_PRICES.get(service_type, Decimal("1299.00"))
 
 
 def home(request):
@@ -54,20 +61,61 @@ def home(request):
 def about(request):
     return render(request, "about.html")
 
+CONTACT_SUBMISSIONS = {}
+
+
+def is_contact_rate_limited(key):
+    now = time.time()
+    timestamps = [t for t in CONTACT_SUBMISSIONS.get(key, []) if now - t < 600]
+    CONTACT_SUBMISSIONS[key] = timestamps
+    return len(timestamps) >= 5
+
+
+def record_contact_submission(key):
+    now = time.time()
+    timestamps = [t for t in CONTACT_SUBMISSIONS.get(key, []) if now - t < 600]
+    timestamps.append(now)
+    CONTACT_SUBMISSIONS[key] = timestamps
+
 
 def contact(request):
     if request.method == "POST":
+        # 1. Honeypot Anti-Spam Protection (Issue #32)
+        honeypot = request.POST.get("website", "").strip()
+        if honeypot:
+            # Bot detected: pretend success to deceive bot without creating DB record
+            messages.success(request, "Your message has been received. Our team will get back to you shortly.")
+            return redirect("contact")
+
+        # 2. Rate Limiting by IP and Email (Issue #32)
+        client_ip = request.META.get("HTTP_X_FORWARDED_FOR")
+        if client_ip:
+            client_ip = client_ip.split(",")[0].strip()
+        else:
+            client_ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
+
+        if is_contact_rate_limited(f"ip_{client_ip}"):
+            messages.error(request, "Too many inquiries submitted from this connection. Please wait a few minutes before trying again.")
+            return redirect("contact")
+
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip().lower()
         phone = request.POST.get("phone", "").strip()
         subject = request.POST.get("subject", "").strip()
         message_text = request.POST.get("message", "").strip()
 
+        if is_contact_rate_limited(f"email_{email}"):
+            messages.error(request, "Too many messages sent from this email address. Please try again later.")
+            return redirect("contact")
+
         if not name or not email or not subject or not message_text:
             messages.error(request, "Please fill in all required fields.")
             return render(request, "contact.html", {
                 "name": name, "email": email, "phone": phone, "subject": subject, "message_text": message_text
             })
+
+        record_contact_submission(f"ip_{client_ip}")
+        record_contact_submission(f"email_{email}")
 
         ContactMessage.objects.create(
             name=name,
@@ -86,6 +134,7 @@ def contact(request):
             initial_data = {"name": user.fullname, "email": user.email, "phone": user.phone}
 
     return render(request, "contact.html", initial_data)
+
 
 
 DISPOSABLE_EMAIL_DOMAINS = {
@@ -183,9 +232,9 @@ def send_robust_autofix_email(subject, plain_message, recipient_list, html_messa
     """
     is_test_env = getattr(settings, "EMAIL_BACKEND", "").endswith("locmem.EmailBackend")
     host = getattr(settings, 'EMAIL_HOST', 'smtp.gmail.com')
-    user = (getattr(settings, 'EMAIL_HOST_USER', None) or 'snehprajapati36@gmail.com').strip()
-    pwd = (getattr(settings, 'EMAIL_HOST_PASSWORD', None) or 'sgyi nbdj kpbt czfu').replace(' ', '').strip()
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or f"AutoFixPro <{user}>"
+    user = (getattr(settings, 'EMAIL_HOST_USER', None) or '').strip()
+    pwd = (getattr(settings, 'EMAIL_HOST_PASSWORD', None) or '').replace(' ', '').strip()
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or (f"AutoFixPro <{user}>" if user else "AutoFixPro <noreply@autofixpro.com>")
     timeout = getattr(settings, 'EMAIL_TIMEOUT', 12)
 
     if is_test_env:
@@ -336,18 +385,41 @@ def send_robust_autofix_email(subject, plain_message, recipient_list, html_messa
         return False, f"All email delivery methods failed: {err465}"
 
 
+FAILED_LOGIN_ATTEMPTS = {}
+
+
+def is_login_rate_limited(key):
+    now = time.time()
+    timestamps = [t for t in FAILED_LOGIN_ATTEMPTS.get(key, []) if now - t < 900]
+    FAILED_LOGIN_ATTEMPTS[key] = timestamps
+    return len(timestamps) >= 5
+
+
+def record_login_failure(key):
+    now = time.time()
+    timestamps = [t for t in FAILED_LOGIN_ATTEMPTS.get(key, []) if now - t < 900]
+    timestamps.append(now)
+    FAILED_LOGIN_ATTEMPTS[key] = timestamps
+
+
+def clear_login_failure(key):
+    FAILED_LOGIN_ATTEMPTS.pop(key, None)
+
+
 def send_otp_email(email, purpose, request=None):
-    EmailOTP.objects.filter(email=email, purpose=purpose, is_used=False).update(is_used=True)
-    otp = f"{random.randint(100000, 999999)}"
+    # 1. Database-level rate limiting (max 5 requests per email + purpose in 15 mins)
+    fifteen_mins_ago = timezone.now() - timedelta(minutes=15)
+    recent_requests = EmailOTP.objects.filter(
+        email=email,
+        purpose=purpose,
+        created_at__gte=fifteen_mins_ago
+    ).count()
 
-    EmailOTP.objects.create(email=email, otp=otp, purpose=purpose)
+    if recent_requests >= 5:
+        return None, False
 
-    if request:
-        request.session[f"otp_email_{purpose}"] = email
-        request.session[f"otp_last_sent_{purpose}"] = time.time()
-        if f"otp_resend_count_{purpose}" not in request.session:
-            request.session[f"otp_resend_count_{purpose}"] = 0
-        request.session.modified = True
+    # 2. Cryptographically secure raw 6-digit OTP generation using secrets module
+    raw_otp = str(secrets.randbelow(900000) + 100000)
 
     purpose_titles = {
         "register": "Account Email Verification",
@@ -357,8 +429,8 @@ def send_otp_email(email, purpose, request=None):
     title = purpose_titles.get(purpose, "Verification Code")
     expiry = getattr(settings, "EMAIL_OTP_EXPIRY_MINUTES", 5)
 
-    subject = f"AutoFixPro - {title}: {otp}"
-    message = f"Hello,\n\nYour 6-digit AutoFixPro verification code is: {otp}\n\nThis OTP is valid for {expiry} minutes.\n\nBest regards,\nAutoFixPro Team"
+    subject = f"AutoFixPro - {title}: {raw_otp}"
+    message = f"Hello,\n\nYour 6-digit AutoFixPro verification code is: {raw_otp}\n\nThis OTP is valid for {expiry} minutes.\n\nBest regards,\nAutoFixPro Team"
     html_message = f"""
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
         <div style="background: #0f172a; padding: 24px 20px; text-align: center;">
@@ -368,7 +440,7 @@ def send_otp_email(email, purpose, request=None):
             <h2 style="color: #0f172a; margin: 0 0 12px 0; font-size: 20px;">{title}</h2>
             <p style="color: #64748b; font-size: 14px; margin: 0 0 20px 0; line-height: 1.5;">Please use the 6-digit verification code below to complete your verification:</p>
             <div style="background: #fff5f5; border: 2px dashed #ff4d30; border-radius: 10px; padding: 14px; margin: 18px 0; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #ff4d30; font-family: monospace;">
-                {otp}
+                {raw_otp}
             </div>
             <p style="color: #64748b; font-size: 13px; margin: 16px 0 6px 0;">This code is valid for <strong>{expiry} minutes</strong>.</p>
             <p style="color: #94a3b8; font-size: 12px; margin: 0;">Do not share this OTP with anyone for your account security.</p>
@@ -387,11 +459,24 @@ def send_otp_email(email, purpose, request=None):
     )
 
     if email_sent:
-        print(f"[AutoFixPro OTP SENT] -> {email} ({purpose}) | Console OTP: {otp}")
-    else:
-        print(f"[AutoFixPro] Warning: Email dispatch to {email} failed ({status_desc}). | Console OTP: {otp}")
+        # Atomic DB update: only save the new valid OTP and retire old OTPs upon confirmed email delivery
+        EmailOTP.objects.filter(email=email, purpose=purpose, is_used=False).update(is_used=True)
+        otp_record = EmailOTP(email=email, purpose=purpose)
+        otp_record.set_otp(raw_otp)
+        otp_record.save()
 
-    return otp, email_sent
+        if request:
+            request.session[f"otp_email_{purpose}"] = email
+            request.session[f"otp_last_sent_{purpose}"] = time.time()
+            if f"otp_resend_count_{purpose}" not in request.session:
+                request.session[f"otp_resend_count_{purpose}"] = 0
+            request.session.modified = True
+
+        print(f"[AutoFixPro OTP SENT] -> {email} ({purpose}) | Console OTP: {raw_otp}")
+        return raw_otp, True
+    else:
+        print(f"[AutoFixPro] Warning: Email dispatch to {email} failed ({status_desc}). Prior active OTP retained.")
+        return None, False
 
 
 def register(request):
@@ -408,7 +493,6 @@ def register(request):
             messages.error(request, "Please fill in all required fields.")
             return render(request, "register.html", context)
 
-        # Validate that email is NOT a dummy, disposable, or invalid domain
         is_valid_email, email_error = validate_real_email(email)
         if not is_valid_email:
             messages.error(request, email_error)
@@ -423,8 +507,11 @@ def register(request):
             messages.error(request, "Passwords do not match.")
             return render(request, "register.html", context)
 
-        if len(password) < 8:
-            messages.error(request, "Password must be at least 8 characters long.")
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            for err in e.messages:
+                messages.error(request, err)
             return render(request, "register.html", context)
 
         if User.objects.filter(email=email).exists():
@@ -438,13 +525,13 @@ def register(request):
             "password": make_password(password)
         }
 
-        otp, email_sent = send_otp_email(email, "register", request)
+        raw_otp, email_sent = send_otp_email(email, "register", request)
         if email_sent:
             messages.info(request, f"A 6-digit verification code was sent to {email}. Please check your inbox and enter it below.")
         else:
             messages.warning(
                 request,
-                f"Cloud Server Notice: Outbound email service is restricted on this server. For verification, your OTP is: {otp}"
+                "Unable to send verification email at this moment. Please check your email address or try again shortly."
             )
         return redirect("verify_otp", purpose="register")
 
@@ -494,7 +581,7 @@ def verify_otp(request, purpose):
             messages.error(request, "This OTP has expired. Please click 'Resend OTP' to receive a fresh code.")
             return render(request, "verify_otp.html", {"email": email, "purpose": purpose, "meta": meta, "expiry_minutes": expiry_minutes})
 
-        if otp_record.otp != otp_input:
+        if not otp_record.check_otp(otp_input):
             otp_record.attempts += 1
             if otp_record.attempts >= 5:
                 otp_record.is_used = True
@@ -559,6 +646,7 @@ def verify_otp(request, purpose):
     return render(request, "verify_otp.html", {"email": email, "purpose": purpose, "meta": meta, "expiry_minutes": expiry_minutes})
 
 
+@require_POST
 def resend_otp(request, purpose):
     allowed_purposes = ["register", "forgot_password", "login_otp"]
     if purpose not in allowed_purposes:
@@ -581,6 +669,7 @@ def resend_otp(request, purpose):
             return redirect("login_otp")
         return redirect("login")
 
+    # Cooldown check
     last_sent = request.session.get(f"otp_last_sent_{purpose}", 0)
     elapsed = time.time() - last_sent
     RESEND_COOLDOWN = getattr(settings, "EMAIL_OTP_RESEND_COOLDOWN", 30)
@@ -590,6 +679,18 @@ def resend_otp(request, purpose):
         messages.warning(request, f"Please wait {remaining} seconds before requesting another OTP.")
         return redirect("verify_otp", purpose=purpose)
 
+    # Database-level rate limiting: max 5 requests per 15 mins
+    fifteen_mins_ago = timezone.now() - timedelta(minutes=15)
+    recent_db_requests = EmailOTP.objects.filter(
+        email=email,
+        purpose=purpose,
+        created_at__gte=fifteen_mins_ago
+    ).count()
+
+    if recent_db_requests >= 5:
+        messages.error(request, "Too many OTP requests for this email. Please wait 15 minutes before requesting again.")
+        return redirect("verify_otp", purpose=purpose)
+
     resend_count = request.session.get(f"otp_resend_count_{purpose}", 0)
     MAX_RESENDS = getattr(settings, "EMAIL_OTP_MAX_RESENDS", 5)
 
@@ -597,9 +698,7 @@ def resend_otp(request, purpose):
         messages.error(request, "Maximum OTP resend limit reached. Please restart the verification process.")
         return redirect("verify_otp", purpose=purpose)
 
-    EmailOTP.objects.filter(email=email, purpose=purpose, is_used=False).update(is_used=True)
-
-    otp, email_sent = send_otp_email(email, purpose, request)
+    raw_otp, email_sent = send_otp_email(email, purpose, request)
     request.session[f"otp_resend_count_{purpose}"] = resend_count + 1
     request.session.modified = True
 
@@ -611,10 +710,9 @@ def resend_otp(request, purpose):
     else:
         messages.warning(
             request,
-            f"Cloud Server Notice: Outbound email service is restricted. Your new OTP is: {otp}"
+            "Unable to dispatch verification email at this moment. Please try again shortly."
         )
     return redirect("verify_otp", purpose=purpose)
-
 
 
 def forgot_password(request):
@@ -630,18 +728,17 @@ def forgot_password(request):
             return render(request, "forgot_password.html")
 
         user = User.objects.filter(email=email).first()
-        if not user:
-            messages.error(request, "No account is registered with this email address.")
-            return render(request, "forgot_password.html")
-
-        otp, email_sent = send_otp_email(email, "forgot_password", request)
-        if email_sent:
-            messages.info(request, f"Password reset OTP sent to {email}. Please check your inbox.")
+        if user:
+            send_otp_email(email, "forgot_password", request)
         else:
-            messages.warning(
-                request,
-                f"Cloud Server Notice: Outbound email service is restricted. For password reset, your code is: {otp}"
-            )
+            # Prevent account enumeration: do not disclose if account exists
+            request.session["otp_email_forgot_password"] = email
+            request.session.modified = True
+
+        messages.info(
+            request,
+            "If an account exists with this email address, a 6-digit verification code has been sent."
+        )
         return redirect("verify_otp", purpose="forgot_password")
 
     return render(request, "forgot_password.html")
@@ -661,12 +758,15 @@ def reset_password(request):
             messages.error(request, "Please enter a new password.")
             return render(request, "reset_password.html", {"email": email})
 
-        if len(new_password) < 8:
-            messages.error(request, "New password must be at least 8 characters long.")
-            return render(request, "reset_password.html", {"email": email})
-
         if new_password != confirm_password:
             messages.error(request, "Passwords do not match.")
+            return render(request, "reset_password.html", {"email": email})
+
+        try:
+            validate_password(new_password)
+        except ValidationError as e:
+            for err in e.messages:
+                messages.error(request, err)
             return render(request, "reset_password.html", {"email": email})
 
         user = User.objects.filter(email=email).first()
@@ -676,7 +776,8 @@ def reset_password(request):
 
         user.password = make_password(new_password)
         user.save(update_fields=["password"])
-        request.session.pop("reset_password_allowed", None)
+        # Revoke all existing session data on password reset for security
+        request.session.flush()
 
         messages.success(request, "Your password was reset successfully! Please login with your new password.")
         return redirect("login")
@@ -701,13 +802,13 @@ def login_otp(request):
             messages.error(request, "No account registered with this email address. Please register first.")
             return render(request, "login_otp.html")
 
-        otp, email_sent = send_otp_email(email, "login_otp", request)
+        raw_otp, email_sent = send_otp_email(email, "login_otp", request)
         if email_sent:
             messages.info(request, f"One-time login code sent to {email}. Please check your inbox.")
         else:
             messages.warning(
                 request,
-                f"Cloud Server Notice: Outbound email service is restricted. Your login code is: {otp}"
+                "Unable to dispatch login code at this moment. Please try again shortly."
             )
         return redirect("verify_otp", purpose="login_otp")
 
@@ -723,9 +824,18 @@ def login(request):
             messages.error(request, "Please enter your email and password.")
             return render(request, "login.html")
 
+        # Brute-force throttling by IP & Email
+        client_ip = request.META.get('REMOTE_ADDR', '')
+        rate_key = f"{email}:{client_ip}"
+        if is_login_rate_limited(rate_key) or is_login_rate_limited(email):
+            messages.error(request, "Too many failed login attempts. Please wait 15 minutes before trying again or use 'Login with OTP'.")
+            return render(request, "login.html")
+
         user = User.objects.filter(email=email).first()
 
         if user and check_password(password, user.password):
+            clear_login_failure(rate_key)
+            clear_login_failure(email)
             request.session.flush()
             request.session["user_id"] = user.id
             request.session["name"] = user.fullname
@@ -740,6 +850,8 @@ def login(request):
             messages.success(request, f"Welcome back, {user.fullname}!")
             return redirect("dashboard")
 
+        record_login_failure(rate_key)
+        record_login_failure(email)
         messages.error(request, "Invalid email or password. Please try again or use 'Login with OTP'.")
 
     return render(request, "login.html")
@@ -812,14 +924,36 @@ def add_vehicle(request):
         vehicle_number = request.POST.get("vehicle_number", "").strip().upper()
         brand = request.POST.get("brand", "").strip()
         model = request.POST.get("model", "").strip()
-        year = request.POST.get("year", "2024")
-        fuel_type = request.POST.get("fuel_type", "Petrol")
+        year_str = request.POST.get("year", "").strip()
+        fuel_type = request.POST.get("fuel_type", "").strip()
         color = request.POST.get("color", "").strip()
 
-        try:
-            year_int = int(year)
-        except ValueError:
-            year_int = 2024
+        context = {
+            "vehicle_number": vehicle_number,
+            "brand": brand,
+            "model": model,
+            "year": year_str,
+            "fuel_type": fuel_type,
+            "color": color,
+        }
+
+        if not vehicle_number or not brand or not model or not year_str or not fuel_type or not color:
+            messages.error(request, "All fields are required. Please fill in all vehicle specifications.")
+            return render(request, "add_vehicle.html", context)
+
+        if not year_str.isdigit():
+            messages.error(request, "Vehicle manufacturing year must be a valid numeric year.")
+            return render(request, "add_vehicle.html", context)
+
+        year_int = int(year_str)
+        current_year = date.today().year
+        if year_int < 1950 or year_int > current_year:
+            messages.error(request, f"Vehicle manufacturing year must be between 1950 and {current_year}.")
+            return render(request, "add_vehicle.html", context)
+
+        if Vehicle.objects.filter(vehicle_number=vehicle_number).exists():
+            messages.error(request, f"A vehicle with registration number '{vehicle_number}' is already registered in our system.")
+            return render(request, "add_vehicle.html", context)
 
         Vehicle.objects.create(
             user=user,
@@ -841,21 +975,46 @@ def edit_vehicle(request, vehicle_id):
     if not user_id:
         return redirect("login")
 
-    vehicle = get_object_or_404(Vehicle, id=vehicle_id, user_id=user_id)
+    if request.session.get("is_admin"):
+        vehicle = get_object_or_404(Vehicle, id=vehicle_id)
+    else:
+        vehicle = get_object_or_404(Vehicle, id=vehicle_id, user_id=user_id)
 
     if request.method == "POST":
-        vehicle.vehicle_number = request.POST.get("vehicle_number", vehicle.vehicle_number).strip().upper()
-        vehicle.brand = request.POST.get("brand", vehicle.brand).strip()
-        vehicle.model = request.POST.get("model", vehicle.model).strip()
-        try:
-            vehicle.year = int(request.POST.get("year", vehicle.year))
-        except ValueError:
-            pass
-        vehicle.fuel_type = request.POST.get("fuel_type", vehicle.fuel_type)
-        vehicle.color = request.POST.get("color", vehicle.color).strip()
+        vehicle_number = request.POST.get("vehicle_number", "").strip().upper()
+        brand = request.POST.get("brand", "").strip()
+        model = request.POST.get("model", "").strip()
+        year_str = request.POST.get("year", "").strip()
+        fuel_type = request.POST.get("fuel_type", "").strip()
+        color = request.POST.get("color", "").strip()
+
+        if not vehicle_number or not brand or not model or not year_str or not fuel_type or not color:
+            messages.error(request, "All vehicle fields are required.")
+            return render(request, "edit_vehicle.html", {"vehicle": vehicle})
+
+        if not year_str.isdigit():
+            messages.error(request, "Vehicle manufacturing year must be a valid numeric year.")
+            return render(request, "edit_vehicle.html", {"vehicle": vehicle})
+
+        year_int = int(year_str)
+        current_year = date.today().year
+        if year_int < 1950 or year_int > current_year:
+            messages.error(request, f"Vehicle manufacturing year must be between 1950 and {current_year}.")
+            return render(request, "edit_vehicle.html", {"vehicle": vehicle})
+
+        if Vehicle.objects.filter(vehicle_number=vehicle_number).exclude(id=vehicle.id).exists():
+            messages.error(request, f"Another vehicle with registration number '{vehicle_number}' already exists.")
+            return render(request, "edit_vehicle.html", {"vehicle": vehicle})
+
+        vehicle.vehicle_number = vehicle_number
+        vehicle.brand = brand
+        vehicle.model = model
+        vehicle.year = year_int
+        vehicle.fuel_type = fuel_type
+        vehicle.color = color
 
         vehicle.save()
-        messages.success(request, "Vehicle updated successfully.")
+        messages.success(request, f"Vehicle '{brand} {model} ({vehicle_number})' updated successfully.")
         return redirect("my_vehicle")
 
     return render(request, "edit_vehicle.html", {"vehicle": vehicle})
@@ -867,7 +1026,10 @@ def delete_vehicle(request, vehicle_id):
     if not user_id:
         return redirect("login")
 
-    vehicle = get_object_or_404(Vehicle, id=vehicle_id, user_id=user_id)
+    if request.session.get("is_admin"):
+        vehicle = get_object_or_404(Vehicle, id=vehicle_id)
+    else:
+        vehicle = get_object_or_404(Vehicle, id=vehicle_id, user_id=user_id)
     vehicle_info = f"{vehicle.brand} {vehicle.model} ({vehicle.vehicle_number})"
     vehicle.delete()
     messages.success(request, f"Vehicle '{vehicle_info}' deleted successfully.")
@@ -887,23 +1049,70 @@ def book_service(request):
 
     if request.method == "POST":
         vehicle_id = request.POST.get("vehicle")
-        service_type = request.POST.get("service_type")
-        service_date = request.POST.get("service_date")
-        service_time = request.POST.get("service_time")
+        service_type = request.POST.get("service_type", "").strip()
+        service_date_str = request.POST.get("service_date", "").strip()
+        service_time_str = request.POST.get("service_time", "").strip()
         description = request.POST.get("description", "").strip()
 
-        if not vehicle_id or not service_type or not service_date or not service_time:
-            messages.error(request, "Please fill in all appointment details.")
-            return render(request, "book_service.html", {"vehicles": vehicles})
+        context = {
+            "vehicles": vehicles,
+            "selected_vehicle": vehicle_id,
+            "selected_service_type": service_type,
+            "selected_date": service_date_str,
+            "selected_time": service_time_str,
+            "description": description,
+        }
 
+        if not vehicle_id or not service_type or not service_date_str or not service_time_str:
+            messages.error(request, "Please fill in all appointment details.")
+            return render(request, "book_service.html", context)
+
+        # 1. Enforce vehicle ownership
         vehicle = get_object_or_404(Vehicle, id=vehicle_id, user_id=user_id)
+
+        # 2. Enforce certified service package choices
+        if service_type not in SERVICE_PRICES:
+            messages.error(request, f"Invalid service package '{service_type}'. Please choose from our certified packages.")
+            return render(request, "book_service.html", context)
+
+        # 3. Date parsing and past-date rejection
+        try:
+            service_date = datetime.strptime(service_date_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid service date format. Please select a valid date.")
+            return render(request, "book_service.html", context)
+
+        if service_date < date.today():
+            messages.error(request, "Service date cannot be in the past. Please select today or a future date.")
+            return render(request, "book_service.html", context)
+
+        # 4. Same slot duplicate protection (conflict prevention)
+        slot_booked = ServiceBooking.objects.filter(
+            service_date=service_date,
+            service_time=service_time_str,
+            status__in=["Pending", "Confirmed", "In Progress", "Quality Check"]
+        ).exists()
+
+        if slot_booked:
+            messages.error(request, f"The selected time slot ({service_time_str}) on {service_date.strftime('%d %b %Y')} is fully booked. Please select an alternate time slot or date.")
+            return render(request, "book_service.html", context)
+
+        # 5. Vehicle ongoing appointment protection
+        ongoing_vehicle_booking = ServiceBooking.objects.filter(
+            vehicle=vehicle,
+            status__in=["Pending", "Confirmed", "In Progress", "Quality Check"]
+        ).exists()
+
+        if ongoing_vehicle_booking:
+            messages.warning(request, f"Vehicle '{vehicle.brand} {vehicle.model} ({vehicle.vehicle_number})' already has an active appointment in progress. Please await its completion or reschedule.")
+            return redirect("my_bookings")
 
         booking = ServiceBooking.objects.create(
             user_id=user_id,
             vehicle=vehicle,
             service_type=service_type,
             service_date=service_date,
-            service_time=service_time,
+            service_time=service_time_str,
             description=description,
             status="Pending"
         )
@@ -971,18 +1180,21 @@ def view_booking(request, booking_id):
         return redirect("login")
 
     booking = get_object_or_404(ServiceBooking, id=booking_id, user_id=user_id)
-    amount = get_service_amount(booking.service_type)
+    amount = booking.total_amount
+    parts_used = booking.parts_used.select_related("inventory_item").all()
     payment = Payment.objects.filter(booking=booking, payment_status="Paid").first()
     review = ServiceReview.objects.filter(booking=booking).first()
 
     return render(request, "view_booking.html", {
         "booking": booking,
         "amount": amount,
+        "parts_used": parts_used,
         "payment": payment,
         "review": review,
     })
 
 
+@require_POST
 def submit_review(request, booking_id):
     user_id = request.session.get("user_id")
     if not user_id:
@@ -997,10 +1209,13 @@ def submit_review(request, booking_id):
     if request.method == "POST":
         try:
             rating = int(request.POST.get("rating", 5))
-            if rating < 1 or rating > 5:
-                rating = 5
-        except ValueError:
-            rating = 5
+        except (ValueError, TypeError):
+            messages.error(request, "Please provide a valid numeric rating between 1 and 5.")
+            return redirect("view_booking", booking_id=booking.id)
+
+        if rating < 1 or rating > 5:
+            messages.error(request, "Rating must be between 1 and 5 stars.")
+            return redirect("view_booking", booking_id=booking.id)
 
         comment = request.POST.get("comment", "").strip()
 
@@ -1070,7 +1285,44 @@ def cancel_booking(request, booking_id):
         return redirect("login")
 
     booking = get_object_or_404(ServiceBooking, id=booking_id, user_id=user_id)
-    booking.delete()
+
+    # Restriction: Only Pending and Confirmed can be cancelled online
+    if booking.status in ["In Progress", "Quality Check", "Completed"]:
+        messages.error(
+            request,
+            f"Bookings in '{booking.status}' stage cannot be cancelled online. Please contact our workshop desk at +91 98765 43210."
+        )
+        return redirect("view_booking", booking_id=booking.id)
+
+    if booking.status == "Cancelled":
+        messages.info(request, f"Booking #{booking.id} is already cancelled.")
+        return redirect("my_bookings")
+
+    old_status = booking.status
+    booking.status = "Cancelled"
+    booking.save(update_fields=["status"])
+
+    # Restock inventory parts allocated to this booking
+    for part in booking.parts_used.select_related("inventory_item").all():
+        part.inventory_item.quantity += part.quantity
+        part.inventory_item.save(update_fields=["quantity"])
+    booking.parts_used.all().delete()
+
+    # Retain payment records and update status appropriately
+    if hasattr(booking, "payment"):
+        payment = booking.payment
+        if payment.payment_status == "Paid":
+            payment.payment_status = "Refund Pending"
+            payment.save(update_fields=["payment_status"])
+        elif payment.payment_status in ["Created", "Pending"]:
+            payment.payment_status = "Cancelled"
+            payment.save(update_fields=["payment_status"])
+
+    try:
+        send_booking_status_email(booking, old_status, "Cancelled")
+    except Exception as e:
+        print(f"[AutoFixPro] Cancellation email notification error: {e}")
+
     messages.success(request, f"Booking #{booking_id} cancelled successfully.")
     return redirect("my_bookings")
 
@@ -1086,7 +1338,17 @@ def payment(request, booking_id):
         user_id=user_id
     )
 
-    amount = get_service_amount(booking.service_type)
+    if booking.is_cancelled:
+        messages.error(
+            request,
+            "Payment cannot be made for a cancelled booking."
+        )
+        return redirect(
+            "view_booking",
+            booking_id=booking.id
+        )
+
+    amount = booking.total_amount
 
     existing_payment = Payment.objects.filter(
         booking=booking,
@@ -1171,6 +1433,16 @@ def payment_success(request, booking_id):
         user_id=user_id
     )
 
+    if booking.is_cancelled:
+        messages.error(
+            request,
+            "Payment cannot be processed for a cancelled booking."
+        )
+        return redirect(
+            "view_booking",
+            booking_id=booking.id
+        )
+
     existing_payment = Payment.objects.filter(
         booking=booking,
         payment_status="Paid"
@@ -1211,9 +1483,9 @@ def payment_success(request, booking_id):
         messages.error(request, "Payment order does not match this booking.")
         return redirect("payment", booking_id=booking.id)
 
-    expected_amount = get_service_amount(booking.service_type)
+    expected_amount = booking.total_amount
 
-    if float(payment_record.amount) != float(expected_amount):
+    if Decimal(str(payment_record.amount)) != Decimal(str(expected_amount)):
         messages.error(request, "Payment amount verification failed.")
         return redirect("payment", booking_id=booking.id)
 
@@ -1246,7 +1518,8 @@ def payment_success(request, booking_id):
     payment_record.razorpay_signature = razorpay_signature
     payment_record.payment_status = "Paid"
     payment_record.payment_method = "RAZORPAY"
-    payment_record.save()
+    payment_record.paid_at = timezone.now()
+    payment_record.save(update_fields=["razorpay_payment_id", "razorpay_signature", "payment_status", "payment_method", "paid_at"])
 
     # Dispatch branded payment confirmation email with Tax Invoice PDF
     send_payment_invoice_email(booking, payment_record)
@@ -1270,6 +1543,10 @@ def cash_payment(request, booking_id):
         user_id=user_id
     )
 
+    if booking.is_cancelled:
+        messages.error(request, "Cannot initiate payment for a cancelled booking.")
+        return redirect("view_booking", booking_id=booking.id)
+
     existing_payment = Payment.objects.filter(
         booking=booking,
         payment_status="Paid"
@@ -1285,7 +1562,7 @@ def cash_payment(request, booking_id):
             booking_id=booking.id
         )
 
-    amount = get_service_amount(booking.service_type)
+    amount = booking.total_amount
 
     Payment.objects.update_or_create(
         booking=booking,
@@ -1299,9 +1576,10 @@ def cash_payment(request, booking_id):
         }
     )
 
+    # Booking remains Pending until vehicle check-in and workshop confirmation
     messages.success(
         request,
-        f"Booking #{booking.id} confirmed. Please pay ₹{amount} at the workshop."
+        f"Cash on Delivery selected for Booking #{booking.id}. Your appointment is registered as Pending. Please pay ₹{amount} at the workshop upon arrival."
     )
     return redirect("view_booking", booking_id=booking.id)
 
@@ -1550,17 +1828,22 @@ def change_password(request):
 
         if not check_password(current_password, user.password):
             messages.error(request, "Current password is incorrect.")
-        elif not new_password or len(new_password) < 8:
-            messages.error(request, "New password must be at least 8 characters long.")
+        elif not new_password:
+            messages.error(request, "Please enter a new password.")
         elif new_password != confirm_password:
             messages.error(request, "New passwords do not match.")
         elif check_password(new_password, user.password):
             messages.error(request, "New password must be different from your current password.")
         else:
-            user.password = make_password(new_password)
-            user.save(update_fields=["password"])
-            messages.success(request, "Password changed successfully.")
-            return redirect("profile")
+            try:
+                validate_password(new_password)
+                user.password = make_password(new_password)
+                user.save(update_fields=["password"])
+                messages.success(request, "Password changed successfully.")
+                return redirect("profile")
+            except ValidationError as e:
+                for err in e.messages:
+                    messages.error(request, err)
 
     return render(request, "change_password.html")
 
@@ -1653,11 +1936,12 @@ def admin_dashboard(request):
         item["total"] for item in status_booking_data
     ]
 
-    # Graph 4: Monthly Revenue
+    # Graph 4: Monthly Revenue (Grounded in actual payment clearing date paid_at with fallback to payment_date)
     monthly_revenue_data = (
         Payment.objects
         .filter(payment_status="Paid")
-        .annotate(month=TruncMonth("payment_date"))
+        .annotate(actual_paid_date=Coalesce("paid_at", "payment_date"))
+        .annotate(month=TruncMonth("actual_paid_date"))
         .values("month")
         .annotate(total=Sum("amount"))
         .order_by("month")
@@ -1760,6 +2044,10 @@ def edit_user(request, user_id):
                 messages.error(request, "Contact number must be exactly 10 digits.")
                 return render(request, "edit_user.html", {"user": user})
 
+            if User.objects.filter(email=email).exclude(id=user.id).exists():
+                messages.error(request, f"Another account with email '{email}' already exists.")
+                return render(request, "edit_user.html", {"user": user})
+
             user.fullname = fullname
             user.email = email
             user.phone = clean_phone
@@ -1807,7 +2095,13 @@ def manage_bookings(request):
     search = request.GET.get("search", "").strip()
     status_filter = request.GET.get("status", "").strip()
 
-    bookings = ServiceBooking.objects.select_related("vehicle", "vehicle__user").all().order_by("-service_date", "-id")
+    bookings = (
+        ServiceBooking.objects
+        .select_related("vehicle", "vehicle__user", "payment")
+        .prefetch_related("parts_used", "parts_used__inventory_item")
+        .all()
+        .order_by("-service_date", "-id")
+    )
     if status_filter:
         bookings = bookings.filter(status__iexact=status_filter)
     if search:
@@ -1815,10 +2109,14 @@ def manage_bookings(request):
             vehicle__vehicle_number__icontains=search
         ) | bookings.filter(vehicle__brand__icontains=search) | bookings.filter(vehicle__user__fullname__icontains=search)
 
+    # All active inventory spare parts and fluids that have available stock
+    inventory_items = Inventory.objects.filter(quantity__gt=0).order_by("category", "name")
+
     return render(request, "manage_bookings.html", {
         "bookings": bookings,
         "search": search,
-        "status_filter": status_filter
+        "status_filter": status_filter,
+        "inventory_items": inventory_items,
     })
 
 
@@ -1934,8 +2232,11 @@ def send_booking_status_email(booking, old_status, new_status):
         return False
 
     recipient_email = booking.user.email.strip()
-    recipient_name = booking.user.fullname or "Valued Customer"
-    vehicle_name = f"{booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.vehicle_number})"
+    recipient_name = html_escape(booking.user.fullname or "Valued Customer")
+    vehicle_name = html_escape(f"{booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.vehicle_number})")
+    service_pkg = html_escape(booking.service_type or "General Service")
+    service_sched_date = html_escape(str(booking.service_date or ""))
+    service_sched_time = html_escape(str(booking.service_time or ""))
     site_base_url = os.getenv('SITE_URL') or ('http://127.0.0.1:8000' if getattr(settings, 'DEBUG', False) else 'https://autofixpro.pythonanywhere.com')
 
     # Status-specific subject line & message details
@@ -1963,7 +2264,7 @@ def send_booking_status_email(booking, old_status, new_status):
         badge_bg = "#3b82f6"
         badge_text = "BOOKING CONFIRMED"
         headline = "Your service slot is confirmed."
-        status_note = f"Your appointment for {booking.service_type} on {booking.service_date} at {booking.service_time} is locked in. We look forward to servicing your vehicle!"
+        status_note = f"Your appointment for {service_pkg} on {service_sched_date} at {service_sched_time} is locked in. We look forward to servicing your vehicle!"
     elif s_lower == "cancelled":
         subject = f"⚠️ Booking #{booking.id} Cancelled — AutoFixPro"
         badge_bg = "#ef4444"
@@ -1973,9 +2274,12 @@ def send_booking_status_email(booking, old_status, new_status):
     else:
         subject = f"AutoFixPro Service Update: Booking #{booking.id} is {new_status}"
         badge_bg = "#64748b"
-        badge_text = new_status.upper()
-        headline = f"Status updated to {new_status}."
-        status_note = f"Your service booking status has been updated to {new_status}."
+        badge_text = html_escape(new_status.upper())
+        headline = f"Status updated to {html_escape(new_status)}."
+        status_note = f"Your service booking status has been updated to {html_escape(new_status)}."
+
+    headline_esc = html_escape(headline)
+    status_note_esc = html_escape(status_note)
 
     html_message = f"""
     <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
@@ -1985,7 +2289,7 @@ def send_booking_status_email(booking, old_status, new_status):
         </div>
         <div style="padding: 32px 28px; color: #1e293b;">
             <p style="font-size: 16px; margin: 0 0 16px;">Hello <strong>{recipient_name}</strong>,</p>
-            <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 24px;">{headline}</p>
+            <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 24px;">{headline_esc}</p>
 
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
@@ -1995,13 +2299,13 @@ def send_booking_status_email(booking, old_status, new_status):
                 <div style="font-size: 13.5px; line-height: 1.8; color: #334155;">
                     <div><strong>Booking ID:</strong> #{booking.id}</div>
                     <div><strong>Vehicle:</strong> {vehicle_name}</div>
-                    <div><strong>Service Package:</strong> {booking.service_type}</div>
-                    <div><strong>Scheduled Date:</strong> {booking.service_date} ({booking.service_time})</div>
+                    <div><strong>Service Package:</strong> {service_pkg}</div>
+                    <div><strong>Scheduled Date:</strong> {service_sched_date} ({service_sched_time})</div>
                 </div>
             </div>
 
             <div style="background: rgba(255, 77, 48, 0.06); border-left: 4px solid #ff4d30; padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 26px;">
-                <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #0f172a;">{status_note}</p>
+                <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #0f172a;">{status_note_esc}</p>
             </div>
 
             <div style="text-align: center; margin: 28px 0 10px;">
@@ -2011,8 +2315,8 @@ def send_booking_status_email(booking, old_status, new_status):
             </div>
         </div>
         <div style="background: #f1f5f9; padding: 18px 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
-            Questions? Call our workshop desk at <strong>+91 98765 43210</strong> or reply to this email.<br>
-            &copy; 2026 AutoFixPro Workshop Technologies Inc.
+            Questions? Call our workshop desk at <strong>{html_escape(getattr(settings, 'WORKSHOP_PHONE', '+91 98765 43210'))}</strong> or reply to this email.<br>
+            &copy; 2026 {html_escape(getattr(settings, 'WORKSHOP_NAME', 'AutoFixPro Workshop'))}.
         </div>
     </div>
     """
@@ -2040,24 +2344,25 @@ def send_payment_invoice_email(booking, payment):
         return False
 
     recipient_email = booking.user.email.strip()
-    recipient_name = booking.user.fullname or "Valued Customer"
-    vehicle_name = f"{booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.vehicle_number})"
+    recipient_name = html_escape(booking.user.fullname or "Valued Customer")
+    vehicle_name = html_escape(f"{booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.vehicle_number})")
+    service_pkg = html_escape(booking.service_type or "General Service")
     site_base_url = os.getenv('SITE_URL') or ('http://127.0.0.1:8000' if getattr(settings, 'DEBUG', False) else 'https://autofixpro.pythonanywhere.com')
-    invoice_num = f"INV-{booking.id:05d}"
-    amount = f"{float(payment.amount):.2f}"
-    pay_method = (payment.payment_method or "ONLINE").upper()
-    txn_id = payment.razorpay_payment_id or f"TXN-CSH{payment.id:05d}"
-    pay_date = payment.payment_date.strftime("%d %b %Y, %I:%M %p") if payment.payment_date else datetime.now().strftime("%d %b %Y, %I:%M %p")
+    invoice_num = html_escape(f"INV-{booking.id:05d}")
+    amount = f"{Decimal(str(payment.amount)):.2f}"
+    pay_method = html_escape((payment.payment_method or "ONLINE").upper())
+    txn_id = html_escape(payment.razorpay_payment_id or f"TXN-CSH{payment.id:05d}")
+    pay_date = html_escape(payment.payment_date.strftime("%d %b %Y, %I:%M %p") if payment.payment_date else datetime.now().strftime("%d %b %Y, %I:%M %p"))
 
     subject = f"🧾 Payment Confirmed & Tax Invoice #{invoice_num} — AutoFixPro Booking #{booking.id}"
 
     plain_message = (
-        f"Hello {recipient_name},\n\n"
+        f"Hello {booking.user.fullname or 'Valued Customer'},\n\n"
         f"Thank you for your payment! We have received ₹{amount} for Booking #{booking.id}.\n"
-        f"Vehicle: {vehicle_name}\n"
+        f"Vehicle: {booking.vehicle.brand} {booking.vehicle.model} ({booking.vehicle.vehicle_number})\n"
         f"Service: {booking.service_type}\n"
-        f"Payment Method: {pay_method}\n"
-        f"Transaction ID: {txn_id}\n\n"
+        f"Payment Method: {(payment.payment_method or 'ONLINE').upper()}\n"
+        f"Transaction ID: {payment.razorpay_payment_id or f'TXN-CSH{payment.id:05d}'}\n\n"
         f"Your official GST Tax Invoice PDF is attached to this email.\n\n"
         f"Best regards,\nAutoFixPro Workshop Technologies"
     )
@@ -2097,7 +2402,7 @@ def send_payment_invoice_email(booking, payment):
                     </tr>
                     <tr>
                         <td style="color: #64748b;">Service Package:</td>
-                        <td style="text-align: right; font-weight: 600;">{booking.service_type}</td>
+                        <td style="text-align: right; font-weight: 600;">{service_pkg}</td>
                     </tr>
                     <tr>
                         <td style="color: #64748b;">Payment Date:</td>
@@ -2119,8 +2424,8 @@ def send_payment_invoice_email(booking, payment):
             </div>
         </div>
         <div style="background: #f1f5f9; padding: 18px 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
-            Thank you for choosing AutoFixPro Workshop! | Phone: <strong>+91 98765 43210</strong><br>
-            &copy; 2026 AutoFixPro Workshop Technologies Inc. All rights reserved.
+            Thank you for choosing AutoFixPro Workshop! | Phone: <strong>{html_escape(getattr(settings, 'WORKSHOP_PHONE', '+91 98765 43210'))}</strong><br>
+            &copy; 2026 {html_escape(getattr(settings, 'WORKSHOP_NAME', 'AutoFixPro Workshop Technologies Inc.'))}. All rights reserved.
         </div>
     </div>
     """
@@ -2152,6 +2457,16 @@ def send_payment_invoice_email(booking, payment):
 
 
 
+VALID_STATUS_TRANSITIONS = {
+    "Pending": {"Confirmed", "In Progress", "Cancelled"},
+    "Confirmed": {"In Progress", "Quality Check", "Cancelled"},
+    "In Progress": {"Quality Check", "Completed", "Cancelled"},
+    "Quality Check": {"Completed", "In Progress", "Cancelled"},
+    "Completed": set(),  # Terminal state
+    "Cancelled": set(),  # Terminal state
+}
+
+
 @admin_required
 @require_POST
 def update_booking_status(request, booking_id):
@@ -2173,9 +2488,35 @@ def update_booking_status(request, booking_id):
     booking = get_object_or_404(ServiceBooking.objects.select_related("user", "vehicle"), id=booking_id)
     old_status = booking.status
 
+    if old_status in ["Completed", "Cancelled"]:
+        messages.error(request, f"Booking #{booking_id} is in '{old_status}' state and cannot be modified.")
+        return redirect("manage_bookings")
+
     if old_status != status:
+        if status not in VALID_STATUS_TRANSITIONS.get(old_status, set()):
+            messages.error(request, f"Cannot change status from '{old_status}' to '{status}'. Invalid status progression.")
+            return redirect("manage_bookings")
+
         booking.status = status
         booking.save(update_fields=["status"])
+
+        # Auto-restock inventory parts and update payment record if admin cancels this booking
+        if status == "Cancelled" and old_status != "Cancelled":
+            for part in booking.parts_used.select_related("inventory_item").all():
+                part.inventory_item.quantity += part.quantity
+                part.inventory_item.save(update_fields=["quantity"])
+            booking.parts_used.all().delete()
+
+            # Update Payment status appropriately
+            payment = Payment.objects.filter(booking=booking).first()
+            if payment:
+                if payment.payment_status == "Paid":
+                    payment.payment_status = "Refund Pending"
+                    payment.save(update_fields=["payment_status"])
+                elif payment.payment_status in ["Created", "Pending"]:
+                    payment.payment_status = "Cancelled"
+                    payment.save(update_fields=["payment_status"])
+
         send_booking_status_email(booking, old_status, status)
         messages.success(
             request,
@@ -2184,6 +2525,114 @@ def update_booking_status(request, booking_id):
     else:
         messages.info(request, f"Booking #{booking_id} is already in '{status}' status.")
 
+    return redirect("manage_bookings")
+
+
+@admin_required
+@require_POST
+def add_booking_part(request, booking_id):
+    booking = get_object_or_404(ServiceBooking, id=booking_id)
+    if booking.status in ["Cancelled", "Completed"]:
+        messages.error(request, f"Cannot add spare parts to {booking.status.lower()} Booking #{booking.id}.")
+        return redirect("manage_bookings")
+
+    if Payment.objects.filter(booking=booking, payment_status="Paid").exists():
+        messages.error(request, f"Spare parts cannot be modified for Booking #{booking.id} because payment has already been completed.")
+        return redirect("manage_bookings")
+
+    inventory_id = request.POST.get("inventory_id")
+    quantity_str = request.POST.get("quantity", "1").strip()
+
+    if not inventory_id:
+        messages.error(request, "Please select an inventory spare part or fluid.")
+        return redirect("manage_bookings")
+
+    try:
+        quantity = int(quantity_str)
+        if quantity <= 0:
+            raise ValueError
+    except ValueError:
+        messages.error(request, "Part quantity must be a positive whole number.")
+        return redirect("manage_bookings")
+
+    with transaction.atomic():
+        item = Inventory.objects.select_for_update().filter(id=inventory_id).first()
+        if not item:
+            messages.error(request, "Selected inventory item not found.")
+            return redirect("manage_bookings")
+
+        if item.quantity < quantity:
+            messages.error(
+                request,
+                f"Insufficient stock for '{item.name}'. Only {item.quantity} available in workshop inventory."
+            )
+            return redirect("manage_bookings")
+
+        # Concurrency-safe Real-time Stock Deduction
+        item.quantity -= quantity
+        item.save(update_fields=["quantity"])
+
+        existing_part = BookingPart.objects.filter(booking=booking, inventory_item=item).first()
+        if existing_part:
+            existing_part.quantity += quantity
+            existing_part.unit_price = item.price
+            existing_part.save(update_fields=["quantity", "unit_price"])
+        else:
+            BookingPart.objects.create(
+                booking=booking,
+                inventory_item=item,
+                quantity=quantity,
+                unit_price=item.price
+            )
+
+        # Sync un-paid Payment record total if exists
+        payment = Payment.objects.filter(booking=booking).exclude(payment_status="Paid").first()
+        if payment:
+            payment.amount = booking.total_amount
+            payment.save(update_fields=["amount"])
+
+    messages.success(
+        request,
+        f"Fitted {quantity}x '{item.name}' (₹{item.price} each) to Booking #{booking.id}. Inventory deducted ({item.quantity} remaining in stock)."
+    )
+    return redirect("manage_bookings")
+
+
+@admin_required
+@require_POST
+def remove_booking_part(request, part_id):
+    part = get_object_or_404(BookingPart.objects.select_related("booking", "inventory_item"), id=part_id)
+    booking = part.booking
+
+    if booking.status in ["Cancelled", "Completed"]:
+        messages.error(request, f"Cannot remove spare parts from {booking.status.lower()} Booking #{booking.id}.")
+        return redirect("manage_bookings")
+
+    if Payment.objects.filter(booking=booking, payment_status="Paid").exists():
+        messages.error(request, f"Spare parts cannot be modified for Booking #{booking.id} because payment has already been completed.")
+        return redirect("manage_bookings")
+
+    item = part.inventory_item
+    qty = part.quantity
+    part_name = item.name
+
+    with transaction.atomic():
+        # Restock back to inventory with concurrency row lock
+        item_locked = Inventory.objects.select_for_update().get(id=item.id)
+        item_locked.quantity += qty
+        item_locked.save(update_fields=["quantity"])
+        part.delete()
+
+        # Sync un-paid Payment record total if exists
+        payment = Payment.objects.filter(booking=booking).exclude(payment_status="Paid").first()
+        if payment:
+            payment.amount = booking.total_amount
+            payment.save(update_fields=["amount"])
+
+    messages.success(
+        request,
+        f"Removed '{part_name}' from Booking #{booking.id}. Restocked {qty} unit(s) back into inventory ({item_locked.quantity} in stock)."
+    )
     return redirect("manage_bookings")
 
 
@@ -2248,17 +2697,35 @@ def manage_payments(request):
 @require_POST
 def mark_payment_paid(request, payment_id):
     payment = get_object_or_404(Payment, id=payment_id)
-    if payment.payment_status != "Paid":
-        payment.payment_status = "Paid"
-        if not payment.razorpay_payment_id:
-            payment.razorpay_payment_id = f"CASH-{payment.id:05d}"
-        payment.save(update_fields=["payment_status", "razorpay_payment_id"])
 
-        # Send confirmation & tax invoice PDF to customer email
-        send_payment_invoice_email(payment.booking, payment)
-        messages.success(request, f"Payment #{payment.id} marked as Paid. Tax invoice emailed to {payment.booking.user.email}!")
-    else:
+    # Restriction: Admin can only mark CASH payments as Paid manually. Online gateway transactions cannot be arbitrarily overwritten.
+    if payment.payment_method != "CASH":
+        messages.error(
+            request,
+            f"Cannot manually mark payment #{payment.id} as Paid. Only Cash on Delivery transactions can be verified manually by staff."
+        )
+        return redirect("manage_payments")
+
+    if payment.payment_status == "Paid":
         messages.info(request, f"Payment #{payment.id} is already marked as Paid.")
+        return redirect("manage_payments")
+
+    if payment.payment_status not in ["Pending", "Created"]:
+        messages.error(
+            request,
+            f"Payment #{payment.id} is currently '{payment.payment_status}' and cannot be marked as Paid."
+        )
+        return redirect("manage_payments")
+
+    payment.payment_status = "Paid"
+    payment.paid_at = timezone.now()
+    if not payment.razorpay_payment_id:
+        payment.razorpay_payment_id = f"CASH-{payment.id:05d}"
+    payment.save(update_fields=["payment_status", "paid_at", "razorpay_payment_id"])
+
+    # Send confirmation & tax invoice PDF to customer email
+    send_payment_invoice_email(payment.booking, payment)
+    messages.success(request, f"Cash Payment #{payment.id} marked as Paid. Tax invoice emailed to {payment.booking.user.email}!")
     return redirect("manage_payments")
 
 
@@ -2383,18 +2850,6 @@ DEFAULT_INVENTORY_SEEDS = [
 
 @admin_required
 def inventory(request):
-    # Auto-seed initial rich catalog if table has fewer than 5 items
-    if Inventory.objects.count() < 5:
-        for seed in DEFAULT_INVENTORY_SEEDS:
-            if not Inventory.objects.filter(name=seed["name"]).exists():
-                Inventory.objects.create(
-                    name=seed["name"],
-                    category=seed["category"],
-                    quantity=seed["quantity"],
-                    price=seed["price"],
-                    image_url=seed.get("image_url", ""),
-                )
-
     search = request.GET.get("search", "").strip()
     category_filter = request.GET.get("category", "").strip()
     status_filter = request.GET.get("status", "").strip()
@@ -2472,15 +2927,38 @@ def add_inventory(request):
             return render(request, "add_inventory.html", {"categories": categories})
 
         try:
-            price = float(price_str)
-            if price <= 0:
+            price = Decimal(price_str)
+            if price <= Decimal("0.00"):
                 raise ValueError
-        except ValueError:
+        except Exception:
             messages.error(request, "Unit price must be a valid positive amount.")
             return render(request, "add_inventory.html", {"categories": categories})
 
         image_file = request.FILES.get("image")
         image_url = request.POST.get("image_url", "").strip()
+
+        # Validate image file if uploaded
+        if image_file:
+            if image_file.size > 5 * 1024 * 1024:
+                messages.error(request, "Uploaded image exceeds the 5 MB limit. Please select a smaller file.")
+                return render(request, "add_inventory.html", {"categories": categories})
+            from PIL import Image
+            try:
+                img = Image.open(image_file)
+                img.verify()
+                if img.format.lower() not in ["jpeg", "jpg", "png", "webp", "gif"]:
+                    messages.error(request, "Uploaded file must be a valid image format (JPEG, PNG, WebP).")
+                    return render(request, "add_inventory.html", {"categories": categories})
+            except Exception:
+                messages.error(request, "Uploaded file is not a valid or readable image.")
+                return render(request, "add_inventory.html", {"categories": categories})
+
+        # Validate image URL scheme if provided
+        if image_url:
+            valid_schemes = ("http://", "https://", "/static/")
+            if not any(image_url.startswith(s) for s in valid_schemes):
+                messages.error(request, "Image URL must start with http:// or https://")
+                return render(request, "add_inventory.html", {"categories": categories})
 
         Inventory.objects.create(
             name=name,
@@ -2522,12 +3000,35 @@ def edit_inventory(request, item_id):
             return render(request, "edit_inventory.html", {"item": item, "categories": categories})
 
         try:
-            price = float(price_str)
-            if price <= 0:
+            price = Decimal(price_str)
+            if price <= Decimal("0.00"):
                 raise ValueError
-        except ValueError:
+        except Exception:
             messages.error(request, "Unit price must be a valid positive amount.")
             return render(request, "edit_inventory.html", {"item": item, "categories": categories})
+
+        # Validate image file if uploaded
+        if image_file:
+            if image_file.size > 5 * 1024 * 1024:
+                messages.error(request, "Uploaded image exceeds the 5 MB limit. Please select a smaller file.")
+                return render(request, "edit_inventory.html", {"item": item, "categories": categories})
+            from PIL import Image
+            try:
+                img = Image.open(image_file)
+                img.verify()
+                if img.format.lower() not in ["jpeg", "jpg", "png", "webp", "gif"]:
+                    messages.error(request, "Uploaded file must be a valid image format (JPEG, PNG, WebP).")
+                    return render(request, "edit_inventory.html", {"item": item, "categories": categories})
+            except Exception:
+                messages.error(request, "Uploaded file is not a valid or readable image.")
+                return render(request, "edit_inventory.html", {"item": item, "categories": categories})
+
+        # Validate image URL scheme if provided
+        if image_url:
+            valid_schemes = ("http://", "https://", "/static/")
+            if not any(image_url.startswith(s) for s in valid_schemes):
+                messages.error(request, "Image URL must start with http:// or https://")
+                return render(request, "edit_inventory.html", {"item": item, "categories": categories})
 
         item.name = name
         item.category = category
