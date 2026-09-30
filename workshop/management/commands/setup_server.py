@@ -1,3 +1,5 @@
+import os
+import secrets
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.contrib.auth.hashers import make_password
@@ -5,7 +7,7 @@ from workshop.models import User, Inventory
 
 
 class Command(BaseCommand):
-    help = "Initializes database, default admin user, initial inventory, and collects static files for PythonAnywhere & production."
+    help = "Initializes database, admin user, initial inventory, and collects static files for PythonAnywhere & production."
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.NOTICE("1. Running database migrations..."))
@@ -13,17 +15,23 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("[OK] Migrations applied successfully."))
 
         self.stdout.write(self.style.NOTICE("2. Checking Admin user..."))
-        admin_email = "admin@autofixpro.com"
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@autofixpro.com").strip()
+        admin_password = os.getenv("ADMIN_PASSWORD", "").strip()
+        generated_password = False
+        if not admin_password:
+            admin_password = secrets.token_urlsafe(12)
+            generated_password = True
+
         admin_user = User.objects.filter(email=admin_email).first()
         if not admin_user:
             User.objects.create(
                 fullname="Admin Panel",
                 email=admin_email,
                 phone="9876543210",
-                password=make_password("12345678"),
+                password=make_password(admin_password),
                 is_admin=True
             )
-            self.stdout.write(self.style.SUCCESS(f"[OK] Default Admin created: {admin_email} / 12345678"))
+            self.stdout.write(self.style.SUCCESS(f"[OK] Admin created: {admin_email}"))
         else:
             if not admin_user.is_admin:
                 admin_user.is_admin = True
@@ -60,6 +68,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("\n========================================================"))
         self.stdout.write(self.style.SUCCESS("  AutoFixPro Server Bootstrap Completed!"))
         self.stdout.write(self.style.SUCCESS("  - Login URL: /login/"))
-        self.stdout.write(self.style.SUCCESS("  - Admin Email: admin@autofixpro.com"))
-        self.stdout.write(self.style.SUCCESS("  - Admin Password: 12345678"))
+        self.stdout.write(self.style.SUCCESS(f"  - Admin Email: {admin_email}"))
+        if not admin_user:
+            if generated_password:
+                self.stdout.write(self.style.WARNING(f"  - Generated Admin Password: {admin_password}"))
+                self.stdout.write(self.style.NOTICE("    (Store this securely or configure ADMIN_PASSWORD in your .env file)"))
+            else:
+                self.stdout.write(self.style.SUCCESS("  - Admin Password: [Configured via ADMIN_PASSWORD environment variable]"))
         self.stdout.write(self.style.SUCCESS("========================================================\n"))
