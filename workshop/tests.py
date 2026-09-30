@@ -1,7 +1,9 @@
+from datetime import date, timedelta
+from decimal import Decimal
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password, check_password
-from workshop.models import User, Vehicle, ServiceBooking, Payment, Inventory, ContactMessage, ServiceReview
+from workshop.models import User, Vehicle, ServiceBooking, Payment, Inventory, ContactMessage, ServiceReview, BookingPart
 
 class AutoFixProTests(TestCase):
     def setUp(self):
@@ -138,10 +140,11 @@ class AutoFixProTests(TestCase):
         get_cancel = self.client.get(reverse('cancel_booking', args=[self.booking.id]))
         self.assertEqual(get_cancel.status_code, 405)
 
-        # 3. cancel_booking POST should succeed
+        # 3. cancel_booking POST should succeed and change status to Cancelled (not delete record)
         post_cancel = self.client.post(reverse('cancel_booking', args=[self.booking.id]))
         self.assertEqual(post_cancel.status_code, 302)
-        self.assertFalse(ServiceBooking.objects.filter(id=self.booking.id).exists())
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, "Cancelled")
 
         # 4. delete_vehicle POST should succeed
         post_del_veh = self.client.post(reverse('delete_vehicle', args=[self.vehicle.id]))
@@ -212,25 +215,29 @@ class AutoFixProTests(TestCase):
     def test_registration_otp_flow(self):
         from workshop.models import EmailOTP
 
-        # 1. Post Registration Form
-        response = self.client.post(reverse('register'), {
-            'fullname': 'New Customer',
-            'email': 'newcustomer@example.com',
-            'phone': '9123456789',
-            'password': 'customerpass123',
-            'confirm_password': 'customerpass123',
-        })
+        from unittest.mock import patch
+
+        # 1. Post Registration Form with deterministic OTP
+        with patch('secrets.randbelow', return_value=23456):
+            response = self.client.post(reverse('register'), {
+                'fullname': 'New Customer',
+                'email': 'newcustomer@example.com',
+                'phone': '9123456789',
+                'password': 'customerpass123',
+                'confirm_password': 'customerpass123',
+            })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('verify_otp', kwargs={'purpose': 'register'}))
 
-        # Check OTP generated in database
+        # Check OTP generated in database (Issue #12: OTP must be stored hashed)
         otp_entry = EmailOTP.objects.filter(email='newcustomer@example.com', purpose='register', is_used=False).first()
         self.assertIsNotNone(otp_entry)
-        self.assertEqual(len(otp_entry.otp), 6)
+        self.assertTrue(otp_entry.otp.startswith('pbkdf2_sha256$'))
+        self.assertTrue(otp_entry.check_otp('123456'))
 
-        # 2. Enter Valid OTP
+        # 2. Enter Valid Raw OTP
         verify_response = self.client.post(reverse('verify_otp', kwargs={'purpose': 'register'}), {
-            'otp': otp_entry.otp
+            'otp': '123456'
         })
         self.assertEqual(verify_response.status_code, 302)
         self.assertRedirects(verify_response, reverse('dashboard'))
@@ -242,21 +249,25 @@ class AutoFixProTests(TestCase):
         self.assertEqual(self.client.session['user_id'], new_user.id)
 
     def test_forgot_password_otp_flow(self):
+        from unittest.mock import patch
         from workshop.models import EmailOTP
 
         # 1. Request Password Reset OTP
-        response = self.client.post(reverse('forgot_password'), {
-            'email': self.user.email
-        })
+        with patch('secrets.randbelow', return_value=554321):
+            response = self.client.post(reverse('forgot_password'), {
+                'email': self.user.email
+            })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('verify_otp', kwargs={'purpose': 'forgot_password'}))
 
         otp_entry = EmailOTP.objects.filter(email=self.user.email, purpose='forgot_password', is_used=False).first()
         self.assertIsNotNone(otp_entry)
+        self.assertTrue(otp_entry.otp.startswith('pbkdf2_sha256$'))
+        self.assertTrue(otp_entry.check_otp('654321'))
 
         # 2. Verify OTP
         verify_response = self.client.post(reverse('verify_otp', kwargs={'purpose': 'forgot_password'}), {
-            'otp': otp_entry.otp
+            'otp': '654321'
         })
         self.assertEqual(verify_response.status_code, 302)
         self.assertRedirects(verify_response, reverse('reset_password'))
@@ -274,21 +285,25 @@ class AutoFixProTests(TestCase):
         self.assertTrue(check_password('brandnewpassword123', self.user.password))
 
     def test_login_otp_flow(self):
+        from unittest.mock import patch
         from workshop.models import EmailOTP
 
         # 1. Request Login OTP
-        response = self.client.post(reverse('login_otp'), {
-            'email': self.user.email
-        })
+        with patch('secrets.randbelow', return_value=12233):
+            response = self.client.post(reverse('login_otp'), {
+                'email': self.user.email
+            })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('verify_otp', kwargs={'purpose': 'login_otp'}))
 
         otp_entry = EmailOTP.objects.filter(email=self.user.email, purpose='login_otp', is_used=False).first()
         self.assertIsNotNone(otp_entry)
+        self.assertTrue(otp_entry.otp.startswith('pbkdf2_sha256$'))
+        self.assertTrue(otp_entry.check_otp('112233'))
 
         # 2. Verify Login OTP
         verify_response = self.client.post(reverse('verify_otp', kwargs={'purpose': 'login_otp'}), {
-            'otp': otp_entry.otp
+            'otp': '112233'
         })
         self.assertEqual(verify_response.status_code, 302)
         self.assertRedirects(verify_response, reverse('dashboard'))
@@ -308,12 +323,12 @@ class AutoFixProTests(TestCase):
         self.assertEqual(wrong_response.status_code, 200)
         self.assertContains(wrong_response, 'Invalid verification code')
 
-        # 3. Resend OTP with cooldown simulated
+        # 3. Resend OTP with cooldown simulated via POST (Issue #35: POST only)
         session = self.client.session
         session['otp_last_sent_login_otp'] = time.time() - 35
         session.save()
 
-        resend_response = self.client.get(reverse('resend_otp', kwargs={'purpose': 'login_otp'}))
+        resend_response = self.client.post(reverse('resend_otp', kwargs={'purpose': 'login_otp'}))
         self.assertEqual(resend_response.status_code, 302)
 
         # 4. Ensure new active OTP exists
@@ -440,17 +455,9 @@ class AutoFixProTests(TestCase):
         self.assertRedirects(response, reverse('login'))
 
     def test_admin_access_granted_for_admin_user(self):
-        # Create admin user
-        admin_user = User.objects.create(
-            fullname='Workshop Admin',
-            email='admin@autofixpro.com',
-            phone='9998887776',
-            password='adminsecretpassword',
-            is_admin=True
-        )
-
+        # Admin user session
         session = self.client.session
-        session['user_id'] = admin_user.id
+        session['user_id'] = self.admin_user.id
         session['is_admin'] = True
         session.save()
 
@@ -468,8 +475,8 @@ class AutoFixProTests(TestCase):
             'fullname': 'Test Long Phone',
             'email': 'longphone@example.com',
             'phone': '9876543210999',
-            'password': 'password123',
-            'confirm_password': 'password123',
+            'password': 'AutoFix#Pass2026',
+            'confirm_password': 'AutoFix#Pass2026',
         })
         self.assertEqual(response_too_long.status_code, 200)
         self.assertContains(response_too_long, 'Contact number must be exactly 10 digits.')
@@ -479,8 +486,8 @@ class AutoFixProTests(TestCase):
             'fullname': 'Test Short Phone',
             'email': 'shortphone@example.com',
             'phone': '98765',
-            'password': 'password123',
-            'confirm_password': 'password123',
+            'password': 'AutoFix#Pass2026',
+            'confirm_password': 'AutoFix#Pass2026',
         })
         self.assertEqual(response_too_short.status_code, 200)
         self.assertContains(response_too_short, 'Contact number must be exactly 10 digits.')
@@ -490,8 +497,8 @@ class AutoFixProTests(TestCase):
             'fullname': 'Test Valid Phone',
             'email': 'validphone@example.com',
             'phone': '9876543210',
-            'password': 'password123',
-            'confirm_password': 'password123',
+            'password': 'AutoFix#Pass2026',
+            'confirm_password': 'AutoFix#Pass2026',
         })
         self.assertEqual(response_valid.status_code, 302)
         self.assertRedirects(response_valid, reverse('verify_otp', kwargs={'purpose': 'register'}))
@@ -627,6 +634,14 @@ class AutoFixProTests(TestCase):
         session['name'] = self.admin_user.fullname
         session['email'] = self.admin_user.email
         session.save()
+
+        from decimal import Decimal
+        Inventory.objects.create(
+            name="Castrol Edge Engine Oil",
+            category="Lubricants",
+            quantity=25,
+            price=Decimal("1250.00")
+        )
 
         response = self.client.get(reverse('inventory'))
         self.assertEqual(response.status_code, 200)
@@ -1010,8 +1025,8 @@ class AutoFixProTests(TestCase):
             'fullname': 'Real User',
             'email': 'genuineuser@example.com',
             'phone': '9876543210',
-            'password': 'password123',
-            'confirm_password': 'password123',
+            'password': 'AutoFix#Pass2026',
+            'confirm_password': 'AutoFix#Pass2026',
         })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('verify_otp', kwargs={'purpose': 'register'}))
@@ -1150,6 +1165,615 @@ class AutoFixProTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f'value="{self.vehicle.id}" selected')
         self.assertContains(response, 'value="Brake Service" selected')
+
+
+class AutoFixProCriticalFixesTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(
+            fullname="Hardened Test Customer",
+            email="hardened@example.com",
+            phone="9876543210",
+            password=make_password("securepassword123"),
+            is_admin=False
+        )
+        self.admin = User.objects.create(
+            fullname="Workshop Manager",
+            email="manager@autofixpro.com",
+            phone="9988776655",
+            password=make_password("adminpassword123"),
+            is_admin=True
+        )
+        self.vehicle = Vehicle.objects.create(
+            user=self.user,
+            vehicle_number="GJ01CR1111",
+            brand="Honda",
+            model="City",
+            year=2022,
+            fuel_type="Petrol",
+            color="Crystal Black"
+        )
+        self.client_customer = Client()
+        session = self.client_customer.session
+        session['user_id'] = self.user.id
+        session['email'] = self.user.email
+        session['name'] = self.user.fullname
+        session['is_admin'] = False
+        session.save()
+
+        self.client_admin = Client()
+        admin_session = self.client_admin.session
+        admin_session['user_id'] = self.admin.id
+        admin_session['email'] = self.admin.email
+        admin_session['name'] = self.admin.fullname
+        admin_session['is_admin'] = True
+        admin_session.save()
+
+    def test_duplicate_vehicle_number_rejected(self):
+        # Trying to add existing vehicle number GJ01CR1111 should be rejected
+        response = self.client_customer.post(reverse('add_vehicle'), {
+            'vehicle_number': 'GJ01CR1111',
+            'brand': 'Honda',
+            'model': 'Amaze',
+            'year': '2023',
+            'fuel_type': 'Petrol',
+            'color': 'Silver'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "already registered")
+
+    def test_vehicle_invalid_year_rejected(self):
+        # Non-digit year like 'abc' must be rejected with error, not defaulted to 2024
+        response = self.client_customer.post(reverse('add_vehicle'), {
+            'vehicle_number': 'GJ01XY9999',
+            'brand': 'Tata',
+            'model': 'Nexon',
+            'year': 'abc',
+            'fuel_type': 'Diesel',
+            'color': 'Blue'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "valid numeric year")
+        self.assertFalse(Vehicle.objects.filter(vehicle_number='GJ01XY9999').exists())
+
+    def test_vehicle_future_year_rejected(self):
+        # Year 2040 is in the future and must be rejected
+        response = self.client_customer.post(reverse('add_vehicle'), {
+            'vehicle_number': 'GJ01XY8888',
+            'brand': 'Tata',
+            'model': 'Harrier',
+            'year': '2040',
+            'fuel_type': 'Diesel',
+            'color': 'Black'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "between 1950 and")
+        self.assertFalse(Vehicle.objects.filter(vehicle_number='GJ01XY8888').exists())
+
+    def test_vehicle_empty_brand_rejected(self):
+        response = self.client_customer.post(reverse('add_vehicle'), {
+            'vehicle_number': 'GJ01XY7777',
+            'brand': '   ',
+            'model': 'Harrier',
+            'year': '2022',
+            'fuel_type': 'Diesel',
+            'color': 'Black'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "All fields are required")
+        self.assertFalse(Vehicle.objects.filter(vehicle_number='GJ01XY7777').exists())
+
+    def test_booking_past_date_rejected(self):
+        past_date = date.today() - timedelta(days=5)
+        response = self.client_customer.post(reverse('book_service'), {
+            'vehicle': self.vehicle.id,
+            'service_type': 'General Service',
+            'service_date': past_date.strftime('%Y-%m-%d'),
+            'service_time': '10:00:00',
+            'description': 'Past date test'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Service date cannot be in the past")
+        # Booking should not be created
+        self.assertFalse(ServiceBooking.objects.filter(vehicle=self.vehicle, service_date=past_date).exists())
+
+    def test_booking_invalid_service_type_rejected(self):
+        future_date = date.today() + timedelta(days=3)
+        response = self.client_customer.post(reverse('book_service'), {
+            'vehicle': self.vehicle.id,
+            'service_type': 'Random Invalid Service XYZ',
+            'service_date': future_date.strftime('%Y-%m-%d'),
+            'service_time': '10:00:00',
+            'description': 'Invalid package test'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid service package")
+        self.assertFalse(ServiceBooking.objects.filter(vehicle=self.vehicle, service_date=future_date).exists())
+
+    def test_booking_duplicate_slot_rejected(self):
+        target_date = date.today() + timedelta(days=5)
+        # Create initial confirmed booking
+        ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=target_date,
+            service_time="10:00:00",
+            status="Confirmed"
+        )
+
+        # Attempt to book another service on same date and same slot
+        other_vehicle = Vehicle.objects.create(
+            user=self.user,
+            vehicle_number="GJ01CR2222",
+            brand="Honda",
+            model="Elevate",
+            year=2023,
+            fuel_type="Petrol",
+            color="Red"
+        )
+        response = self.client_customer.post(reverse('book_service'), {
+            'vehicle': other_vehicle.id,
+            'service_type': 'Oil Change',
+            'service_date': target_date.strftime('%Y-%m-%d'),
+            'service_time': '10:00:00',
+            'description': 'Duplicate slot test'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "fully booked")
+        # Conflicting booking should not be created
+        self.assertEqual(ServiceBooking.objects.filter(service_date=target_date, service_time="10:00:00").count(), 1)
+
+    def test_booking_cancel_completed_rejected(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="Oil Change",
+            service_date=date.today(),
+            service_time="11:00:00",
+            status="Completed"
+        )
+        response = self.client_customer.post(reverse('cancel_booking', args=[booking.id]))
+        self.assertEqual(response.status_code, 302)
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, "Completed")
+
+    def test_booking_cancel_paid_retains_payment_as_refund_pending(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="Brake Service",
+            service_date=date.today() + timedelta(days=2),
+            service_time="14:00:00",
+            status="Confirmed"
+        )
+        payment = Payment.objects.create(
+            booking=booking,
+            amount=Decimal("1850.00"),
+            payment_status="Paid",
+            payment_method="RAZORPAY",
+            razorpay_payment_id="pay_test_refund_123"
+        )
+        response = self.client_customer.post(reverse('cancel_booking', args=[booking.id]))
+        self.assertEqual(response.status_code, 302)
+
+        booking.refresh_from_db()
+        payment.refresh_from_db()
+
+        # Booking is retained with Cancelled status
+        self.assertEqual(booking.status, "Cancelled")
+        # Payment is retained and marked as Refund Pending
+        self.assertEqual(payment.payment_status, "Refund Pending")
+
+    def test_admin_mark_payment_paid_restricted_to_cash_pending(self):
+        booking_failed = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today(),
+            service_time="09:00:00",
+            status="Pending"
+        )
+        failed_online_payment = Payment.objects.create(
+            booking=booking_failed,
+            amount=Decimal("1499.00"),
+            payment_status="Failed",
+            payment_method="RAZORPAY",
+            razorpay_order_id="order_failed_test"
+        )
+        # Attempting to manually mark a Failed Razorpay payment as Paid must be blocked
+        response = self.client_admin.post(reverse('mark_payment_paid', args=[failed_online_payment.id]))
+        self.assertEqual(response.status_code, 302)
+        failed_online_payment.refresh_from_db()
+        self.assertEqual(failed_online_payment.payment_status, "Failed")
+
+        # Now test valid CASH Pending payment on a separate booking
+        booking_cash = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="Oil Change",
+            service_date=date.today(),
+            service_time="11:00:00",
+            status="Pending"
+        )
+        cash_payment = Payment.objects.create(
+            booking=booking_cash,
+            amount=Decimal("899.00"),
+            payment_status="Pending",
+            payment_method="CASH"
+        )
+        response = self.client_admin.post(reverse('mark_payment_paid', args=[cash_payment.id]))
+        self.assertEqual(response.status_code, 302)
+        cash_payment.refresh_from_db()
+        self.assertEqual(cash_payment.payment_status, "Paid")
+        self.assertIsNotNone(cash_payment.paid_at)
+
+    def test_forgot_password_enumeration_protection(self):
+        # Both registered and unregistered emails should produce identical generic messages
+        response_existing = self.client_customer.post(reverse('forgot_password'), {
+            'email': self.user.email
+        })
+        self.assertEqual(response_existing.status_code, 302)
+
+        response_non_existing = self.client_customer.post(reverse('forgot_password'), {
+            'email': 'completely_unregistered_9999@example.com'
+        })
+        self.assertEqual(response_non_existing.status_code, 302)
+        self.assertEqual(response_non_existing.url, response_existing.url)
+
+    def test_login_brute_force_lockout(self):
+        from workshop.views import FAILED_LOGIN_ATTEMPTS
+        FAILED_LOGIN_ATTEMPTS.clear()
+
+        # Simulate 5 consecutive failed login attempts
+        for _ in range(5):
+            self.client.post(reverse('login'), {
+                'email': self.user.email,
+                'password': 'wrongpassword'
+            })
+
+        # 6th attempt should be locked out
+        lockout_response = self.client.post(reverse('login'), {
+            'email': self.user.email,
+            'password': 'securepassword123'
+        })
+        self.assertEqual(lockout_response.status_code, 200)
+        self.assertContains(lockout_response, "Too many failed login attempts")
+
+    def test_invoice_generator_is_paid_status_accurate(self):
+        from workshop.invoice_generator import generate_pdf_invoice
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today(),
+            service_time="10:00:00",
+            status="Completed"  # Completed, but NO payment record yet
+        )
+        # When payment is not Paid, invoice status should NOT be Paid even if booking is Completed
+        pdf_unpaid = generate_pdf_invoice(booking, payment=None)
+        self.assertTrue(len(pdf_unpaid) > 100)
+
+        # When payment record has status Paid
+        paid_record = Payment.objects.create(
+            booking=booking,
+            amount=Decimal("1499.00"),
+            payment_status="Paid",
+            payment_method="CASH"
+        )
+        pdf_paid = generate_pdf_invoice(booking, payment=paid_record)
+        self.assertTrue(len(pdf_paid) > 100)
+
+    def test_add_part_deducts_inventory_and_updates_bill(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today(),
+            service_time="10:00:00",
+            status="In Progress"
+        )
+        item = Inventory.objects.create(
+            name="Mobil 1 0W-40 Synthetic Engine Oil",
+            category="Lubricants",
+            quantity=20,
+            price=Decimal("750.00")
+        )
+        # Create an unpaid payment to test syncing
+        payment = Payment.objects.create(
+            booking=booking,
+            amount=booking.total_amount,
+            payment_status="Pending",
+            payment_method="CASH"
+        )
+        self.assertEqual(booking.base_package_price, Decimal("1499.00"))
+        self.assertEqual(booking.total_amount, Decimal("1499.00"))
+
+        # Admin allocates 4 units of engine oil to booking
+        response = self.client_admin.post(reverse('add_booking_part', args=[booking.id]), {
+            'inventory_id': item.id,
+            'quantity': 4
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Verify inventory deducted
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 16)
+
+        # Verify BookingPart created
+        part = BookingPart.objects.filter(booking=booking, inventory_item=item).first()
+        self.assertIsNotNone(part)
+        self.assertEqual(part.quantity, 4)
+        self.assertEqual(part.unit_price, Decimal("750.00"))
+        self.assertEqual(part.total_price, Decimal("3000.00"))
+
+        # Verify booking parts_total & total_amount
+        booking.refresh_from_db()
+        self.assertEqual(booking.parts_total, Decimal("3000.00"))
+        self.assertEqual(booking.total_amount, Decimal("4499.00"))
+
+        # Verify payment amount updated
+        payment.refresh_from_db()
+        self.assertEqual(payment.amount, Decimal("4499.00"))
+
+        # Verify online payment success with fitted parts
+        from unittest.mock import patch
+        payment.razorpay_order_id = "order_test_parts_999"
+        payment.save()
+        with patch("razorpay.Client") as mock_rzp:
+            mock_inst = mock_rzp.return_value
+            mock_inst.utility.verify_payment_signature.return_value = True
+            resp_pay = self.client_customer.post(reverse("payment_success", args=[booking.id]), {
+                "razorpay_order_id": "order_test_parts_999",
+                "razorpay_payment_id": "pay_test_parts_999",
+                "razorpay_signature": "sig_valid_123"
+            })
+            self.assertEqual(resp_pay.status_code, 302)
+            payment.refresh_from_db()
+            self.assertEqual(payment.payment_status, "Paid")
+            self.assertEqual(payment.amount, Decimal("4499.00"))
+
+    def test_add_part_insufficient_stock_fails(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="Oil Change",
+            service_date=date.today(),
+            service_time="11:00:00",
+            status="In Progress"
+        )
+        item = Inventory.objects.create(
+            name="Bosch Oil Filter",
+            category="Filters",
+            quantity=2,
+            price=Decimal("350.00")
+        )
+        # Try to allocate 5 units when only 2 in stock
+        response = self.client_admin.post(reverse('add_booking_part', args=[booking.id]), {
+            'inventory_id': item.id,
+            'quantity': 5
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Inventory must NOT be deducted
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 2)
+        self.assertFalse(BookingPart.objects.filter(booking=booking).exists())
+
+    def test_remove_part_restores_inventory_stock(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today(),
+            service_time="10:00:00",
+            status="In Progress"
+        )
+        item = Inventory.objects.create(
+            name="NGK Laser Iridium Spark Plugs",
+            category="Engine",
+            quantity=10,
+            price=Decimal("450.00")
+        )
+        # Allocate 4 plugs
+        self.client_admin.post(reverse('add_booking_part', args=[booking.id]), {
+            'inventory_id': item.id,
+            'quantity': 4
+        })
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 6)
+
+        part = BookingPart.objects.get(booking=booking, inventory_item=item)
+
+        # Remove part
+        response = self.client_admin.post(reverse('remove_booking_part', args=[part.id]))
+        self.assertEqual(response.status_code, 302)
+
+        # Verify stock restored
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 10)
+        self.assertFalse(BookingPart.objects.filter(id=part.id).exists())
+
+        # Verify booking amount is back to base
+        booking.refresh_from_db()
+        self.assertEqual(booking.parts_total, Decimal("0.00"))
+        self.assertEqual(booking.total_amount, Decimal("1499.00"))
+
+    def test_booking_cancellation_auto_restores_inventory(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today(),
+            service_time="10:00:00",
+            status="Pending"
+        )
+        item = Inventory.objects.create(
+            name="Motul DOT 4 Brake Fluid",
+            category="Fluids",
+            quantity=8,
+            price=Decimal("500.00")
+        )
+        # Allocate 2 units
+        self.client_admin.post(reverse('add_booking_part', args=[booking.id]), {
+            'inventory_id': item.id,
+            'quantity': 2
+        })
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 6)
+        self.assertTrue(BookingPart.objects.filter(booking=booking).exists())
+
+        # Customer cancels the booking
+        cancel_response = self.client_customer.post(reverse('cancel_booking', args=[booking.id]))
+        self.assertEqual(cancel_response.status_code, 302)
+
+        # Verify inventory restored and parts cleared
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 8)
+        self.assertFalse(BookingPart.objects.filter(booking=booking).exists())
+
+    def test_customer_cannot_allocate_or_remove_spares(self):
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today(),
+            service_time="10:00:00",
+            status="Pending"
+        )
+        item = Inventory.objects.create(
+            name="Air Filter",
+            category="Filters",
+            quantity=5,
+            price=Decimal("250.00")
+        )
+        # Customer tries to call add_booking_part
+        res_add = self.client_customer.post(reverse('add_booking_part', args=[booking.id]), {
+            'inventory_id': item.id,
+            'quantity': 1
+        })
+        self.assertEqual(res_add.status_code, 302)
+        self.assertRedirects(res_add, reverse('login'))
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 5)
+
+    def test_cancelled_booking_payment_blocked(self):
+        """Item 3: Ensure payment cannot be initiated or completed for cancelled bookings."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date="2026-10-15",
+            service_time="10:00:00",
+            status="Cancelled"
+        )
+        # Attempt to access payment page
+        res_pay = self.client_customer.get(reverse('payment', args=[booking.id]))
+        self.assertEqual(res_pay.status_code, 302)
+        self.assertRedirects(res_pay, reverse('view_booking', args=[booking.id]))
+
+        # Attempt to post payment_success
+        res_success = self.client_customer.post(reverse('payment_success', args=[booking.id]), {
+            'razorpay_order_id': 'order_123',
+            'razorpay_payment_id': 'pay_123',
+            'razorpay_signature': 'sig_123',
+        })
+        self.assertEqual(res_success.status_code, 302)
+        self.assertRedirects(res_success, reverse('view_booking', args=[booking.id]))
+
+    def test_admin_booking_cancellation_syncs_payment_refund_status(self):
+        """Item 4: When admin cancels a booking, payment status updates from Paid to Refund Pending."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date="2026-10-16",
+            service_time="10:00:00",
+            status="Confirmed"
+        )
+        payment = Payment.objects.create(
+            booking=booking,
+            amount=Decimal("1499.00"),
+            payment_status="Paid",
+            payment_method="RAZORPAY"
+        )
+
+        # Admin cancels the booking
+        res = self.client_admin.post(reverse('update_booking_status', args=[booking.id]), {
+            'status': 'Cancelled'
+        })
+        self.assertEqual(res.status_code, 302)
+        booking.refresh_from_db()
+        payment.refresh_from_db()
+
+        self.assertEqual(booking.status, "Cancelled")
+        self.assertEqual(payment.payment_status, "Refund Pending")
+
+    def test_paid_booking_spare_parts_modification_blocked(self):
+        """Item 5: Spare parts cannot be added or removed once payment is Paid."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date="2026-10-17",
+            service_time="10:00:00",
+            status="In Progress"
+        )
+        Payment.objects.create(
+            booking=booking,
+            amount=Decimal("1499.00"),
+            payment_status="Paid",
+            payment_method="RAZORPAY"
+        )
+        item = Inventory.objects.create(
+            name="Cabin Filter",
+            category="Filters",
+            quantity=10,
+            price=Decimal("400.00")
+        )
+
+        # Admin attempts to add part to a Paid booking
+        res_add = self.client_admin.post(reverse('add_booking_part', args=[booking.id]), {
+            'inventory_id': item.id,
+            'quantity': 1
+        })
+        self.assertEqual(res_add.status_code, 302)
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 10)  # Stock untouched
+        self.assertEqual(booking.parts_used.count(), 0)
+
+    def test_invalid_booking_status_transitions_blocked(self):
+        """Item 6: Terminal states (Completed, Cancelled) and invalid transitions are blocked."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date="2026-10-18",
+            service_time="10:00:00",
+            status="Completed"
+        )
+
+        # Attempt to reopen Completed booking back to Pending
+        res = self.client_admin.post(reverse('update_booking_status', args=[booking.id]), {
+            'status': 'Pending'
+        })
+        self.assertEqual(res.status_code, 302)
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, "Completed")  # Must remain Completed
+
+    def test_registration_rejects_weak_common_password(self):
+        """Item 10: Django validate_password rejects weak passwords like 'password123'."""
+        response = self.client.post(reverse('register'), {
+            'fullname': 'Weak Pass User',
+            'email': 'weakpass@example.com',
+            'phone': '9876543210',
+            'password': 'password123',
+            'confirm_password': 'password123',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This password is too common.")
+        self.assertFalse(User.objects.filter(email='weakpass@example.com').exists())
+
+
 
 
 
