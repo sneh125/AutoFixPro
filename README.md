@@ -2,7 +2,7 @@
 
 ![AutoFixPro Banner](static/images/car.jpg)
 
-**AutoFixPro** is a full-featured, modern automotive service booking and workshop management web application built with **Django 6.0**, **Python**, **Vanilla CSS**, and **ReportLab**. It enables vehicle owners to manage their digital garage, book certified repair services in seconds, track stage-by-stage repairs live, pay online via Razorpay, generate GST-compliant PDF Tax Invoices, and submit 5-star customer ratings.
+**AutoFixPro** is a full-featured, modern automotive service booking and workshop management web application built with **Django 6.0**, **Python**, **Vanilla CSS**, and **ReportLab**. It enables vehicle owners to manage their digital garage, book certified repair services in seconds, track stage-by-stage repairs live, pay online via Razorpay, generate GST-configurable PDF Tax Invoices, and submit 5-star customer ratings.
 
 ---
 
@@ -15,7 +15,7 @@
 - **Service Booking in 60s:** Quick booking with date picker, time slot selector, and 5 distinct service packages.
 - **Live Mechanical Stage Tracking:** Real-time stage progress tracker (`Booking Received` ➔ `Inspection` ➔ `In Progress` ➔ `Quality Check` ➔ `Completed`).
 - **Payments:** Razorpay UPI/Card/NetBanking online payments + Cash on Delivery (COD) mode.
-- **Branded Tax Invoice Generator:** Automated, GSTIN-compliant PDF Tax Invoices generated via ReportLab (protected strictly for paid bookings).
+- **Branded Tax Invoice Generator:** Automated, GST-configurable PDF Tax Invoices generated via ReportLab (protected strictly for paid bookings).
 - **5-Star Rating & Reviews:** Customer feedback submission for completed services with dynamic testimonials displayed on the home page.
 - **Contact & Support:** Public inquiry message system with customer notifications.
 
@@ -33,7 +33,7 @@
 - **Styling:** Vanilla Modern CSS with Glassmorphism, CSS Grid, Flexbox, and Micro-animations
 - **PDF Engine:** ReportLab (Vector Graphics & Typography)
 - **Payment Gateway:** Razorpay API (HMAC SHA-256 signature verification)
-- **Email Dispatch:** Real Gmail SMTP with HTML email templates & OTP expiration handling
+- **Email Dispatch:** Multi-channel delivery (Brevo / Sendinblue HTTPS API, Resend HTTPS API, and fallback Gmail SMTP over TLS/SSL) with cryptographically secure OTP handling
 - **Configuration:** Python-Dotenv (`.env` file management)
 
 ---
@@ -93,20 +93,21 @@ EMAIL_OTP_EXPIRY_MINUTES=5
 python manage.py migrate
 ```
 
-### 6. Run Automated Test Suite
+### 6. Seed Initial Data (Optional)
+```bash
+python manage.py seed_inventory
+```
+
+### 7. Run Automated Test Suite
 ```bash
 python manage.py test
 ```
 
-### 7. Launch Development Server
+### 8. Launch Development Server
 ```bash
-# Default port 8000:
 python manage.py runserver
-
-# Or custom port 8080 (to run alongside other projects):
-python manage.py runserver 8080
 ```
-Visit `http://127.0.0.1:8080` in your web browser.
+Visit `http://127.0.0.1:8000` in your web browser (or specify custom port: `python manage.py runserver 8080` to access at `http://127.0.0.1:8080`).
 
 ---
 
