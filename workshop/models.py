@@ -1,9 +1,10 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class User(models.Model):
     fullname = models.CharField(max_length=100)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
     password = models.CharField(max_length=255)
     is_admin = models.BooleanField(default=False)
@@ -14,7 +15,7 @@ class User(models.Model):
 
 class Vehicle(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    vehicle_number = models.CharField(max_length=20)
+    vehicle_number = models.CharField(max_length=20, unique=True)
     brand = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     year = models.IntegerField()
@@ -69,13 +70,22 @@ class Vehicle(models.Model):
 
 
 class ServiceBooking(models.Model):
+    STATUS_CHOICES = (
+        ("Pending", "Pending"),
+        ("Confirmed", "Confirmed"),
+        ("In Progress", "In Progress"),
+        ("Quality Check", "Quality Check"),
+        ("Completed", "Completed"),
+        ("Cancelled", "Cancelled"),
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     service_type = models.CharField(max_length=100)
     service_date = models.DateField()
     service_time = models.TimeField()
     description = models.TextField()
-    status = models.CharField(max_length=50, default="Pending")
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="Pending")
 
     def __str__(self):
         return f"{self.vehicle} - {self.service_type}"
@@ -152,16 +162,53 @@ class ServiceBooking(models.Model):
             return "All mechanical work and quality checks are complete! Your vehicle is ready for pickup."
         return ""
 
+    @property
+    def parts_total(self):
+        from decimal import Decimal
+        return sum((p.total_price for p in self.parts_used.all()), Decimal("0.00"))
+
+    @property
+    def base_package_price(self):
+        from decimal import Decimal
+        prices = {
+            "General Service": Decimal("1499.00"),
+            "Oil Change": Decimal("899.00"),
+            "Tire Change": Decimal("1200.00"),
+            "Brake Service": Decimal("1850.00"),
+            "Full Vehicle Service": Decimal("3499.00"),
+        }
+        return prices.get(self.service_type, Decimal("1299.00"))
+
+    @property
+    def total_amount(self):
+        return self.base_package_price + self.parts_total
+
 
 class Payment(models.Model):
+    PAYMENT_STATUS_CHOICES = (
+        ("Created", "Created"),
+        ("Pending", "Pending"),
+        ("Paid", "Paid"),
+        ("Failed", "Failed"),
+        ("Cancelled", "Cancelled"),
+        ("Refund Pending", "Refund Pending"),
+        ("Refunded", "Refunded"),
+    )
+    PAYMENT_METHOD_CHOICES = (
+        ("UPI", "UPI"),
+        ("RAZORPAY", "Razorpay Online"),
+        ("CASH", "Cash"),
+    )
+
     booking = models.OneToOneField(ServiceBooking, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=20, default="UPI")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="UPI")
     razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
     razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
-    payment_status = models.CharField(max_length=30, default="Created")
+    payment_status = models.CharField(max_length=30, choices=PAYMENT_STATUS_CHOICES, default="Created")
     payment_date = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Payment - Booking #{self.booking.id}"
@@ -261,6 +308,25 @@ class Inventory(models.Model):
         return self.quantity * self.price
 
 
+class BookingPart(models.Model):
+    booking = models.ForeignKey(ServiceBooking, on_delete=models.CASCADE, related_name="parts_used")
+    inventory_item = models.ForeignKey(Inventory, on_delete=models.PROTECT, related_name="booking_usages")
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+
+    @property
+    def total_price(self):
+        from decimal import Decimal
+        return (Decimal(str(self.unit_price)) * Decimal(str(self.quantity))).quantize(Decimal("0.01"))
+
+    def __str__(self):
+        return f"{self.inventory_item.name} x{self.quantity} (Booking #{self.booking_id})"
+
+
 class EmailOTP(models.Model):
     PURPOSE_CHOICES = (
         ('register', 'Registration'),
@@ -269,11 +335,24 @@ class EmailOTP(models.Model):
     )
 
     email = models.EmailField()
-    otp = models.CharField(max_length=6)
+    otp = models.CharField(max_length=255)
     purpose = models.CharField(max_length=30, choices=PURPOSE_CHOICES, default='register')
     created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)
     attempts = models.PositiveSmallIntegerField(default=0)
+
+    def set_otp(self, raw_otp):
+        from django.contrib.auth.hashers import make_password
+        self.otp = make_password(str(raw_otp))
+
+    def check_otp(self, raw_otp):
+        from django.contrib.auth.hashers import check_password
+        if not self.otp:
+            return False
+        # Backward compatibility with existing plain 6-digit OTPs
+        if len(self.otp) == 6 and self.otp.isdigit():
+            return self.otp == str(raw_otp)
+        return check_password(str(raw_otp), self.otp)
 
     def is_valid(self, expiry_minutes=5):
         from django.utils import timezone
@@ -284,7 +363,7 @@ class EmailOTP(models.Model):
         return age <= (expiry_minutes * 60)
 
     def __str__(self):
-        return f"OTP for {self.email} ({self.purpose}) - {self.otp}"
+        return f"OTP for {self.email} ({self.purpose})"
 
 
 class ContactMessage(models.Model):
@@ -306,7 +385,10 @@ class ContactMessage(models.Model):
 class ServiceReview(models.Model):
     booking = models.OneToOneField(ServiceBooking, on_delete=models.CASCADE, related_name="review")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating = models.IntegerField(default=5)
+    rating = models.IntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
