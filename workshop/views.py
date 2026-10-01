@@ -256,11 +256,11 @@ def send_robust_autofix_email(subject, plain_message, recipient_list, html_messa
             return False, str(e)
 
     # 1. Cloud REST Strategy: Brevo (Sendinblue) HTTPS API (Port 443)
-    brevo_key = getattr(settings, 'BREVO_API_KEY', '').strip()
+    brevo_key = getattr(settings, 'BREVO_API_KEY', '').strip() or os.getenv('BREVO_API_KEY', '').strip()
     if brevo_key:
         try:
             sender_name = getattr(settings, 'DEFAULT_FROM_NAME', 'AutoFixPro').strip()
-            sender_email = user
+            sender_email = os.getenv('BREVO_SENDER_EMAIL', '').strip() or getattr(settings, 'BREVO_SENDER_EMAIL', '').strip() or user
             headers = {
                 "accept": "application/json",
                 "api-key": brevo_key,
@@ -407,76 +407,166 @@ def clear_login_failure(key):
 
 
 def send_otp_email(email, purpose, request=None):
-    # 1. Database-level rate limiting (max 5 requests per email + purpose in 15 mins)
-    fifteen_mins_ago = timezone.now() - timedelta(minutes=15)
-    recent_requests = EmailOTP.objects.filter(
+    EmailOTP.objects.filter(
         email=email,
         purpose=purpose,
-        created_at__gte=fifteen_mins_ago
-    ).count()
+        is_used=False
+    ).update(is_used=True)
 
-    if recent_requests >= 5:
-        return None, False
+    otp = f"{random.randint(100000, 999999)}"
 
-    # 2. Cryptographically secure raw 6-digit OTP generation using secrets module
-    raw_otp = str(secrets.randbelow(900000) + 100000)
+    EmailOTP.objects.create(
+        email=email,
+        otp=otp,
+        purpose=purpose
+    )
+
+    if request:
+        request.session[f"otp_email_{purpose}"] = email
+        request.session[f"otp_last_sent_{purpose}"] = time.time()
+
+        if f"otp_resend_count_{purpose}" not in request.session:
+            request.session[f"otp_resend_count_{purpose}"] = 0
+
+        request.session.modified = True
 
     purpose_titles = {
         "register": "Account Email Verification",
         "forgot_password": "Password Reset Code",
-        "login_otp": "Instant Login Code"
+        "login_otp": "Instant Login Code",
     }
+
     title = purpose_titles.get(purpose, "Verification Code")
     expiry = getattr(settings, "EMAIL_OTP_EXPIRY_MINUTES", 5)
 
-    subject = f"AutoFixPro - {title}: {raw_otp}"
-    message = f"Hello,\n\nYour 6-digit AutoFixPro verification code is: {raw_otp}\n\nThis OTP is valid for {expiry} minutes.\n\nBest regards,\nAutoFixPro Team"
+    subject = f"AutoFixPro - {title}"
+
+    message = (
+        f"Hello,\n\n"
+        f"Your 6-digit AutoFixPro verification code is: {otp}\n\n"
+        f"This OTP is valid for {expiry} minutes.\n\n"
+        f"Do not share this OTP with anyone.\n\n"
+        f"Best regards,\n"
+        f"AutoFixPro Team"
+    )
+
     html_message = f"""
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff;">
-        <div style="background: #0f172a; padding: 24px 20px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px;">AutoFix<span style="color: #ff4d30;">Pro</span></h1>
+    <div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;
+                border:1px solid #e2e8f0;border-radius:12px;
+                overflow:hidden;background:#ffffff;">
+
+        <div style="background:#0f172a;padding:24px;text-align:center;">
+            <h1 style="color:#ffffff;margin:0;">
+                AutoFix<span style="color:#ff4d30;">Pro</span>
+            </h1>
         </div>
-        <div style="padding: 28px 24px; text-align: center;">
-            <h2 style="color: #0f172a; margin: 0 0 12px 0; font-size: 20px;">{title}</h2>
-            <p style="color: #64748b; font-size: 14px; margin: 0 0 20px 0; line-height: 1.5;">Please use the 6-digit verification code below to complete your verification:</p>
-            <div style="background: #fff5f5; border: 2px dashed #ff4d30; border-radius: 10px; padding: 14px; margin: 18px 0; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #ff4d30; font-family: monospace;">
-                {raw_otp}
+
+        <div style="padding:28px 24px;text-align:center;">
+            <h2 style="color:#0f172a;">
+                {title}
+            </h2>
+
+            <p style="color:#64748b;font-size:14px;">
+                Please use the 6-digit verification code below:
+            </p>
+
+            <div style="
+                background:#fff5f5;
+                border:2px dashed #ff4d30;
+                border-radius:10px;
+                padding:14px;
+                margin:18px 0;
+                font-size:32px;
+                font-weight:800;
+                letter-spacing:8px;
+                color:#ff4d30;
+                font-family:monospace;
+            ">
+                {otp}
             </div>
-            <p style="color: #64748b; font-size: 13px; margin: 16px 0 6px 0;">This code is valid for <strong>{expiry} minutes</strong>.</p>
-            <p style="color: #94a3b8; font-size: 12px; margin: 0;">Do not share this OTP with anyone for your account security.</p>
+
+            <p style="color:#64748b;font-size:13px;">
+                This code is valid for <strong>{expiry} minutes</strong>.
+            </p>
+
+            <p style="color:#94a3b8;font-size:12px;">
+                Do not share this OTP with anyone.
+            </p>
         </div>
-        <div style="background: #f8fafc; padding: 14px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-            &copy; AutoFixPro Workshop Management. All rights reserved.
+
+        <div style="
+            background:#f8fafc;
+            padding:14px;
+            text-align:center;
+            border-top:1px solid #e2e8f0;
+            font-size:12px;
+            color:#94a3b8;
+        ">
+            © AutoFixPro Workshop Management. All rights reserved.
         </div>
     </div>
     """
 
-    email_sent, status_desc = send_robust_autofix_email(
-        subject=subject,
-        plain_message=message,
-        recipient_list=[email],
-        html_message=html_message
-    )
+    import requests
+    import os
 
-    if email_sent:
-        # Atomic DB update: only save the new valid OTP and retire old OTPs upon confirmed email delivery
-        EmailOTP.objects.filter(email=email, purpose=purpose, is_used=False).update(is_used=True)
-        otp_record = EmailOTP(email=email, purpose=purpose)
-        otp_record.set_otp(raw_otp)
-        otp_record.save()
+    brevo_api_key = os.getenv("BREVO_API_KEY") or getattr(settings, "BREVO_API_KEY", "")
+    sender_email = os.getenv("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "") or getattr(settings, "EMAIL_HOST_USER", "")
+    sender_name = os.getenv("BREVO_SENDER_NAME", getattr(settings, "DEFAULT_FROM_NAME", "AutoFixPro"))
 
-        if request:
-            request.session[f"otp_email_{purpose}"] = email
-            request.session[f"otp_last_sent_{purpose}"] = time.time()
-            if f"otp_resend_count_{purpose}" not in request.session:
-                request.session[f"otp_resend_count_{purpose}"] = 0
-            request.session.modified = True
+    email_sent = False
 
-        print(f"[AutoFixPro OTP SENT] -> {email} ({purpose}) | Console OTP: {raw_otp}")
-        return raw_otp, True
-    else:
-        print(f"[AutoFixPro] Warning: Email dispatch to {email} failed ({status_desc}). Prior active OTP retained.")
-        return None, False
+    if not brevo_api_key or not sender_email:
+        print("[AutoFixPro] Brevo configuration is missing.")
+        return otp, False
+
+    try:
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={
+                "accept": "application/json",
+                "api-key": brevo_api_key,
+                "content-type": "application/json",
+            },
+            json={
+                "sender": {
+                    "name": sender_name,
+                    "email": sender_email,
+                },
+                "to": [
+                    {
+                        "email": email,
+                    }
+                ],
+                "subject": subject,
+                "textContent": message,
+                "htmlContent": html_message,
+            },
+            timeout=15,
+        )
+
+        if 200 <= response.status_code < 300:
+            email_sent = True
+            print(
+                f"[AutoFixPro OTP SENT] -> {email} ({purpose}) via Brevo"
+            )
+        else:
+            print(
+                f"[AutoFixPro Brevo Error] "
+                f"Status: {response.status_code} "
+                f"Response: {response.text[:500]}"
+            )
+
+    except Exception as e:
+        print(f"[AutoFixPro Brevo Error to {email}]: {e}")
+
+    if not email_sent:
+        print(
+            f"[AutoFixPro] Warning: OTP email delivery failed "
+            f"for {email} ({purpose})."
+        )
+
+    return otp, email_sent
 
 
 def register(request):
@@ -525,14 +615,21 @@ def register(request):
             "password": make_password(password)
         }
 
-        raw_otp, email_sent = send_otp_email(email, "register", request)
+        otp, email_sent = send_otp_email(email, "register", request)
+
         if email_sent:
-            messages.info(request, f"A 6-digit verification code was sent to {email}. Please check your inbox and enter it below.")
-        else:
-            messages.warning(
+            messages.info(
                 request,
-                "Unable to send verification email at this moment. Please check your email address or try again shortly."
+                f"A 6-digit verification code was sent to {email}. "
+                "Please check your inbox and enter it below."
             )
+        else:
+            messages.error(
+                request,
+                "Unable to send verification email. Please try again later."
+            )
+            return render(request, "register.html", context)
+
         return redirect("verify_otp", purpose="register")
 
     return render(request, "register.html")
