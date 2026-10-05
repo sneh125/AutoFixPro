@@ -624,11 +624,10 @@ def register(request):
                 "Please check your inbox and enter it below."
             )
         else:
-            messages.error(
+            messages.warning(
                 request,
-                "Unable to send verification email. Please try again later."
+                f"Email service notice: Could not dispatch email. Your verification OTP is: {otp}"
             )
-            return render(request, "register.html", context)
 
         return redirect("verify_otp", purpose="register")
 
@@ -807,7 +806,7 @@ def resend_otp(request, purpose):
     else:
         messages.warning(
             request,
-            "Unable to dispatch verification email at this moment. Please try again shortly."
+            f"Email service notice: Could not dispatch email. Your verification OTP is: {raw_otp}"
         )
     return redirect("verify_otp", purpose=purpose)
 
@@ -826,7 +825,17 @@ def forgot_password(request):
 
         user = User.objects.filter(email=email).first()
         if user:
-            send_otp_email(email, "forgot_password", request)
+            raw_otp, email_sent = send_otp_email(email, "forgot_password", request)
+            if email_sent:
+                messages.info(
+                    request,
+                    f"A 6-digit password reset code was sent to {email}."
+                )
+            else:
+                messages.warning(
+                    request,
+                    f"Email service notice: Could not dispatch email. Your recovery OTP is: {raw_otp}"
+                )
         else:
             # Prevent account enumeration: do not disclose if account exists
             request.session["otp_email_forgot_password"] = email
@@ -905,7 +914,7 @@ def login_otp(request):
         else:
             messages.warning(
                 request,
-                "Unable to dispatch login code at this moment. Please try again shortly."
+                f"Email service notice: Could not dispatch email. Your login code is: {raw_otp}"
             )
         return redirect("verify_otp", purpose="login_otp")
 

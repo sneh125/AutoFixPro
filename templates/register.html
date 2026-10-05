@@ -120,7 +120,7 @@
                             <label for="reg-name">Full Name</label>
                             <div class="input-wrap">
                                 <i class="fas fa-user field-icon"></i>
-                                <input type="text" id="reg-name" name="fullname" placeholder="e.g. Rajesh Kumar" required autocomplete="name" autofocus>
+                                <input type="text" id="reg-name" name="fullname" placeholder="e.g. Rajesh Kumar" value="{{ fullname|default:'' }}" required autocomplete="name" autofocus>
                             </div>
                         </div>
 
@@ -128,7 +128,7 @@
                             <label for="reg-email">Email Address</label>
                             <div class="input-wrap">
                                 <i class="fas fa-envelope field-icon"></i>
-                                <input type="email" id="reg-email" name="email" placeholder="name@example.com" required autocomplete="email">
+                                <input type="email" id="reg-email" name="email" placeholder="name@example.com" value="{{ email|default:'' }}" required autocomplete="email">
                             </div>
                         </div>
 

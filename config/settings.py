@@ -31,17 +31,16 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
 # Base allowed hosts for local development and PythonAnywhere deployment
 DEFAULT_ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'sneh1205.pythonanywhere.com',
-    '.pythonanywhere.com',
+    "localhost",
+    "127.0.0.1",
+    "sneh1205.pythonanywhere.com",
 ]
 
 # Read optional additional hosts from environment (comma-separated), excluding wildcard '*'
 _env_hosts = [
     h.strip()
-    for h in os.getenv('ALLOWED_HOSTS', '').split(',')
-    if h.strip() and h.strip() != '*'
+    for h in os.getenv("ALLOWED_HOSTS", "").split(",")
+    if h.strip() and h.strip() != "*"
 ]
 
 # Combine default hosts with environment hosts, preserving order and uniqueness
