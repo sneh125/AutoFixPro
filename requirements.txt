@@ -1,4 +1,4 @@
-Django>=6.0,<6.1
+Django>=5.1,<5.2
 pillow
 python-dotenv
 razorpay

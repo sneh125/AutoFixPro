@@ -28,7 +28,24 @@ load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY', 'django-insecure-default-change-me-in-env')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '*').split(',') if h.strip()]
+
+# Base allowed hosts for local development and PythonAnywhere deployment
+DEFAULT_ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'sneh1205.pythonanywhere.com',
+    '.pythonanywhere.com',
+]
+
+# Read optional additional hosts from environment (comma-separated), excluding wildcard '*'
+_env_hosts = [
+    h.strip()
+    for h in os.getenv('ALLOWED_HOSTS', '').split(',')
+    if h.strip() and h.strip() != '*'
+]
+
+# Combine default hosts with environment hosts, preserving order and uniqueness
+ALLOWED_HOSTS = list(dict.fromkeys(DEFAULT_ALLOWED_HOSTS + _env_hosts))
 
 
 # Application definition
@@ -136,6 +153,14 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Enable WhiteNoise compression and caching for fast, reliable static serving in production
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Media files (User uploaded images and documents)
@@ -193,7 +218,9 @@ CSRF_COOKIE_SECURE = not DEBUG
 
 # CSRF Trusted Origins for live domain/hosting (Includes PythonAnywhere and localhost)
 _env_origins = [origin.strip() for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
-CSRF_TRUSTED_ORIGINS = list(set([
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys([
+    'https://sneh1205.pythonanywhere.com',
+    'http://sneh1205.pythonanywhere.com',
     'https://*.pythonanywhere.com',
     'http://*.pythonanywhere.com',
     'https://*.ngrok-free.app',
