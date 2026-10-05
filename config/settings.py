@@ -23,8 +23,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module=".*pkg_res
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables from .env (override=True ensures .env values take precedence)
+load_dotenv(BASE_DIR / '.env', override=True)
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY', 'django-insecure-default-change-me-in-env')
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
@@ -185,7 +185,9 @@ SERVER_EMAIL = os.getenv('SERVER_EMAIL', EMAIL_HOST_USER)
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', 15))
 
 # HTTP REST Email APIs (Works 100% on PythonAnywhere Free Tier over HTTPS port 443)
-BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
+BREVO_API_KEY = (os.getenv('BREVO_API_KEY', '') or '').strip('\'" \t\r\n')
+BREVO_SENDER_EMAIL = (os.getenv('BREVO_SENDER_EMAIL', '') or 'snehprajapati36@gmail.com').strip('\'" \t\r\n')
+BREVO_SENDER_NAME = (os.getenv('BREVO_SENDER_NAME', '') or 'AutoFixPro').strip('\'" \t\r\n')
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip()
 RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', '').strip()
 DEFAULT_FROM_NAME = os.getenv('DEFAULT_FROM_NAME', 'AutoFixPro').strip()

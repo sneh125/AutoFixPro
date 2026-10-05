@@ -3,6 +3,7 @@ import csv
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 import json
+import logging
 import os
 import random
 import secrets
@@ -10,6 +11,8 @@ import socket
 import time
 from functools import wraps
 import requests
+
+logger = logging.getLogger(__name__)
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password, make_password
@@ -413,13 +416,12 @@ def send_otp_email(email, purpose, request=None):
         is_used=False
     ).update(is_used=True)
 
-    otp = f"{random.randint(100000, 999999)}"
+    import secrets
+    otp = f"{100000 + secrets.randbelow(900000)}"
 
-    EmailOTP.objects.create(
-        email=email,
-        otp=otp,
-        purpose=purpose
-    )
+    otp_record = EmailOTP(email=email, purpose=purpose)
+    otp_record.set_otp(otp)
+    otp_record.save()
 
     if request:
         request.session[f"otp_email_{purpose}"] = email
@@ -507,64 +509,138 @@ def send_otp_email(email, purpose, request=None):
     </div>
     """
 
+    is_test_env = getattr(settings, "EMAIL_BACKEND", "").endswith("locmem.EmailBackend")
+    if is_test_env:
+        try:
+            from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "AutoFixPro <noreply@autofixpro.com>")
+            msg = EmailMultiAlternatives(subject=subject, body=message, from_email=from_email, to=[email])
+            if html_message:
+                msg.attach_alternative(html_message, "text/html")
+            msg.send(fail_silently=False)
+            return otp, True
+        except Exception as e:
+            print(f"[AutoFixPro Test Outbox Error]: {e}")
+            return otp, False
+
     import requests
     import os
 
-    brevo_api_key = os.getenv("BREVO_API_KEY") or getattr(settings, "BREVO_API_KEY", "")
-    sender_email = os.getenv("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "") or getattr(settings, "EMAIL_HOST_USER", "")
-    sender_name = os.getenv("BREVO_SENDER_NAME", getattr(settings, "DEFAULT_FROM_NAME", "AutoFixPro"))
+    clean_email = (email or "").strip().lower()
+
+    brevo_api_key = (
+        getattr(settings, "BREVO_API_KEY", "")
+        or os.getenv("BREVO_API_KEY", "")
+    ).strip("'\" \t\r\n")
+
+    sender_email = (
+        os.getenv("BREVO_SENDER_EMAIL", "")
+        or getattr(settings, "BREVO_SENDER_EMAIL", "")
+        or getattr(settings, "EMAIL_HOST_USER", "")
+        or "snehprajapati36@gmail.com"
+    ).strip("'\" \t\r\n")
+
+    sender_name = (
+        os.getenv("BREVO_SENDER_NAME", "")
+        or getattr(settings, "BREVO_SENDER_NAME", "")
+        or getattr(settings, "DEFAULT_FROM_NAME", "AutoFixPro")
+    ).strip("'\" \t\r\n")
 
     email_sent = False
 
-    if not brevo_api_key or not sender_email:
-        print("[AutoFixPro] Brevo configuration is missing.")
-        return otp, False
-
-    try:
-        response = requests.post(
-            "https://api.brevo.com/v3/smtp/email",
-            headers={
+    if brevo_api_key and sender_email:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            headers = {
                 "accept": "application/json",
                 "api-key": brevo_api_key,
                 "content-type": "application/json",
-            },
-            json={
+            }
+            payload = {
                 "sender": {
                     "name": sender_name,
                     "email": sender_email,
                 },
                 "to": [
                     {
-                        "email": email,
+                        "email": clean_email,
                     }
                 ],
                 "subject": subject,
                 "textContent": message,
                 "htmlContent": html_message,
-            },
-            timeout=15,
-        )
+            }
+            timeout = getattr(settings, "EMAIL_TIMEOUT", 15)
 
-        if 200 <= response.status_code < 300:
-            email_sent = True
-            print(
-                f"[AutoFixPro OTP SENT] -> {email} ({purpose}) via Brevo"
-            )
-        else:
-            print(
-                f"[AutoFixPro Brevo Error] "
-                f"Status: {response.status_code} "
-                f"Response: {response.text[:500]}"
+            response = requests.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=timeout,
             )
 
-    except Exception as e:
-        print(f"[AutoFixPro Brevo Error to {email}]: {e}")
+            if 200 <= response.status_code < 300:
+                email_sent = True
+                success_msg = f"[AutoFixPro OTP SENT] -> {clean_email} ({purpose}) via Brevo HTTPS API (Status {response.status_code})"
+                logger.info(success_msg)
+                print(success_msg)
+            else:
+                resp_text = response.text[:500] if response.text else "Empty response"
+                err_msg = (
+                    f"[AutoFixPro Brevo API Failure] Recipient: {clean_email} | "
+                    f"HTTP Status: {response.status_code} | Reason: {response.reason} | Response: {resp_text}"
+                )
+                logger.error(err_msg)
+                print(err_msg)
+
+        except requests.exceptions.Timeout:
+            err_msg = f"[AutoFixPro Brevo API Error] Request timed out after {getattr(settings, 'EMAIL_TIMEOUT', 15)}s connecting to https://api.brevo.com for {clean_email}"
+            logger.error(err_msg)
+            print(err_msg)
+        except requests.exceptions.RequestException as req_err:
+            err_msg = f"[AutoFixPro Brevo API Error] Network exception for {clean_email}: {type(req_err).__name__}: {req_err}"
+            logger.error(err_msg)
+            print(err_msg)
+        except Exception as e:
+            err_msg = f"[AutoFixPro Brevo API Error] Unexpected error during Brevo email dispatch for {clean_email}: {type(e).__name__}: {e}"
+            logger.error(err_msg)
+            print(err_msg)
+    else:
+        if not brevo_api_key:
+            warn_msg = "[AutoFixPro Brevo Config] BREVO_API_KEY is not set in environment or settings."
+            logger.warning(warn_msg)
+            print(warn_msg)
+        if not sender_email:
+            warn_msg = "[AutoFixPro Brevo Config] BREVO_SENDER_EMAIL is not set in environment or settings."
+            logger.warning(warn_msg)
+            print(warn_msg)
+
+    # Multi-channel fallback if Brevo is not configured or failed
+    if not email_sent:
+        try:
+            fallback_sent, fallback_desc = send_robust_autofix_email(
+                subject=subject,
+                plain_message=message,
+                recipient_list=[clean_email],
+                html_message=html_message
+            )
+            if fallback_sent:
+                email_sent = True
+                fb_msg = f"[AutoFixPro OTP SENT] -> {clean_email} ({purpose}) via Fallback Dispatcher ({fallback_desc})"
+                logger.info(fb_msg)
+                print(fb_msg)
+            else:
+                fb_warn = f"[AutoFixPro Fallback Dispatcher] Could not deliver to {clean_email}: {fallback_desc}"
+                logger.warning(fb_warn)
+                print(fb_warn)
+        except Exception as fb_err:
+            fb_err_msg = f"[AutoFixPro Fallback Dispatcher Error]: {fb_err}"
+            logger.error(fb_err_msg)
+            print(fb_err_msg)
 
     if not email_sent:
-        print(
-            f"[AutoFixPro] Warning: OTP email delivery failed "
-            f"for {email} ({purpose})."
-        )
+        failure_log = f"[AutoFixPro] Delivery failure: all email channels failed for {clean_email} ({purpose})."
+        logger.error(failure_log)
+        print(failure_log)
 
     return otp, email_sent
 
@@ -623,13 +699,14 @@ def register(request):
                 f"A 6-digit verification code was sent to {email}. "
                 "Please check your inbox and enter it below."
             )
+            return redirect("verify_otp", purpose="register")
         else:
-            messages.warning(
+            logger.error(f"[AutoFixPro Registration] Email verification dispatch failed for {email}. Halting registration flow.")
+            messages.error(
                 request,
-                f"Email service notice: Could not dispatch email. Your verification OTP is: {otp}"
+                "Unable to send verification email. Please try again later."
             )
-
-        return redirect("verify_otp", purpose="register")
+            return render(request, "register.html", context)
 
     return render(request, "register.html")
 
@@ -655,9 +732,9 @@ def verify_otp(request, purpose):
             return redirect("login")
 
     purpose_meta = {
-        "register": {"title": "Verify Your Email", "desc": f"Enter the 6-digit code sent to {email}.", "back_url": "register", "back_label": "Back to Registration"},
-        "forgot_password": {"title": "Password Reset Code", "desc": f"Enter the 6-digit recovery code sent to {email}.", "back_url": "forgot_password", "back_label": "Back to Forgot Password"},
-        "login_otp": {"title": "Instant Login Code", "desc": f"Enter the 6-digit one-time code sent to {email}.", "back_url": "login_otp", "back_label": "Back to OTP Login"}
+        "register": {"title": "Verify Your Email", "desc": f"Enter the 6-digit code sent to {email}.", "back_url": "register", "back_label": "Back to Registration", "button_text": "Verify & Create Account"},
+        "forgot_password": {"title": "Password Reset Code", "desc": f"Enter the 6-digit recovery code sent to {email}.", "back_url": "forgot_password", "back_label": "Back to Forgot Password", "button_text": "Verify & Reset Password"},
+        "login_otp": {"title": "Instant Login Code", "desc": f"Enter the 6-digit one-time code sent to {email}.", "back_url": "login_otp", "back_label": "Back to OTP Login", "button_text": "Verify & Login"},
     }
     meta = purpose_meta.get(purpose, purpose_meta["register"])
     expiry_minutes = getattr(settings, "EMAIL_OTP_EXPIRY_MINUTES", 5)
@@ -804,9 +881,9 @@ def resend_otp(request, purpose):
             f"A new OTP has been sent to your email ({email}). You have {MAX_RESENDS - (resend_count + 1)} resend(s) remaining."
         )
     else:
-        messages.warning(
+        messages.error(
             request,
-            f"Email service notice: Could not dispatch email. Your verification OTP is: {raw_otp}"
+            "Unable to send verification email. Please try again later."
         )
     return redirect("verify_otp", purpose=purpose)
 
@@ -832,9 +909,9 @@ def forgot_password(request):
                     f"A 6-digit password reset code was sent to {email}."
                 )
             else:
-                messages.warning(
+                messages.error(
                     request,
-                    f"Email service notice: Could not dispatch email. Your recovery OTP is: {raw_otp}"
+                    "Unable to send verification email. Please try again later."
                 )
         else:
             # Prevent account enumeration: do not disclose if account exists
@@ -911,12 +988,13 @@ def login_otp(request):
         raw_otp, email_sent = send_otp_email(email, "login_otp", request)
         if email_sent:
             messages.info(request, f"One-time login code sent to {email}. Please check your inbox.")
+            return redirect("verify_otp", purpose="login_otp")
         else:
-            messages.warning(
+            messages.error(
                 request,
-                f"Email service notice: Could not dispatch email. Your login code is: {raw_otp}"
+                "Unable to send login code. Please try again later."
             )
-        return redirect("verify_otp", purpose="login_otp")
+            return render(request, "login_otp.html")
 
     return render(request, "login_otp.html")
 
