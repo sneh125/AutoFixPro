@@ -1,13 +1,44 @@
 {% load static %}
 <footer class="site-footer">
     <div class="footer-inner">
+        <!-- Brand & About -->
         <div class="footer-brand">
             <a href="{% url 'home' %}" class="footer-logo">
                 <img src="{% static 'images/logo-light.png' %}" alt="AutoFixPro Logo">
                 <span>AutoFix<span class="f-hl">Pro</span></span>
             </a>
             <p>Your trusted partner for professional vehicle servicing, transparent digital repair tracking, and automated workshop care.</p>
+            
+            <!-- Social Media Icons -->
+            <div class="footer-social-links">
+                <a href="https://wa.me/919876543210?text=Hello%20AutoFixPro,%20I%20would%20like%20to%20inquire%20about%20vehicle%20service." target="_blank" rel="noopener" class="social-icon-btn whatsapp" title="Chat on WhatsApp" aria-label="WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noopener" class="social-icon-btn instagram" title="Follow on Instagram" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://facebook.com" target="_blank" rel="noopener" class="social-icon-btn facebook" title="Like us on Facebook" aria-label="Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-icon-btn linkedin" title="Connect on LinkedIn" aria-label="LinkedIn">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="https://youtube.com" target="_blank" rel="noopener" class="social-icon-btn youtube" title="Watch on YouTube" aria-label="YouTube">
+                    <i class="fab fa-youtube"></i>
+                </a>
+            </div>
+
+            <!-- 24/7 Breakdown Emergency Badge -->
+            <div class="emergency-help-box">
+                <div class="em-icon"><i class="fas fa-truck-pickup"></i></div>
+                <div class="em-content">
+                    <span class="em-label">24/7 Breakdown Assistance</span>
+                    <a href="tel:+919876543210" class="em-phone">+91 98765 43210</a>
+                </div>
+            </div>
         </div>
+
+        <!-- Quick Links -->
         <div class="footer-col">
             <h4>Quick Links</h4>
             <ul>
@@ -26,45 +57,63 @@
                 <li><a href="{% url 'contact' %}">Contact Us</a></li>
             </ul>
         </div>
+
+        <!-- Workshop Services -->
         <div class="footer-col">
             <h4>Workshop Services</h4>
             <ul>
-                <li>Periodic Maintenance</li>
-                <li>Engine Diagnostics &amp; Tuning</li>
-                <li>Brake &amp; Suspension Service</li>
-                <li>Oil &amp; Filter Replacement</li>
-                <li>Battery &amp; Electricals</li>
+                <li><a href="{% url 'book_service' %}">General Periodic Service</a></li>
+                <li><a href="{% url 'book_service' %}">Engine Diagnostics &amp; Tuning</a></li>
+                <li><a href="{% url 'book_service' %}">Brake &amp; Suspension Care</a></li>
+                <li><a href="{% url 'book_service' %}">Synthetic Oil &amp; Filter Change</a></li>
+                <li><a href="{% url 'book_service' %}">Battery &amp; Electrical Scan</a></li>
+                <li><a href="{% url 'book_service' %}">Tyre Rotation &amp; Alignment</a></li>
             </ul>
         </div>
+
+        <!-- Contact Workshop -->
         <div class="footer-col">
             <h4>Contact Workshop</h4>
             <ul>
                 <li class="contact-item">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                    101, AutoFixPro Plaza, SG Highway, Ahmedabad
+                    <i class="fas fa-location-dot contact-icon"></i>
+                    <a href="https://maps.google.com/?q=AutoFixPro+Ahmedabad" target="_blank" rel="noopener" class="contact-link">
+                        101, AutoFixPro Plaza, SG Highway, Ahmedabad, Gujarat 380054
+                    </a>
                 </li>
                 <li class="contact-item">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
-                    +91 98765 43210
+                    <i class="fas fa-phone contact-icon"></i>
+                    <a href="tel:+919876543210" class="contact-link">
+                        +91 98765 43210
+                    </a>
                 </li>
                 <li class="contact-item">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
-                    support@autofixpro.com
+                    <i class="fas fa-envelope contact-icon"></i>
+                    <a href="mailto:support@autofixpro.com" class="contact-link">
+                        support@autofixpro.com
+                    </a>
                 </li>
                 <li class="contact-item">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-                    Mon – Sat: 8:00 AM – 8:00 PM
+                    <i class="fas fa-clock contact-icon"></i>
+                    <span>Mon – Sat: 8:00 AM – 8:00 PM<br><small style="color: #64748b;">(Sunday Emergency On Call)</small></span>
                 </li>
             </ul>
         </div>
     </div>
+
+    <!-- Bottom Bar -->
     <div class="footer-bottom">
-        <p>&copy; 2026 AutoFixPro Technologies Inc. All Rights Reserved.</p>
+        <div class="footer-bottom-copy">
+            <p>&copy; 2026 AutoFixPro Technologies Inc. All Rights Reserved.</p>
+            <span class="footer-gst-tag">GSTIN: 24AAACA1234F1Z9 &bull; Certified Multi-Brand Automotive Workshop</span>
+        </div>
         <div class="footer-bottom-links">
             <a href="{% url 'home' %}#services">Services</a>
             <a href="{% url 'home' %}#why-us">Why Us</a>
             <a href="{% url 'contact' %}">Contact Us</a>
+            <a href="{% url 'about' %}">About Us</a>
             <a href="{% url 'home' %}#faq">FAQ</a>
         </div>
     </div>
 </footer>
+
