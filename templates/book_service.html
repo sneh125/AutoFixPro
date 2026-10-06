@@ -344,7 +344,7 @@
                             <div class="schedule-grid">
                                 <div class="input-group">
                                     <label for="service_date"><i class="far fa-calendar-alt"></i> Preferred Service Date</label>
-                                    <input type="date" id="service_date" name="service_date" required>
+                                    <input type="date" id="service_date" name="service_date" min="{{ min_date|default:'' }}" required>
                                     
                                     <!-- Quick Date Chips -->
                                     <div class="quick-chips-row">

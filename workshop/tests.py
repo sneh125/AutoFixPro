@@ -1773,6 +1773,88 @@ class AutoFixProCriticalFixesTests(TestCase):
         self.assertContains(response, "This password is too common.")
         self.assertFalse(User.objects.filter(email='weakpass@example.com').exists())
 
+    def test_custom_404_page(self):
+        """Verify custom 404 page renders properly with 404 status."""
+        response = self.client.get('/non-existent-route-for-testing-404/')
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "Page Not Found", status_code=404)
+
+    def test_custom_500_view(self):
+        """Verify custom 500 handler renders 500.html with 500 status."""
+        from workshop.views import custom_server_error
+        from django.test import RequestFactory
+        factory = RequestFactory()
+        req = factory.get('/')
+        resp = custom_server_error(req)
+        self.assertEqual(resp.status_code, 500)
+        self.assertIn(b"Engine Malfunction", resp.content)
+
+    def test_reschedule_booking_success(self):
+        """Verify customer can reschedule a pending appointment to a future date."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today() + timedelta(days=2),
+            service_time="10:00",
+            status="Pending"
+        )
+        future_date = (date.today() + timedelta(days=5)).strftime("%Y-%m-%d")
+        response = self.client_customer.post(reverse('reschedule_booking', args=[booking.id]), {
+            'service_date': future_date,
+            'service_time': '11:30'
+        })
+        self.assertEqual(response.status_code, 302)
+        booking.refresh_from_db()
+        self.assertEqual(booking.service_date.strftime("%Y-%m-%d"), future_date)
+        self.assertEqual(booking.service_time.strftime("%H:%M"), "11:30")
+
+    def test_reschedule_booking_rejects_past_date(self):
+        """Verify rescheduling to a past date is rejected."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today() + timedelta(days=2),
+            service_time="10:00",
+            status="Pending"
+        )
+        past_date = (date.today() - timedelta(days=2)).strftime("%Y-%m-%d")
+        response = self.client_customer.post(reverse('reschedule_booking', args=[booking.id]), {
+            'service_date': past_date,
+            'service_time': '10:00'
+        })
+        self.assertEqual(response.status_code, 302)
+        booking.refresh_from_db()
+        self.assertNotEqual(booking.service_date.strftime("%Y-%m-%d"), past_date)
+
+    def test_reschedule_booking_rejects_completed_status(self):
+        """Verify completed bookings cannot be rescheduled online."""
+        booking = ServiceBooking.objects.create(
+            user=self.user,
+            vehicle=self.vehicle,
+            service_type="General Service",
+            service_date=date.today() + timedelta(days=2),
+            service_time="10:00",
+            status="Completed"
+        )
+        future_date = (date.today() + timedelta(days=7)).strftime("%Y-%m-%d")
+        response = self.client_customer.post(reverse('reschedule_booking', args=[booking.id]), {
+            'service_date': future_date,
+            'service_time': '14:00'
+        })
+        self.assertEqual(response.status_code, 302)
+        booking.refresh_from_db()
+        self.assertNotEqual(booking.service_date.strftime("%Y-%m-%d"), future_date)
+
+    def test_home_page_dynamic_metrics(self):
+        """Verify home page loads dynamic statistics context."""
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('vehicles_serviced_count', response.context)
+        self.assertIn('satisfaction_rate', response.context)
+
+
 
 
 

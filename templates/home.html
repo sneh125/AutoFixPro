@@ -34,7 +34,7 @@
             <span class="stars">
                 <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
             </span>
-            <span>Trusted by <strong>12,000+</strong> Car Owners across India</span>
+            <span>Trusted by <strong>{{ clients_count|default:"8,500+" }}</strong> Car Owners across India</span>
         </div>
     </div>
 
@@ -49,11 +49,11 @@
 <section class="stats">
     <div class="stats-grid">
         <div class="stat-card">
-            <h3>12K+</h3>
+            <h3>{{ vehicles_serviced_count|default:"12,000+" }}</h3>
             <p>Vehicles Serviced</p>
         </div>
         <div class="stat-card">
-            <h3>99.4%</h3>
+            <h3>{{ satisfaction_rate|default:"99.4%" }}</h3>
             <p>Customer Satisfaction</p>
         </div>
         <div class="stat-card">

@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 — Workshop Maintenance Issue | AutoFixPro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <style>
+        .error-page-wrapper {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .error-card {
+            background: #ffffff;
+            border: 1px solid var(--border, #e2e8f0);
+            border-radius: 20px;
+            padding: 50px 36px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+        }
+        .error-code-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .error-big-graphic {
+            font-size: 80px;
+            color: #f59e0b;
+            margin-bottom: 16px;
+        }
+        .error-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 12px 0;
+        }
+        .error-desc {
+            font-size: 15px;
+            color: #64748b;
+            line-height: 1.6;
+            margin: 0 auto 30px auto;
+            max-width: 480px;
+        }
+        .error-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ff4d30;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 16px rgba(255, 77, 48, 0.3);
+        }
+        .btn-home:hover {
+            background: #e03a1e;
+            transform: translateY(-2px);
+            color: #ffffff;
+        }
+        .btn-outline-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-back:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body style="background: #f8fafc; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif;">
+
+    {% include 'includes/navbar.html' %}
+
+    <main class="error-page-wrapper">
+        <div class="error-card">
+            <div class="error-code-badge">
+                <i class="fas fa-screwdriver-wrench"></i> Server Maintenance (500)
+            </div>
+            
+            <div class="error-big-graphic">
+                <i class="fas fa-engine-warning"></i>
+            </div>
+
+            <h1 class="error-title">Pit Stop! Engine Malfunction</h1>
+            <p class="error-desc">
+                Our workshop servers encountered an unexpected stall. Our mechanics are already under the hood fixing the issue. Please try refreshing in a moment.
+            </p>
+
+            <div class="error-actions">
+                <a href="{% url 'home' %}" class="btn-home">
+                    <i class="fas fa-house"></i> Return to Safety
+                </a>
+                <a href="javascript:location.reload();" class="btn-outline-back">
+                    <i class="fas fa-rotate"></i> Reload Page
+                </a>
+            </div>
+        </div>
+    </main>
+
+    {% include 'includes/footer.html' %}
+
+</body>
+</html>

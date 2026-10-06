@@ -4,8 +4,15 @@ from django.http import HttpResponse
 from workshop import views
 
 
+from django.views.generic.base import RedirectView
+
+
 def favicon(request):
-    return HttpResponse(status=204)
+    return RedirectView.as_view(url='/static/images/logo.png', permanent=True)(request)
+
+
+handler404 = 'workshop.views.custom_page_not_found'
+handler500 = 'workshop.views.custom_server_error'
 
 
 urlpatterns = [
@@ -33,6 +40,7 @@ urlpatterns = [
     path('booking/<int:booking_id>/invoice/preview/', views.preview_invoice, name='preview_invoice'),
     path('booking/<int:booking_id>/review/', views.submit_review, name='submit_review'),
     path('cancel_booking/<int:booking_id>/', views.cancel_booking, name='cancel_booking'),
+    path('reschedule_booking/<int:booking_id>/', views.reschedule_booking, name='reschedule_booking'),
     path('payment/<int:booking_id>/', views.payment, name='payment'),
     path('payment/<int:booking_id>/success/', views.payment_success, name='payment_success'),
     path('payment/<int:booking_id>/cash/', views.cash_payment, name='cash_payment'),
