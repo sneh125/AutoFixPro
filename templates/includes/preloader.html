@@ -1,0 +1,134 @@
+{% load static %}
+<!-- ── AutoFixPro High-Tech Tachometer & Turbo Diagnostic Preloader ── -->
+<div id="autofix-preloader" class="af-preloader" aria-hidden="true">
+    <div class="af-preloader-content">
+        <!-- Tachometer Gauge SVG -->
+        <div class="af-gauge-wrapper">
+            <svg class="af-gauge-svg" viewBox="0 0 200 120">
+                <defs>
+                    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="60%" stop-color="#f59e0b" />
+                        <stop offset="100%" stop-color="#ff4d30" />
+                    </linearGradient>
+                    <filter id="gaugeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+
+                <!-- Background Track Arc -->
+                <path class="gauge-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" stroke-linecap="round" />
+
+                <!-- Glowing Active Gradient Arc -->
+                <path class="gauge-active-arc" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="url(#gaugeGradient)" stroke-width="8" stroke-linecap="round" filter="url(#gaugeGlow)" />
+
+                <!-- Dial Ticks -->
+                <line x1="25" y1="105" x2="35" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                <line x1="45" y1="62" x2="53" y2="69" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                <line x1="100" y1="30" x2="100" y2="40" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+                <line x1="155" y1="62" x2="147" y2="69" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                <line x1="175" y1="105" x2="165" y2="100" stroke="#ff4d30" stroke-width="2.5" />
+
+                <!-- Needle Pin -->
+                <g class="gauge-needle-group">
+                    <line x1="100" y1="105" x2="35" y2="105" class="gauge-needle" stroke="#ff4d30" stroke-width="3" stroke-linecap="round" filter="url(#gaugeGlow)" />
+                    <circle cx="100" cy="105" r="7" fill="#ff4d30" />
+                    <circle cx="100" cy="105" r="3" fill="#ffffff" />
+                </g>
+            </svg>
+
+            <!-- Digital RPM Readout -->
+            <div class="af-gauge-digital">
+                <span class="af-rpm-num" id="afRpmDisplay">0</span>
+                <span class="af-rpm-unit">RPM</span>
+            </div>
+        </div>
+
+        <!-- Brand Title & Diagnostics Progress Bar -->
+        <div class="af-loader-meta">
+            <div class="af-loader-brand">
+                <span>AutoFix<span class="af-brand-hl">Pro</span></span>
+            </div>
+            <div class="af-loader-bar">
+                <div class="af-loader-bar-fill"></div>
+            </div>
+            <div class="af-loader-status" id="afLoaderText">
+                <span class="status-pulse-dot"></span>
+                <span>Calibrating Workshop Diagnostics...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Top Turbo Progress Line (YouTube/Stripe Style) ── -->
+<div id="af-turbo-line" class="af-turbo-line"></div>
+
+<script>
+(function() {
+    const preloader = document.getElementById('autofix-preloader');
+    const turboLine = document.getElementById('af-turbo-line');
+    const rpmDisplay = document.getElementById('afRpmDisplay');
+    const statusText = document.getElementById('afLoaderText');
+
+    if (!preloader) return;
+
+    // Fast animated RPM counter
+    let currentRpm = 1200;
+    const targetRpm = 7800;
+    const rpmInterval = setInterval(function() {
+        if (currentRpm < targetRpm) {
+            currentRpm += Math.floor(Math.random() * 450) + 300;
+            if (currentRpm > targetRpm) currentRpm = targetRpm;
+            if (rpmDisplay) rpmDisplay.textContent = currentRpm.toLocaleString();
+        } else {
+            clearInterval(rpmInterval);
+        }
+    }, 40);
+
+    // Dismiss preloader smoothly
+    function dismissPreloader() {
+        if (!preloader || preloader.classList.contains('is-hidden')) return;
+        clearInterval(rpmInterval);
+        if (rpmDisplay) rpmDisplay.textContent = '8,000';
+        
+        preloader.classList.add('is-hidden');
+        if (turboLine) {
+            turboLine.style.width = '100%';
+            setTimeout(function() { turboLine.style.opacity = '0'; }, 300);
+        }
+
+        setTimeout(function() {
+            preloader.remove();
+        }, 450);
+    }
+
+    // Safety timeout: Maximum 850ms so user is never kept waiting
+    const safetyTimer = setTimeout(dismissPreloader, 850);
+
+    if (document.readyState === 'complete') {
+        clearTimeout(safetyTimer);
+        setTimeout(dismissPreloader, 250);
+    } else {
+        window.addEventListener('load', function() {
+            clearTimeout(safetyTimer);
+            setTimeout(dismissPreloader, 300);
+        });
+    }
+
+    // Form submit button loading state handler
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]:not(.no-loader)');
+        if (submitBtn && !submitBtn.disabled) {
+            submitBtn.dataset.originalHtml = submitBtn.innerHTML;
+            submitBtn.style.minWidth = submitBtn.offsetWidth + 'px';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-is-loading');
+            submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+            // Allow form to submit normally
+            form.submit();
+        }
+    }, true);
+})();
+</script>
